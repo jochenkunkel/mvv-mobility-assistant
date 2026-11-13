@@ -3,6 +3,7 @@ package de.mvv.mobility
 import android.Manifest
 import android.os.Bundle
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.net.Uri
 import android.location.Location
 import androidx.activity.ComponentActivity
@@ -21,6 +22,7 @@ import de.mvv.mobility.data.DeviceCalendarRepository
 import de.mvv.mobility.data.DestinationLookup
 import de.mvv.mobility.data.MvvJourneyRepository
 import de.mvv.mobility.data.JourneyOption
+import de.mvv.mobility.data.UpcomingAppointment
 import de.mvv.mobility.widget.JourneyWidget
 import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.launch
@@ -28,6 +30,9 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Fixture mode is strictly limited to debuggable APKs and is visibly labelled.
+        val fixture = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0 &&
+            intent.getBooleanExtra("mein_weg_test_fixture", false)
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
@@ -42,7 +47,7 @@ class MainActivity : ComponentActivity() {
                         scope.launch { JourneyWidget().updateAll(this@MainActivity) }
                     }
                     val appointment = remember(allowed, refresh) {
-                        if (allowed) DeviceCalendarRepository.nextAppointment(this) else null
+                        if (fixture) UpcomingAppointment("Testtermin Fußball", "Olympiapark München", System.currentTimeMillis() + 3600000L) else if (allowed) DeviceCalendarRepository.nextAppointment(this) else null
                     }
                     var confirmedDestination by remember(appointment?.startMillis) { mutableStateOf("") }
                     var addressSuggestions by remember(appointment?.startMillis) { mutableStateOf<List<String>>(emptyList()) }
@@ -52,7 +57,10 @@ class MainActivity : ComponentActivity() {
                     var routeStatus by remember { mutableStateOf("") }
                     var journeys by remember { mutableStateOf<List<JourneyOption>>(emptyList()) }
                     var journeyLoading by remember { mutableStateOf(false) }
-                    var location by remember { mutableStateOf<Location?>(null) }
+                    var location by remember { mutableStateOf<Location?>(if (fixture) Location("test").apply {
+                        latitude = 48.137154
+                        longitude = 11.576124
+                    } else null) }
                     var locationStatus by remember { mutableStateOf("Noch kein Standort abgerufen") }
                     val locationPermissionLauncher = rememberLauncherForActivityResult(
                         ActivityResultContracts.RequestMultiplePermissions()
@@ -68,7 +76,8 @@ class MainActivity : ComponentActivity() {
                     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         Text("Mein Weg", style = MaterialTheme.typography.headlineMedium)
                         Text("Phase 5 · MVV-Verbindungen (Test)", color = MaterialTheme.colorScheme.primary)
-                        if (!allowed) {
+                        if (fixture) Text("TESTMODUS: simulierte Kalender-, GPS- und MVV-Daten", color = MaterialTheme.colorScheme.error)
+                        if (!allowed && !fixture) {
                             Text("Damit Mein Weg deine Termine anzeigen kann, erlaube den Kalenderzugriff. Die Daten bleiben auf deinem Gerät.")
                             Button(onClick = { permissionLauncher.launch(Manifest.permission.READ_CALENDAR) }) {
                                 Text("Kalenderzugriff erlauben")
@@ -167,7 +176,11 @@ class MainActivity : ComponentActivity() {
                                 journeyLoading = true
                                 journeys = emptyList()
                                 routeStatus = "MVV-Verbindungen werden abgefragt …"
-                                MvvJourneyRepository.search(start, destination, walkingSpeed) { result ->
+                                if (fixture) {
+                                    journeys = MvvJourneyRepository.parseTrips("""{"trips":[{"legs":[{"origin":{"dateTime":{"hour":"09","minute":"10"}},"distance":300},{"transportation":{"number":"U3"},"destination":{"dateTime":{"hour":"09","minute":"30"}}}]}]}""", walkingSpeed)
+                                    journeyLoading = false
+                                    routeStatus = "Testverbindung geladen"
+                                } else MvvJourneyRepository.search(start, destination, walkingSpeed) { result ->
                                     runOnUiThread {
                                         journeyLoading = false
                                         result.fold(
