@@ -9,7 +9,7 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.Column
 import androidx.glance.layout.padding
 import androidx.glance.text.Text
-import androidx.glance.unit.dp
+import androidx.compose.ui.unit.dp
 import de.mvv.mobility.data.DemoJourneyRepository
 
 class JourneyWidget : GlanceAppWidget() {
