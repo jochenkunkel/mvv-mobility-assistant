@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.provider.CalendarContract
-import androidx.core.content.ContextCompat
 import java.text.DateFormat
 import java.util.Date
 
@@ -15,7 +14,7 @@ data class UpcomingAppointment(val title: String, val location: String?, val sta
 /** Reads the device calendar provider only; no network account or server sync. */
 object DeviceCalendarRepository {
     fun hasPermission(context: Context): Boolean =
-        ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED
+        context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED
 
     fun nextAppointment(context: Context): UpcomingAppointment? {
         if (!hasPermission(context)) return null
