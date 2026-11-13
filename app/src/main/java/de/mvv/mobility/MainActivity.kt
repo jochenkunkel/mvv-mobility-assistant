@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import de.mvv.mobility.data.CurrentLocationRepository
 import de.mvv.mobility.data.DeviceCalendarRepository
 import de.mvv.mobility.data.DestinationLookup
+import de.mvv.mobility.data.MvvJourneyRepository
+import de.mvv.mobility.data.JourneyOption
 import de.mvv.mobility.widget.JourneyWidget
 import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.launch
@@ -48,6 +50,8 @@ class MainActivity : ComponentActivity() {
                     var lookupRequest by remember(appointment?.startMillis) { mutableIntStateOf(0) }
                     var walkingSpeed by remember { mutableFloatStateOf(getPreferences(MODE_PRIVATE).getFloat("walking_speed_kmh", 3.0f)) }
                     var routeStatus by remember { mutableStateOf("") }
+                    var journeys by remember { mutableStateOf<List<JourneyOption>>(emptyList()) }
+                    var journeyLoading by remember { mutableStateOf(false) }
                     var location by remember { mutableStateOf<Location?>(null) }
                     var locationStatus by remember { mutableStateOf("Noch kein Standort abgerufen") }
                     val locationPermissionLauncher = rememberLauncherForActivityResult(
@@ -63,7 +67,7 @@ class MainActivity : ComponentActivity() {
                     }
                     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         Text("Mein Weg", style = MaterialTheme.typography.headlineMedium)
-                        Text("Phase 4 · Route vorbereiten", color = MaterialTheme.colorScheme.primary)
+                        Text("Phase 5 · MVV-Verbindungen (Test)", color = MaterialTheme.colorScheme.primary)
                         if (!allowed) {
                             Text("Damit Mein Weg deine Termine anzeigen kann, erlaube den Kalenderzugriff. Die Daten bleiben auf deinem Gerät.")
                             Button(onClick = { permissionLauncher.launch(Manifest.permission.READ_CALENDAR) }) {
@@ -156,6 +160,37 @@ class MainActivity : ComponentActivity() {
                             steps = 5
                         )
                         val destination = confirmedDestination.trim().ifBlank { appointment?.location?.trim().orEmpty() }
+                        Button(
+                            enabled = location != null && destination.isNotBlank() && !journeyLoading,
+                            onClick = {
+                                val start = location ?: return@Button
+                                journeyLoading = true
+                                journeys = emptyList()
+                                routeStatus = "MVV-Verbindungen werden abgefragt …"
+                                MvvJourneyRepository.search(start, destination, walkingSpeed) { result ->
+                                    runOnUiThread {
+                                        journeyLoading = false
+                                        result.fold(
+                                            onSuccess = {
+                                                journeys = it
+                                                routeStatus = if (it.isEmpty()) "Keine Verbindungen gefunden oder Antwortformat nicht unterstützt." else "${it.size} Verbindungen geladen (experimentell)"
+                                            },
+                                            onFailure = { routeStatus = "MVV-Abfrage fehlgeschlagen: ${it.localizedMessage ?: "Unbekannter Fehler"}" }
+                                        )
+                                    }
+                                }
+                            }
+                        ) { Text(if (journeyLoading) "Suche läuft …" else "MVV-Verbindungen direkt anzeigen (Test)") }
+                        journeys.sortedWith(compareBy<JourneyOption> { it.changes }.thenBy { it.walkingMinutes }).forEach { trip ->
+                            Card(Modifier.fillMaxWidth()) {
+                                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text("${trip.departure} – ${trip.arrival}", style = MaterialTheme.typography.titleMedium)
+                                    Text(trip.summary)
+                                    Text("${trip.changes} Umstiege · Fußweg geschätzt: ${trip.walkingMinutes} Min. bei %.1f km/h".format(java.util.Locale.GERMANY, walkingSpeed))
+                                }
+                            }
+                        }
+                        Text("Experimenteller MVV-Datenzugriff: Zeiten und Fußwege bitte mit der offiziellen MVV-Auskunft vergleichen. Die Fußweg-Schätzung berücksichtigt nur gemeldete Streckenlängen.")
                         Button(
                             enabled = location != null && destination.isNotBlank(),
                             onClick = {
