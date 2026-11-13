@@ -2,6 +2,7 @@ package de.mvv.mobility
 
 import android.Manifest
 import android.os.Bundle
+import android.location.Location
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -11,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import de.mvv.mobility.data.CurrentLocationRepository
 import de.mvv.mobility.data.DeviceCalendarRepository
 import de.mvv.mobility.widget.JourneyWidget
 import androidx.glance.appwidget.updateAll
@@ -36,9 +38,22 @@ class MainActivity : ComponentActivity() {
                         if (allowed) DeviceCalendarRepository.nextAppointment(this) else null
                     }
                     var confirmedDestination by remember(appointment?.startMillis) { mutableStateOf("") }
+                    var location by remember { mutableStateOf<Location?>(null) }
+                    var locationStatus by remember { mutableStateOf("Noch kein Standort abgerufen") }
+                    val locationPermissionLauncher = rememberLauncherForActivityResult(
+                        ActivityResultContracts.RequestMultiplePermissions()
+                    ) { grants ->
+                        if (grants.values.any { it }) {
+                            locationStatus = "Standort wird ermittelt …"
+                            CurrentLocationRepository.request(this@MainActivity) { found ->
+                                location = found
+                                locationStatus = if (found == null) "Standort nicht verfügbar. Standortdienste prüfen." else "Aktueller Startpunkt ermittelt"
+                            }
+                        } else locationStatus = "Standortberechtigung nicht erteilt"
+                    }
                     Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         Text("Mein Weg", style = MaterialTheme.typography.headlineMedium)
-                        Text("Phase 2 · Kalender", color = MaterialTheme.colorScheme.primary)
+                        Text("Phase 3 · Kalender + Standort", color = MaterialTheme.colorScheme.primary)
                         if (!allowed) {
                             Text("Damit Mein Weg deine Termine anzeigen kann, erlaube den Kalenderzugriff. Die Daten bleiben auf deinem Gerät.")
                             Button(onClick = { permissionLauncher.launch(Manifest.permission.READ_CALENDAR) }) {
@@ -72,7 +87,27 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         HorizontalDivider()
-                        Text("MVV-Routen, GPS und automatische Abfahrtszeiten folgen in späteren Phasen.")
+                        Text("Startpunkt", style = MaterialTheme.typography.titleMedium)
+                        Button(onClick = {
+                            if (CurrentLocationRepository.hasPermission(this@MainActivity)) {
+                                locationStatus = "Standort wird ermittelt …"
+                                CurrentLocationRepository.request(this@MainActivity) { found ->
+                                    location = found
+                                    locationStatus = if (found == null) "Standort nicht verfügbar. Standortdienste prüfen." else "Aktueller Startpunkt ermittelt"
+                                }
+                            } else {
+                                locationPermissionLauncher.launch(arrayOf(
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                ))
+                            }
+                        }) { Text("Aktuellen Standort verwenden") }
+                        Text(locationStatus)
+                        location?.let {
+                            Text("Breite: %.5f · Länge: %.5f".format(java.util.Locale.GERMANY, it.latitude, it.longitude))
+                        }
+                        Text("Die Position wird nur auf Anfrage ermittelt, nicht gespeichert und nicht im Hintergrund verfolgt.")
+                        Text("MVV-Verbindung, Komfort-Routen und Abfahrtszeiten folgen als nächster Schritt.")
                     }
                 }
             }
