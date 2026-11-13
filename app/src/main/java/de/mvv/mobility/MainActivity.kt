@@ -10,12 +10,15 @@ import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.mvv.mobility.data.CurrentLocationRepository
 import de.mvv.mobility.data.DeviceCalendarRepository
+import de.mvv.mobility.data.DestinationLookup
 import de.mvv.mobility.widget.JourneyWidget
 import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.launch
@@ -40,6 +43,9 @@ class MainActivity : ComponentActivity() {
                         if (allowed) DeviceCalendarRepository.nextAppointment(this) else null
                     }
                     var confirmedDestination by remember(appointment?.startMillis) { mutableStateOf("") }
+                    var addressSuggestions by remember(appointment?.startMillis) { mutableStateOf<List<String>>(emptyList()) }
+                    var lookupStatus by remember(appointment?.startMillis) { mutableStateOf("") }
+                    var lookupRequest by remember(appointment?.startMillis) { mutableIntStateOf(0) }
                     var walkingSpeed by remember { mutableFloatStateOf(getPreferences(MODE_PRIVATE).getFloat("walking_speed_kmh", 3.0f)) }
                     var routeStatus by remember { mutableStateOf("") }
                     var location by remember { mutableStateOf<Location?>(null) }
@@ -55,7 +61,7 @@ class MainActivity : ComponentActivity() {
                             }
                         } else locationStatus = "Standortberechtigung nicht erteilt"
                     }
-                    Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         Text("Mein Weg", style = MaterialTheme.typography.headlineMedium)
                         Text("Phase 4 · Route vorbereiten", color = MaterialTheme.colorScheme.primary)
                         if (!allowed) {
@@ -77,14 +83,40 @@ class MainActivity : ComponentActivity() {
                                     Text("Für diesen Termin fehlt ein Zielort. Bitte bestätigen oder ergänzen.")
                                 } else {
                                     Text("Kalender-Ziel: ${appointment.location}")
-                                    Text("Bitte prüfe den Zielort vor der Routenplanung.")
+                                    Text("Du kannst den Ort automatisch suchen lassen und einen passenden Treffer auswählen.")
                                 }
                                 OutlinedTextField(
                                     value = confirmedDestination,
-                                    onValueChange = { confirmedDestination = it },
+                                    onValueChange = { confirmedDestination = it; addressSuggestions = emptyList() },
                                     label = { Text("Zielort bestätigen oder korrigieren") },
                                     modifier = Modifier.fillMaxWidth()
                                 )
+                                Button(onClick = {
+                                    val query = confirmedDestination.trim().ifBlank { appointment.location.orEmpty() }
+                                    lookupRequest++
+                                    val requestId = lookupRequest
+                                    addressSuggestions = emptyList()
+                                    lookupStatus = "Suche passende Orte und Adressen …"
+                                    DestinationLookup.search(this@MainActivity, query) { results ->
+                                        if (requestId == lookupRequest) {
+                                            addressSuggestions = results
+                                            lookupStatus = if (results.isEmpty()) "Keine eindeutigen Treffer. Bitte den Suchtext ergänzen oder die Adresse selbst eingeben." else "Bitte den passenden Ort auswählen:"
+                                        }
+                                    }
+                                }, enabled = confirmedDestination.isNotBlank() || !appointment.location.isNullOrBlank()) {
+                                    Text("Adresse online suchen")
+                                }
+                                if (lookupStatus.isNotBlank()) Text(lookupStatus)
+                                addressSuggestions.forEach { suggestion ->
+                                    OutlinedButton(
+                                        onClick = {
+                                            confirmedDestination = suggestion
+                                            addressSuggestions = emptyList()
+                                            lookupStatus = "Ausgewähltes Ziel: $suggestion"
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) { Text(suggestion) }
+                                }
                                 if (confirmedDestination.isNotBlank()) {
                                     Text("Bestätigtes Ziel (nur für diese Ansicht): $confirmedDestination")
                                 }
