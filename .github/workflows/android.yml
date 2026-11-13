@@ -60,6 +60,7 @@ jobs:
           script: |
             bash scripts/emulator-smoke-test.sh
             gradle --no-daemon :app:connectedDebugAndroidTest
+            bash scripts/emulator-fixture-test.sh
       - name: Upload emulator logs and screenshot
         if: always()
         uses: actions/upload-artifact@v4
