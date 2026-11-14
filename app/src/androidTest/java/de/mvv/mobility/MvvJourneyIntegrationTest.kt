@@ -34,7 +34,9 @@ class MvvJourneyIntegrationTest {
 
     @Test fun emptyAndMalformedResponseHandled() {
         assertTrue(MvvJourneyRepository.parseTrips("""{"trips":[]}""", 3f).isEmpty())
-        assertTrue(MvvJourneyRepository.parseTrips("""{}""", 3f).isEmpty())
+        assertThrows(IllegalStateException::class.java) {
+            MvvJourneyRepository.parseTrips("""{}""", 3f)
+        }
         assertThrows(IllegalArgumentException::class.java) {
             MvvJourneyRepository.parseTrips(sample, 0f)
         }
