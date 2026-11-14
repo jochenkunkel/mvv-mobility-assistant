@@ -68,7 +68,7 @@ object MvvJourneyRepository {
                 val date = SimpleDateFormat("yyyyMMdd", Locale.GERMANY).format(Date())
                 val clock = SimpleDateFormat("HHmm", Locale.GERMANY).format(Date())
                 val url = "https://efa.mvv-muenchen.de/ng/XML_TRIP_REQUEST2?" +
-                    "outputFormat=JSON&coordOutputFormat=WGS84&locationServerActive=1&" +
+                    "outputFormat=JSON&tripReductionMacro=1&coordOutputFormat=WGS84&locationServerActive=1&" +
                     "type_origin=coord&name_origin=${param(originCoords)}&" +
                     "type_destination=any&name_destination=${param(destination)}&" +
                     "itdDate=$date&itdTime=$clock&itdTripDateTimeDepArr=dep&" +
