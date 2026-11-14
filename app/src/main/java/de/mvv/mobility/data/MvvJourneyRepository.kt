@@ -11,7 +11,37 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-data class JourneyOption(val departure: String, val arrival: String, val summary: String, val changes: Int, val walkingMinutes: Int)
+data class JourneyOption(
+    val departure: String, val arrival: String, val summary: String,
+    val changes: Int, val walkingMinutes: Int,
+    val lines: List<String> = emptyList(), val products: List<String> = emptyList()
+)
+enum class RouteFilterMode { ANY, CONTAINS, ONLY_LINE_WITH_WALK }
+data class RoutePreference(val mode: RouteFilterMode = RouteFilterMode.ANY, val query: String = "")
+fun filterJourneys(options: List<JourneyOption>, preference: RoutePreference): List<JourneyOption> {
+    if (preference.mode == RouteFilterMode.ANY || preference.query.isBlank()) return options
+    val target = preference.query.trim().lowercase(Locale.GERMANY)
+    fun matches(line: String, product: String): Boolean {
+        val l = line.lowercase(Locale.GERMANY).trim()
+        val p = product.lowercase(Locale.GERMANY).trim()
+        return l == target || "$p $l" == target || p == target ||
+            (target == "bus" && p.contains("bus")) ||
+            (target == "u-bahn" && p.contains("u-bahn")) ||
+            (target == "s-bahn" && p.contains("s-bahn")) ||
+            (target == "tram" && (p.contains("tram") || p.contains("straßenbahn")))
+    }
+    return options.filter { journey ->
+        val matched = journey.lines.indices.map { i ->
+            matches(journey.lines[i], journey.products.getOrElse(i) { "" })
+        }
+        when (preference.mode) {
+            RouteFilterMode.ANY -> true
+            RouteFilterMode.CONTAINS -> matched.any { it }
+            RouteFilterMode.ONLY_LINE_WITH_WALK -> matched.isNotEmpty() && matched.all { it }
+        }
+    }
+}
+
 
 object MvvJourneyRepository {
     private fun param(value: String) = URLEncoder.encode(value, "UTF-8")
@@ -46,6 +76,7 @@ object MvvJourneyRepository {
             val names = mutableListOf<String>()
             var walkingMinutes = 0
             var vehicles = 0
+            val products = mutableListOf<String>()
             for (j in 0 until legs.length()) {
                 val leg = legs.optJSONObject(j) ?: continue
                 // Real MVV EFA uses mode + points, unlike the legacy fixture schema.
@@ -67,6 +98,7 @@ object MvvJourneyRepository {
                     }
                 } else if (number.isNotBlank()) {
                     names.add(number)
+                    products.add(product)
                     vehicles++
                 }
             }
@@ -91,7 +123,8 @@ object MvvJourneyRepository {
                 arrival = efaTime(endpoint(last, false)),
                 summary = names.joinToString(" → ").ifBlank { "Verbindung ohne Linienangabe" },
                 changes = (vehicles - 1).coerceAtLeast(0),
-                walkingMinutes = walkingMinutes
+                walkingMinutes = walkingMinutes,
+                lines = names.toList(), products = products.toList()
             ))
         }
         return results
@@ -111,7 +144,7 @@ object MvvJourneyRepository {
             "type_origin=coord&name_origin=${param(originCoords)}&" +
             "type_destination=$type&name_destination=${param(destination)}&" +
             "itdDate=$date&itdTime=$clock&itdTripDateTimeDepArr=dep&" +
-            "calcNumberOfTrips=4&useRealtime=1"
+            "calcNumberOfTrips=12&useRealtime=1"
         val connection = URL(url).openConnection() as HttpURLConnection
         connection.connectTimeout = 12000
         connection.readTimeout = 15000
@@ -169,7 +202,8 @@ object MvvJourneyRepository {
         origin: Location,
         address: String,
         walkingKmh: Float,
-        callback: (Result<ResolvedJourney>) -> Unit
+        callback: (Result<ResolvedJourney>) -> Unit,
+        preference: RoutePreference = RoutePreference()
     ) {
         Thread {
             try {
@@ -187,7 +221,7 @@ object MvvJourneyRepository {
                 if (ambiguous) error("Mehrdeutige Zieladresse. Bitte vollständige Straße, Hausnummer und Ort angeben.")
                 val coordinates = "${first.longitude}:${first.latitude}:WGS84"
                 val response = request(origin, coordinates, "coord")
-                val trips = parseTrips(response, walkingKmh)
+                val trips = filterJourneys(parseTrips(response, walkingKmh), preference)
                 val destination = StopCandidate(coordinates, first.getAddressLine(0) ?: address, 0)
                 callback(Result.success(ResolvedJourney(trips, destination)))
             } catch (e: Exception) { callback(Result.failure(e)) }
