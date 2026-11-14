@@ -1,6 +1,8 @@
 package de.mvv.mobility.data
 
 import android.location.Location
+import android.location.Geocoder
+import android.content.Context
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -128,6 +130,41 @@ object MvvJourneyRepository {
             name == target || name.endsWith(" $target")
         }
         return exact.singleOrNull()
+    }
+
+    /**
+     * EFA can calculate public-transport access and egress directly from coordinates.
+     * This avoids prematurely choosing the nearest stop (which might be slower).
+     * Geocoding is done off the main thread and is never treated as a stop identifier.
+     */
+    fun searchAddress(
+        context: Context,
+        origin: Location,
+        address: String,
+        walkingKmh: Float,
+        callback: (Result<ResolvedJourney>) -> Unit
+    ) {
+        Thread {
+            try {
+                require(address.isNotBlank()) { "Zieladresse fehlt." }
+                @Suppress("DEPRECATION")
+                val places = Geocoder(context, Locale.GERMANY).getFromLocationName(address, 5).orEmpty()
+                if (places.isEmpty()) error("Zieladresse konnte nicht geografisch bestimmt werden.")
+                // Multiple geocoding matches must not silently route to an unrelated location.
+                val first = places.first()
+                val ambiguous = places.drop(1).any { other ->
+                    val a = Location("geocode").apply { latitude = first.latitude; longitude = first.longitude }
+                    val b = Location("geocode").apply { latitude = other.latitude; longitude = other.longitude }
+                    a.distanceTo(b) > 1000f
+                }
+                if (ambiguous) error("Mehrdeutige Zieladresse. Bitte vollständige Straße, Hausnummer und Ort angeben.")
+                val coordinates = "${first.longitude}:${first.latitude}:WGS84"
+                val response = request(origin, coordinates, "coord")
+                val trips = parseTrips(response, walkingKmh)
+                val destination = StopCandidate(coordinates, first.getAddressLine(0) ?: address, 0)
+                callback(Result.success(ResolvedJourney(trips, destination)))
+            } catch (e: Exception) { callback(Result.failure(e)) }
+        }.start()
     }
 
     fun search(
