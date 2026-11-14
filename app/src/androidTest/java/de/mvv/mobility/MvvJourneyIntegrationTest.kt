@@ -41,4 +41,16 @@ class MvvJourneyIntegrationTest {
             MvvJourneyRepository.parseTrips(sample, 0f)
         }
     }
+    @Test fun ambiguousDestinationRequiresSelection() {
+        val json = """{"destination":{"points":[
+          {"stateless":"91000306","name":"München, Olympiapark West","anyType":"stop","quality":"310"},
+          {"stateless":"91000325","name":"München, Olympiapark Ost","anyType":"stop","quality":"275"}
+        ]}}"""
+        val stops = MvvJourneyRepository.candidates(json)
+        assertEquals(2, stops.size)
+        assertNull(MvvJourneyRepository.selectCandidate("Olympiapark München", stops))
+        assertEquals("91000306", MvvJourneyRepository.selectCandidate("Olympiapark West", stops)?.id)
+        assertEquals("91000325", MvvJourneyRepository.selectCandidate("Olympiapark Ost", stops)?.id)
+    }
+
 }
