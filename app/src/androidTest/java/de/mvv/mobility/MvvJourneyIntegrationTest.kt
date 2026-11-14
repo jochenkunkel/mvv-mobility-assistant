@@ -53,4 +53,22 @@ class MvvJourneyIntegrationTest {
         assertEquals("91000325", MvvJourneyRepository.selectCandidate("Olympiapark Ost", stops)?.id)
     }
 
+    @Test fun parsesRealEfaModePointsAndTimes() {
+        val response = """{"trips":[{"legs":[
+          {"timeMinute":"6","mode":{"product":"Fussweg","number":""},"points":[
+            {"dateTime":{"time":"10:00"}},{"dateTime":{"time":"10:06"}}]},
+          {"timeMinute":"12","mode":{"product":"U-Bahn","number":"U3"},"points":[
+            {"dateTime":{"time":"10:08","rtTime":"10:09"}},
+            {"dateTime":{"time":"10:20","rtTime":"10:21"}}]},
+          {"timeMinute":"4","mode":{"product":"Fussweg","number":""},"points":[
+            {"dateTime":{"time":"10:21"}},{"dateTime":{"time":"10:25"}}]}
+        ]}]}"""
+        val option = MvvJourneyRepository.parseTrips(response, 3.5f).single()
+        assertEquals("10:00", option.departure)
+        assertEquals("10:25", option.arrival)
+        assertEquals("U3", option.summary)
+        assertEquals(10, option.walkingMinutes)
+        assertEquals(0, option.changes)
+    }
+
 }
