@@ -10,8 +10,8 @@ now = datetime.now(ZoneInfo("Europe/Berlin"))
 params = {
     "outputFormat": "JSON", "tripReductionMacro": "1",
     "coordOutputFormat": "WGS84", "locationServerActive": "1",
-    "type_origin": "coord", "name_origin": "11.576124:48.137154:WGS84",
-    "type_destination": "coord", "name_destination": "11.5508:48.1745:WGS84",
+    "type_origin": "coord", "name_origin": "11.47657:48.09239:WGS84",
+    "type_destination": "coord", "name_destination": "11.5508:48.1117:WGS84",
     "itdDate": now.strftime("%Y%m%d"), "itdTime": now.strftime("%H%M"),
     "itdTripDateTimeDepArr": "dep", "calcNumberOfTrips": "4", "useRealtime": "1",
 }
@@ -27,6 +27,9 @@ if not isinstance(trips, list) or not trips:
 for trip in trips[:4]:
     legs = trip.get("legs") or []
     print("Trip:", len(legs), "legs; last destination:", json.dumps((legs[-1].get("destination") if legs else {}), ensure_ascii=False)[:300])
+    print("Trip keys:", list(trip.keys()))
+    for leg in legs[:3]:
+        print("Leg sample:", json.dumps(leg, ensure_ascii=False)[:2400])
     if not legs:
         raise SystemExit("Trip without legs")
 print("PASS: coordinate destination yields", len(trips), "journeys")
