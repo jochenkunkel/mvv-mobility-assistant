@@ -58,10 +58,14 @@ for attempt in range(7):
 else:
     raise SystemExit('ERROR: MVV button not found enabled and onscreen')
 
+seen_u3 = False
+seen_status = False
 for attempt in range(5):
     root=dump('fixture-result')
     texts=[n.attrib.get('text','') for n in root.iter('node') if n.attrib.get('text')]
-    if any('U3' in t for t in texts) and any('Testverbindung geladen' in t for t in texts):
+    seen_u3 |= any('U3' in t for t in texts)
+    seen_status |= any('Testverbindung geladen' in t for t in texts)
+    if seen_u3 and seen_status:
         print('PASS: MVV fixture result and U3 visible')
         break
     print('Result viewport',attempt,':',' | '.join(texts)[:1200])
