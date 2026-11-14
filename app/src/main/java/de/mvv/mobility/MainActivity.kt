@@ -58,6 +58,7 @@ class MainActivity : ComponentActivity() {
                     var routeStatus by remember { mutableStateOf("") }
                     var journeys by remember { mutableStateOf<List<JourneyOption>>(emptyList()) }
                     var journeyLoading by remember { mutableStateOf(false) }
+                    var mvvCandidates by remember { mutableStateOf<List<MvvJourneyRepository.StopCandidate>>(emptyList()) }
                     var location by remember { mutableStateOf<Location?>(if (fixture) Location("test").apply {
                         latitude = 48.137154
                         longitude = 11.576124
@@ -177,7 +178,8 @@ class MainActivity : ComponentActivity() {
                                 val start = location ?: return@Button
                                 journeyLoading = true
                                 journeys = emptyList()
-                                routeStatus = "MVV-Verbindungen werden abgefragt …"
+                                mvvCandidates = emptyList()
+                                routeStatus = "MVV-Ziel wird geprüft …"
                                 if (fixture) {
                                     journeys = MvvJourneyRepository.parseTrips("""{"trips":[{"legs":[{"origin":{"dateTime":{"hour":"09","minute":"10"}},"distance":300},{"transportation":{"number":"U3"},"destination":{"dateTime":{"hour":"09","minute":"30"}}}]}]}""", walkingSpeed)
                                     journeyLoading = false
@@ -187,15 +189,44 @@ class MainActivity : ComponentActivity() {
                                         journeyLoading = false
                                         result.fold(
                                             onSuccess = {
-                                                journeys = it
-                                                routeStatus = if (it.isEmpty()) "Keine Verbindungen gefunden oder Antwortformat nicht unterstützt." else "${it.size} Verbindungen geladen (experimentell)"
+                                                journeys = it.options
+                                                routeStatus = "${it.options.size} Verbindungen nach ${it.destination.name} geladen"
                                             },
-                                            onFailure = { routeStatus = "MVV-Abfrage fehlgeschlagen: ${it.localizedMessage ?: "Unbekannter Fehler"}" }
+                                            onFailure = {
+                                                if (it is MvvJourneyRepository.AmbiguousDestination) {
+                                                    mvvCandidates = it.candidates
+                                                    routeStatus = "Bitte die richtige MVV-Zielhaltestelle auswählen:"
+                                                } else routeStatus = "MVV-Abfrage fehlgeschlagen: ${it.localizedMessage ?: "Unbekannter Fehler"}"
+                                            }
                                         )
                                     }
                                 }
                             }
                         ) { Text(if (journeyLoading) "Suche läuft …" else "MVV-Verbindungen direkt anzeigen (Test)") }
+                        mvvCandidates.forEach { candidate ->
+                            OutlinedButton(
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = !journeyLoading,
+                                onClick = {
+                                    val start = location ?: return@OutlinedButton
+                                    journeyLoading = true
+                                    mvvCandidates = emptyList()
+                                    routeStatus = "Prüfe MVV-Haltestelle ${candidate.name} …"
+                                    MvvJourneyRepository.search(start, destination, walkingSpeed, { result ->
+                                        runOnUiThread {
+                                            journeyLoading = false
+                                            result.fold(
+                                                onSuccess = {
+                                                    journeys = it.options
+                                                    routeStatus = "${it.options.size} Verbindungen nach ${it.destination.name} geladen"
+                                                },
+                                                onFailure = { routeStatus = "MVV-Abfrage fehlgeschlagen: ${it.localizedMessage}" }
+                                            )
+                                        }
+                                    }, selectedId = candidate.id)
+                                }
+                            ) { Text(candidate.name) }
+                        }
                         journeys.sortedWith(compareBy<JourneyOption> { it.changes }.thenBy { it.walkingMinutes }).forEach { trip ->
                             Card(Modifier.fillMaxWidth()) {
                                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
