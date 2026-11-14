@@ -2,7 +2,6 @@ package de.mvv.mobility
 
 import android.content.Intent
 import androidx.activity.ComponentActivity
-import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
