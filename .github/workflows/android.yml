@@ -6,7 +6,15 @@ on:
 permissions:
   contents: read
 jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check shell and embedded Python before any build
+        run: bash scripts/preflight.sh
+
   build-and-test:
+    needs: preflight
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -32,6 +40,7 @@ jobs:
           retention-days: 30
 
   emulator-smoke-test:
+    needs: preflight
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -58,9 +67,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           script: |
-            bash scripts/emulator-smoke-test.sh
             gradle --no-daemon :app:connectedDebugAndroidTest
-            bash scripts/emulator-fixture-test.sh
       - name: Upload emulator logs and screenshot
         if: always()
         uses: actions/upload-artifact@v4
