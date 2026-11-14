@@ -23,6 +23,9 @@ import de.mvv.mobility.data.DeviceCalendarRepository
 import de.mvv.mobility.data.DestinationLookup
 import de.mvv.mobility.data.MvvJourneyRepository
 import de.mvv.mobility.data.JourneyOption
+import de.mvv.mobility.data.RouteFilterMode
+import de.mvv.mobility.data.RoutePreference
+import de.mvv.mobility.data.filterJourneys
 import de.mvv.mobility.data.UpcomingAppointment
 import de.mvv.mobility.widget.JourneyWidget
 import androidx.glance.appwidget.updateAll
@@ -64,6 +67,8 @@ class MainActivity : ComponentActivity() {
                     var routeStatus by remember { mutableStateOf("") }
                     var journeys by remember { mutableStateOf<List<JourneyOption>>(emptyList()) }
                     var journeyLoading by remember { mutableStateOf(false) }
+                    var routeFilterMode by remember { mutableStateOf(RouteFilterMode.ANY) }
+                    var routeFilterQuery by remember { mutableStateOf("") }
                     var mvvCandidates by remember { mutableStateOf<List<MvvJourneyRepository.StopCandidate>>(emptyList()) }
                     var location by remember { mutableStateOf<Location?>(if (fixture) Location("test").apply {
                         latitude = 48.137154
@@ -191,10 +196,29 @@ class MainActivity : ComponentActivity() {
                             valueRange = 2.0f..5.0f,
                             steps = 5
                         )
+                        HorizontalDivider()
+                        Text("Wegewahl vor der Suche", style = MaterialTheme.typography.titleMedium)
+                        listOf(
+                            RouteFilterMode.ANY to "Alle Verbindungen",
+                            RouteFilterMode.CONTAINS to "Linie oder Verkehrsmittel muss vorkommen",
+                            RouteFilterMode.ONLY_LINE_WITH_WALK to "Nur diese Linie und Fußwege"
+                        ).forEach { (mode, label) ->
+                            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                RadioButton(selected = routeFilterMode == mode, onClick = { routeFilterMode = mode; journeys = emptyList() },
+                                    modifier = Modifier.testTag("route_filter_mode_${mode.name}"))
+                                Text(label)
+                            }
+                        }
+                        if (routeFilterMode != RouteFilterMode.ANY) {
+                            OutlinedTextField(value = routeFilterQuery, onValueChange = { routeFilterQuery = it; journeys = emptyList() },
+                                label = { Text("Linie oder Verkehrsmittel: 166, U3, Bus, U-Bahn") },
+                                singleLine = true, modifier = Modifier.fillMaxWidth().testTag("route_filter_query"))
+                            Text("Filtert die abgefragten MVV-Verbindungen; kein Treffer bedeutet nicht, dass die Linie nie fährt.")
+                        }
                         val destination = confirmedDestination.trim().ifBlank { appointment?.location?.trim().orEmpty() }
                         Button(
                             modifier = Modifier.testTag("mvv_search_button"),
-                            enabled = location != null && destination.isNotBlank() && !journeyLoading,
+                            enabled = location != null && destination.isNotBlank() && !journeyLoading && (routeFilterMode == RouteFilterMode.ANY || routeFilterQuery.isNotBlank()),
                             onClick = {
                                 val start = location ?: return@Button
                                 journeyLoading = true
@@ -202,7 +226,7 @@ class MainActivity : ComponentActivity() {
                                 mvvCandidates = emptyList()
                                 routeStatus = "MVV-Ziel wird geprüft …"
                                 if (fixture) {
-                                    journeys = MvvJourneyRepository.parseTrips("""{"trips":[{"legs":[{"origin":{"dateTime":{"hour":"09","minute":"10"}},"distance":300},{"transportation":{"number":"U3"},"destination":{"dateTime":{"hour":"09","minute":"30"}}}]}]}""", walkingSpeed)
+                                    journeys = filterJourneys(MvvJourneyRepository.parseTrips("""{"trips":[{"legs":[{"origin":{"dateTime":{"hour":"09","minute":"10"}},"distance":300},{"transportation":{"number":"U3"},"destination":{"dateTime":{"hour":"09","minute":"30"}}}]}]}""", walkingSpeed), RoutePreference(routeFilterMode, routeFilterQuery))
                                     journeyLoading = false
                                     routeStatus = "Testverbindung geladen"
                                 } else MvvJourneyRepository.searchAddress(this@MainActivity, start, destination, walkingSpeed, callback = { result ->
@@ -221,7 +245,7 @@ class MainActivity : ComponentActivity() {
                                             }
                                         )
                                     }
-                                })
+                                }, preference = RoutePreference(routeFilterMode, routeFilterQuery))
                             }
                         ) { Text(if (journeyLoading) "Suche läuft …" else "MVV-Verbindungen direkt anzeigen (Test)") }
                         mvvCandidates.forEach { candidate ->
