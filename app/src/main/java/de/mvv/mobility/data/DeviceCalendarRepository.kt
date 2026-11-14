@@ -16,10 +16,12 @@ object DeviceCalendarRepository {
     fun hasPermission(context: Context): Boolean =
         context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED
 
-    fun nextAppointment(context: Context): UpcomingAppointment? {
-        if (!hasPermission(context)) return null
+    fun nextAppointment(context: Context): UpcomingAppointment? = appointments(context, 1).firstOrNull()
+
+    fun appointments(context: Context, limit: Int = 10): List<UpcomingAppointment> {
+        if (!hasPermission(context) || limit <= 0) return emptyList()
         val now = System.currentTimeMillis()
-        val end = now + 14L * 24 * 60 * 60 * 1000
+        val end = now + 365L * 24 * 60 * 60 * 1000
         val builder = CalendarContract.Instances.CONTENT_URI.buildUpon()
         android.content.ContentUris.appendId(builder, now)
         android.content.ContentUris.appendId(builder, end)
@@ -39,24 +41,23 @@ object DeviceCalendarRepository {
                 val locationCol = cursor.getColumnIndexOrThrow(CalendarContract.Instances.EVENT_LOCATION)
                 val beginCol = cursor.getColumnIndexOrThrow(CalendarContract.Instances.BEGIN)
                 val allDayCol = cursor.getColumnIndexOrThrow(CalendarContract.Instances.ALL_DAY)
-                var result: UpcomingAppointment? = null
-                while (cursor.moveToNext()) {
+                val results = mutableListOf<UpcomingAppointment>()
+                while (cursor.moveToNext() && results.size < limit) {
                     if (cursor.getInt(allDayCol) != 0) continue
                     val title = cursor.getString(titleCol)?.trim().orEmpty()
                     if (title.isBlank()) continue
-                    result = UpcomingAppointment(
+                    results.add(UpcomingAppointment(
                         title,
                         cursor.getString(locationCol)?.trim()?.takeIf { it.isNotBlank() },
                         cursor.getLong(beginCol)
-                    )
-                    break
+                    ))
                 }
-                result
+                results
             }
         } catch (_: SecurityException) {
-            null
+            emptyList()
         } catch (_: IllegalArgumentException) {
-            null
+            emptyList()
         }
     }
 }
