@@ -29,7 +29,13 @@ object MvvJourneyRepository {
         // Do not confuse parsing failure with a valid search returning zero trips.
         val trips = root.optJSONArray("trips") ?: root.optJSONObject("trip")?.optJSONArray("trips")
         if (trips == null) {
-            throw IllegalStateException("MVV-Antwort nicht lesbar: kein unterstütztes trips-Feld")
+            val keys = root.keys().asSequence().take(12).joinToString(", ")
+            val error = root.optString("error").take(160)
+                .ifBlank { root.optString("message").take(160) }
+            val detail = if (error.isBlank()) "" else "; Hinweis: $error"
+            throw IllegalStateException(
+                "MVV-Antwort nicht lesbar (Felder: $keys)$detail"
+            )
         }
         val results = mutableListOf<JourneyOption>()
         if (trips != null) for (i in 0 until minOf(trips.length(), 6)) {
