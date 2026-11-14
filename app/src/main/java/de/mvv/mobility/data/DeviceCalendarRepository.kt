@@ -53,7 +53,7 @@ object DeviceCalendarRepository {
                     ))
                 }
                 results
-            }
+            } ?: emptyList()
         } catch (_: SecurityException) {
             emptyList()
         } catch (_: IllegalArgumentException) {
