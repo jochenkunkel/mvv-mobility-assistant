@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import de.mvv.mobility.data.CurrentLocationRepository
 import de.mvv.mobility.data.DeviceCalendarRepository
@@ -74,7 +75,7 @@ class MainActivity : ComponentActivity() {
                         } else locationStatus = "Standortberechtigung nicht erteilt"
                     }
                     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        Text("Mein Weg", style = MaterialTheme.typography.headlineMedium)
+                        Text("Mein Weg", modifier = Modifier.testTag("app_title"), style = MaterialTheme.typography.headlineMedium)
                         Text("Phase 5 · MVV-Verbindungen (Test)", color = MaterialTheme.colorScheme.primary)
                         if (fixture) Text("TESTMODUS: simulierte Kalender-, GPS- und MVV-Daten", color = MaterialTheme.colorScheme.error)
                         if (!allowed && !fixture) {
@@ -170,6 +171,7 @@ class MainActivity : ComponentActivity() {
                         )
                         val destination = confirmedDestination.trim().ifBlank { appointment?.location?.trim().orEmpty() }
                         Button(
+                            modifier = Modifier.testTag("mvv_search_button"),
                             enabled = location != null && destination.isNotBlank() && !journeyLoading,
                             onClick = {
                                 val start = location ?: return@Button
@@ -198,7 +200,7 @@ class MainActivity : ComponentActivity() {
                             Card(Modifier.fillMaxWidth()) {
                                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                     Text("${trip.departure} – ${trip.arrival}", style = MaterialTheme.typography.titleMedium)
-                                    Text(trip.summary)
+                                    Text(trip.summary, modifier = Modifier.testTag("journey_summary"))
                                     Text("${trip.changes} Umstiege · Fußweg geschätzt: ${trip.walkingMinutes} Min. bei %.1f km/h".format(java.util.Locale.GERMANY, walkingSpeed))
                                 }
                             }
@@ -223,7 +225,7 @@ class MainActivity : ComponentActivity() {
                         ) { Text("ÖPNV-Route anzeigen") }
                         if (location == null) Text("Bitte zuerst den aktuellen Standort ermitteln.")
                         if (destination.isBlank()) Text("Bitte einen Zielort im Kalender ergänzen oder oben eingeben.")
-                        if (routeStatus.isNotBlank()) Text(routeStatus)
+                        if (routeStatus.isNotBlank()) Text(routeStatus, modifier = Modifier.testTag("route_status"))
                         Text("Die Route öffnet sich zunächst in Google Maps mit ÖPNV-Auswahl. Die Einstellung für 3,0 km/h wird in Mein Weg gespeichert, aber vom externen Routenplaner noch nicht berücksichtigt. Eine eigene MVV-Routenbewertung folgt.")
                     }
                 }
