@@ -13,39 +13,67 @@ adb pull /sdcard/fixture.xml test-results/fixture-start.xml >/dev/null
 grep -q 'TESTMODUS' test-results/fixture-start.xml
 grep -q 'Testtermin Fußball' test-results/fixture-start.xml
 grep -q 'Olympiapark München' test-results/fixture-start.xml
-adb shell input swipe 500 1500 500 300 400
-sleep 2
-adb shell uiautomator dump /sdcard/fixture.xml >/dev/null
-adb pull /sdcard/fixture.xml test-results/fixture-scroll.xml >/dev/null
+# Find the actual clickable MVV button; do not tap off-screen coordinates.
 python3 - <<'PY'
-import re, subprocess, xml.etree.ElementTree as ET
-root=ET.parse('test-results/fixture-scroll.xml').getroot()
-for node in root.iter('node'):
-    if 'MVV-Verbindungen direkt anzeigen' in node.attrib.get('text',''):
-        b=node.attrib['bounds']
-        x1,y1,x2,y2=map(int,re.findall(r'\d+',b))
-        subprocess.run(['adb','shell','input','tap',str((x1+x2)//2),str((y1+y2)//2)],check=True)
-        break
+import re, subprocess, time, xml.etree.ElementTree as ET
+
+def adb(*args):
+    return subprocess.check_output(['adb', *args], text=True, stderr=subprocess.STDOUT)
+
+def dump(name):
+    adb('shell','uiautomator','dump','/sdcard/fixture.xml')
+    subprocess.run(['adb','pull','/sdcard/fixture.xml','test-results/'+name+'.xml'],check=True,stdout=subprocess.DEVNULL)
+    return ET.parse('test-results/'+name+'.xml').getroot()
+
+def foreground():
+    return adb('shell','dumpsys','activity','activities')
+
+def ensure_app(stage):
+    state=foreground()
+    if 'de.mvv.mobility/.MainActivity' not in state and 'de.mvv.mobility/de.mvv.mobility.MainActivity' not in state:
+        print('ERROR: app left foreground at',stage)
+        print('\\n'.join(line for line in state.splitlines() if 'Resumed' in line or 'mTop' in line)[:2000])
+        subprocess.run(['adb','shell','screencap','-p','/sdcard/fixture-failure.png'])
+        subprocess.run(['adb','pull','/sdcard/fixture-failure.png','test-results/fixture-failure.png'])
+        raise SystemExit(1)
+
+ensure_app('after launch')
+for attempt in range(7):
+    root=dump('fixture-scroll')
+    matches=[n for n in root.iter('node') if 'MVV-Verbindungen direkt anzeigen' in n.attrib.get('text','')]
+    if matches:
+        n=matches[0]
+        x1,y1,x2,y2=map(int,re.findall(r'\\d+',n.attrib['bounds']))
+        screen=adb('shell','wm','size')
+        height=int(re.search(r'(\\d+)x(\\d+)',screen).group(2))
+        # Ensure the center of the button is well inside the display.
+        if 80 < (y1+y2)//2 < height-120 and n.attrib.get('enabled')=='true':
+            subprocess.run(['adb','shell','input','tap',str((x1+x2)//2),str((y1+y2)//2)],check=True)
+            time.sleep(2)
+            ensure_app('after MVV tap')
+            break
+    subprocess.run(['adb','shell','input','swipe','500','1350','500','750','350'],check=True)
+    time.sleep(1)
+    ensure_app('after scroll')
 else:
-    raise SystemExit('MVV button not visible in fixture mode')
+    raise SystemExit('ERROR: MVV button not found enabled and onscreen')
+
+for attempt in range(5):
+    root=dump('fixture-result')
+    texts=[n.attrib.get('text','') for n in root.iter('node') if n.attrib.get('text')]
+    if any('U3' in t for t in texts) and any('Testverbindung geladen' in t for t in texts):
+        print('PASS: MVV fixture result and U3 visible')
+        break
+    print('Result viewport',attempt,':',' | '.join(texts)[:1200])
+    subprocess.run(['adb','shell','input','swipe','500','1350','500','800','350'],check=True)
+    time.sleep(1)
+    ensure_app('during result scroll')
+else:
+    print('ERROR: MVV fixture result not visible')
+    subprocess.run(['adb','shell','screencap','-p','/sdcard/fixture-failure.png'])
+    subprocess.run(['adb','pull','/sdcard/fixture-failure.png','test-results/fixture-failure.png'])
+    raise SystemExit(1)
 PY
-sleep 3
-# The result card may appear below the viewport after tapping the button.
-adb shell input swipe 500 1500 500 350 400
-sleep 2
-adb shell uiautomator dump /sdcard/fixture.xml >/dev/null
-adb pull /sdcard/fixture.xml test-results/fixture-result.xml >/dev/null
-if ! grep -q 'Testverbindung geladen' test-results/fixture-result.xml || ! grep -q 'U3' test-results/fixture-result.xml; then
-    echo "ERROR: expected fixture result is not visible; UI texts:"
-    python3 - <<'PY'
-import xml.etree.ElementTree as ET
-root=ET.parse('test-results/fixture-result.xml').getroot()
-print(' | '.join(n.attrib.get('text','') for n in root.iter('node') if n.attrib.get('text')))
-PY
-    adb shell screencap -p /sdcard/fixture-failure.png
-    adb pull /sdcard/fixture-failure.png test-results/fixture-failure.png >/dev/null
-    exit 1
-fi
 adb shell screencap -p /sdcard/fixture.png
 adb pull /sdcard/fixture.png test-results/fixture-screenshot.png >/dev/null
 echo "PASS: debug fixture calendar, GPS, route search, MVV rendering"
