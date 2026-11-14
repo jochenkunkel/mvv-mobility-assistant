@@ -117,7 +117,7 @@ object MvvJourneyRepository {
 
     private fun normalize(value: String) = java.text.Normalizer.normalize(
         value.lowercase(Locale.GERMANY), java.text.Normalizer.Form.NFD
-    ).replace(Regex("""\\p{M}+"""), "").replace(Regex("[^a-z0-9]+"), " ").trim()
+    ).replace(Regex("""\p{M}+"""), "").replace(Regex("[^a-z0-9]+"), " ").trim()
 
     fun selectCandidate(query: String, options: List<StopCandidate>): StopCandidate? {
         if (options.size == 1) return options.single()
