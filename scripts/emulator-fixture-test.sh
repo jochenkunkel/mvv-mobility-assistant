@@ -43,9 +43,9 @@ for attempt in range(7):
     matches=[n for n in root.iter('node') if 'MVV-Verbindungen direkt anzeigen' in n.attrib.get('text','')]
     if matches:
         n=matches[0]
-        x1,y1,x2,y2=map(int,re.findall(r'\\d+',n.attrib['bounds']))
+        x1,y1,x2,y2=map(int,re.findall(r'\d+',n.attrib['bounds']))
         screen=adb('shell','wm','size')
-        height=int(re.search(r'(\\d+)x(\\d+)',screen).group(2))
+        height=int(re.search(r'(\d+)x(\d+)',screen).group(2))
         # Ensure the center of the button is well inside the display.
         if 80 < (y1+y2)//2 < height-120 and n.attrib.get('enabled')=='true':
             subprocess.run(['adb','shell','input','tap',str((x1+x2)//2),str((y1+y2)//2)],check=True)
