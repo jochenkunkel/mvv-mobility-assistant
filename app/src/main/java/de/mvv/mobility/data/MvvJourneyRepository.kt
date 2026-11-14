@@ -25,7 +25,12 @@ object MvvJourneyRepository {
     fun parseTrips(json: String, walkingKmh: Float): List<JourneyOption> {
         require(walkingKmh > 0f) { "Walking speed must be positive" }
         val root = JSONObject(json)
+        // A successful HTTP response can still have an unsupported EFA schema.
+        // Do not confuse parsing failure with a valid search returning zero trips.
         val trips = root.optJSONArray("trips") ?: root.optJSONObject("trip")?.optJSONArray("trips")
+        if (trips == null) {
+            throw IllegalStateException("MVV-Antwort nicht lesbar: kein unterstütztes trips-Feld")
+        }
         val results = mutableListOf<JourneyOption>()
         if (trips != null) for (i in 0 until minOf(trips.length(), 6)) {
             val trip = trips.optJSONObject(i) ?: continue
