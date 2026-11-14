@@ -117,7 +117,7 @@ object MvvJourneyRepository {
 
     private fun normalize(value: String) = java.text.Normalizer.normalize(
         value.lowercase(Locale.GERMANY), java.text.Normalizer.Form.NFD
-    ).replace(Regex("\\p{M}+"), "").replace(Regex("[^a-z0-9]+"), " ").trim()
+    ).replace(Regex("""\\p{M}+"""), "").replace(Regex("[^a-z0-9]+"), " ").trim()
 
     fun selectCandidate(query: String, options: List<StopCandidate>): StopCandidate? {
         if (options.size == 1) return options.single()
@@ -125,7 +125,7 @@ object MvvJourneyRepository {
         val exact = options.filter {
             val target = normalize(query)
             val name = normalize(it.name)
-            name == target || name.substringAfter(", ", name) == target
+            name == target || name.endsWith(" $target")
         }
         return exact.singleOrNull()
     }
@@ -148,7 +148,6 @@ object MvvJourneyRepository {
                     ?: error("Ausgewählte Haltestelle ist nicht mehr gültig. Bitte erneut auswählen.")
                 // Second request with validated stop ID. Re-check returned destination identity.
                 val response = request(origin, selected.id, "stop")
-                val root = JSONObject(response)
                 val returned = candidates(response)
                 if (returned.isNotEmpty() && returned.none { it.id == selected.id }) {
                     error("MVV hat eine andere Zielhaltestelle zurückgegeben.")
