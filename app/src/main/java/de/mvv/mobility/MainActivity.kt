@@ -205,7 +205,7 @@ class MainActivity : ComponentActivity() {
                                     journeys = MvvJourneyRepository.parseTrips("""{"trips":[{"legs":[{"origin":{"dateTime":{"hour":"09","minute":"10"}},"distance":300},{"transportation":{"number":"U3"},"destination":{"dateTime":{"hour":"09","minute":"30"}}}]}]}""", walkingSpeed)
                                     journeyLoading = false
                                     routeStatus = "Testverbindung geladen"
-                                } else MvvJourneyRepository.search(start, destination, walkingSpeed, callback = { result ->
+                                } else MvvJourneyRepository.searchAddress(this@MainActivity, start, destination, walkingSpeed, callback = { result ->
                                     runOnUiThread {
                                         journeyLoading = false
                                         result.fold(
