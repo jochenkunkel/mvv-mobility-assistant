@@ -205,7 +205,7 @@ class MainActivity : ComponentActivity() {
                                     journeys = MvvJourneyRepository.parseTrips("""{"trips":[{"legs":[{"origin":{"dateTime":{"hour":"09","minute":"10"}},"distance":300},{"transportation":{"number":"U3"},"destination":{"dateTime":{"hour":"09","minute":"30"}}}]}]}""", walkingSpeed)
                                     journeyLoading = false
                                     routeStatus = "Testverbindung geladen"
-                                } else MvvJourneyRepository.search(start, destination, walkingSpeed) { result ->
+                                } else MvvJourneyRepository.search(start, destination, walkingSpeed, callback = { result ->
                                     runOnUiThread {
                                         journeyLoading = false
                                         result.fold(
@@ -221,7 +221,7 @@ class MainActivity : ComponentActivity() {
                                             }
                                         )
                                     }
-                                }
+                                })
                             }
                         ) { Text(if (journeyLoading) "Suche läuft …" else "MVV-Verbindungen direkt anzeigen (Test)") }
                         mvvCandidates.forEach { candidate ->
