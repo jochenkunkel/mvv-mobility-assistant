@@ -13,11 +13,27 @@ adb shell pm grant "$PACKAGE" android.permission.ACCESS_FINE_LOCATION
 adb shell pm grant "$PACKAGE" android.permission.ACCESS_COARSE_LOCATION
 adb shell pm grant "$PACKAGE" android.permission.READ_CALENDAR
 adb emu geo fix 11.576124 48.137154
-adb shell am start -W -n "$PACKAGE/.MainActivity"
-sleep 5
-adb shell uiautomator dump /sdcard/window.xml >/dev/null
-adb pull /sdcard/window.xml test-results/start.xml >/dev/null
-grep -q 'Mein Weg' test-results/start.xml || { echo "ERROR: app title missing"; exit 1; }
+# Retry initial launch: the emulator launcher may temporarily take focus after boot.
+started=false
+for attempt in 1 2 3 4 5; do
+  adb shell am start -W -n "$PACKAGE/.MainActivity"
+  sleep 3
+  adb shell uiautomator dump /sdcard/window.xml >/dev/null
+  adb pull /sdcard/window.xml test-results/start.xml >/dev/null
+  if grep -q 'Mein Weg' test-results/start.xml; then
+    started=true
+    break
+  fi
+  echo "WARN: app title not visible on attempt $attempt; retrying"
+done
+if [ "$started" != true ]; then
+  echo "ERROR: app title missing after 5 launch attempts"
+  adb shell dumpsys activity activities > test-results/activity-failure.txt
+  adb logcat -d -t 500 > test-results/logcat-failure.txt
+  adb shell screencap -p /sdcard/smoke-failure.png
+  adb pull /sdcard/smoke-failure.png test-results/smoke-failure.png >/dev/null
+  exit 1
+fi
 adb shell dumpsys package "$PACKAGE" > test-results/package.txt
 grep -q 'android.permission.INTERNET' test-results/package.txt || { echo "ERROR: INTERNET permission missing"; exit 1; }
 # Swipe up and verify that controls below the fold are reachable.
