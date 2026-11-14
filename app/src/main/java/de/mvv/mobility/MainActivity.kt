@@ -47,9 +47,14 @@ class MainActivity : ComponentActivity() {
                         refresh++
                         scope.launch { JourneyWidget().updateAll(this@MainActivity) }
                     }
-                    val appointment = remember(allowed, refresh) {
-                        if (fixture) UpcomingAppointment("Testtermin Fußball", "Olympiapark München", System.currentTimeMillis() + 3600000L) else if (allowed) DeviceCalendarRepository.nextAppointment(this) else null
+                    var visibleAppointments by remember { mutableIntStateOf(10) }
+                    var selectedAppointmentStart by remember { mutableStateOf<Long?>(null) }
+                    val appointments = remember(allowed, refresh, visibleAppointments) {
+                        if (fixture) (1..visibleAppointments).map { index ->
+                            UpcomingAppointment("Testtermin $index", "Olympiapark München", System.currentTimeMillis() + index * 3600000L)
+                        } else if (allowed) DeviceCalendarRepository.appointments(this, visibleAppointments) else emptyList()
                     }
+                    val appointment = appointments.firstOrNull { it.startMillis == selectedAppointmentStart } ?: appointments.firstOrNull()
                     var confirmedDestination by remember(appointment?.startMillis) { mutableStateOf("") }
                     var addressSuggestions by remember(appointment?.startMillis) { mutableStateOf<List<String>>(emptyList()) }
                     var lookupStatus by remember(appointment?.startMillis) { mutableStateOf("") }
@@ -90,8 +95,23 @@ class MainActivity : ComponentActivity() {
                                 scope.launch { JourneyWidget().updateAll(this@MainActivity) }
                             }) { Text("Termine aktualisieren") }
                             if (appointment == null) {
-                                Text("Keine bevorstehenden Termine mit Uhrzeit in den nächsten 14 Tagen gefunden.")
+                                Text("Keine bevorstehenden Termine mit Uhrzeit gefunden.")
                             } else {
+                                Text("Kalendertermin auswählen", style = MaterialTheme.typography.titleMedium)
+                                appointments.forEach { item ->
+                                    OutlinedButton(modifier = Modifier.fillMaxWidth().testTag("calendar_appointment"), onClick = {
+                                        selectedAppointmentStart = item.startMillis
+                                        journeys = emptyList()
+                                        mvvCandidates = emptyList()
+                                        routeStatus = ""
+                                    }) { Text(item.timeLabel() + " · " + item.title + if (item.startMillis == appointment.startMillis) " ✓" else "") }
+                                }
+                                if (appointments.size == visibleAppointments) {
+                                    OutlinedButton(modifier = Modifier.fillMaxWidth().testTag("calendar_more"), onClick = { visibleAppointments += 10 }) {
+                                        Text("Weitere 10 Termine anzeigen")
+                                    }
+                                }
+                                Text("Ausgewählter Termin", style = MaterialTheme.typography.titleMedium)
                                 Text(appointment.title, style = MaterialTheme.typography.titleLarge)
                                 Text("Beginn: ${appointment.timeLabel()}")
                                 if (appointment.location == null) {
