@@ -2,6 +2,9 @@ package de.mvv.mobility
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.mvv.mobility.data.MvvJourneyRepository
+import de.mvv.mobility.data.RouteFilterMode
+import de.mvv.mobility.data.RoutePreference
+import de.mvv.mobility.data.filterJourneys
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -69,6 +72,24 @@ class MvvJourneyIntegrationTest {
         assertEquals("U3", option.summary)
         assertEquals(10, option.walkingMinutes)
         assertEquals(0, option.changes)
+    }
+
+    @Test fun routePreferenceIncludesOrExcludesTransitLines() {
+        val json = """{"trips":[
+          {"legs":[{"mode":{"product":"Fussweg"},"timeMinute":"3"},
+                   {"mode":{"product":"Bus","number":"166"},"points":[{"dateTime":{"time":"10:00"}},{"dateTime":{"time":"10:10"}}]},
+                   {"mode":{"product":"Fussweg"},"timeMinute":"2"}]},
+          {"legs":[{"mode":{"product":"Bus","number":"166"},"points":[{"dateTime":{"time":"10:00"}},{"dateTime":{"time":"10:10"}}]},
+                   {"mode":{"product":"U-Bahn","number":"U3"},"points":[{"dateTime":{"time":"10:12"}},{"dateTime":{"time":"10:20"}}]}]},
+          {"legs":[{"mode":{"product":"U-Bahn","number":"U6"},"points":[{"dateTime":{"time":"10:00"}},{"dateTime":{"time":"10:10"}}]}]}
+        ]}"""
+        val trips = MvvJourneyRepository.parseTrips(json, 3f)
+        assertEquals(3, trips.size)
+        assertEquals(2, filterJourneys(trips, RoutePreference(RouteFilterMode.CONTAINS, "166")).size)
+        assertEquals(1, filterJourneys(trips, RoutePreference(RouteFilterMode.ONLY_LINE_WITH_WALK, "166")).size)
+        assertEquals(2, filterJourneys(trips, RoutePreference(RouteFilterMode.CONTAINS, "U-Bahn")).size)
+        assertTrue(filterJourneys(trips, RoutePreference(RouteFilterMode.ONLY_LINE_WITH_WALK, "U3")).isEmpty())
+        assertEquals(3, filterJourneys(trips, RoutePreference()).size)
     }
 
 }
