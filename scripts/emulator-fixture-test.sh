@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 mkdir -p test-results
+# Gradle connectedDebugAndroidTest uninstalls the tested APK; reinstall before UI fixture run.
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb shell pm grant de.mvv.mobility android.permission.READ_CALENDAR
+adb shell pm grant de.mvv.mobility android.permission.ACCESS_FINE_LOCATION
 adb shell am force-stop de.mvv.mobility
 adb shell am start -W -n de.mvv.mobility/.MainActivity --ez mein_weg_test_fixture true
 sleep 4
