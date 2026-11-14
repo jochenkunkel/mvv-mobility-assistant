@@ -48,6 +48,11 @@ for key in ("error", "message", "version", "trips", "trip", "journeys", "itdTrip
                 print(key, "first item keys:", sorted(value[0].keys())[:40])
         else:
             print(key, "value:", str(value)[:300])
-if "trips" not in data and "trip" not in data:
-    raise SystemExit("Live EFA schema differs from current Android parser")
-print("Live EFA response contains a supported trip container")
+trips = data.get("trips")
+if not isinstance(trips, list):
+    print("MVV returned trips type:", type(trips).__name__)
+    for key in ("itdMessageList", "origin", "destination"):
+        if key in data:
+            print(key, "diagnostic:", json.dumps(data[key], ensure_ascii=False)[:1200])
+    raise SystemExit("Live EFA response has no trips array; investigate request parameters or MVV messages")
+print("Live EFA response contains", len(trips), "trips")
