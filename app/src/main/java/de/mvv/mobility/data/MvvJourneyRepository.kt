@@ -48,20 +48,47 @@ object MvvJourneyRepository {
             var vehicles = 0
             for (j in 0 until legs.length()) {
                 val leg = legs.optJSONObject(j) ?: continue
+                // Real MVV EFA uses mode + points, unlike the legacy fixture schema.
+                val mode = leg.optJSONObject("mode")
                 val transport = leg.optJSONObject("transportation")
-                val name = transport?.text("number").orEmpty().ifBlank { transport?.text("name").orEmpty() }
-                val mode = transport?.optJSONObject("product")?.text("name").orEmpty()
-                if (name.isNotBlank()) { names.add(name); vehicles++ }
-                else if (mode.contains("Fuß", true) || mode.contains("walk", true) || transport == null) {
+                val product = mode?.optString("product").orEmpty()
+                    .ifBlank { transport?.optJSONObject("product")?.optString("name").orEmpty() }
+                val number = mode?.text("number").orEmpty()
+                    .ifBlank { transport?.text("number").orEmpty() }
+                    .ifBlank { transport?.text("name").orEmpty() }
+                val walking = product.contains("Fuss", true) || product.contains("Fuß", true) ||
+                    product.contains("walk", true) || (mode == null && transport == null)
+                if (walking) {
                     val distance = leg.optDouble("distance", 0.0)
-                    if (distance > 0) walkingMinutes += kotlin.math.ceil(distance / (walkingKmh * 1000.0 / 60.0)).toInt()
+                    if (distance > 0) {
+                        walkingMinutes += kotlin.math.ceil(distance / (walkingKmh * 1000.0 / 60.0)).toInt()
+                    } else {
+                        walkingMinutes += leg.optInt("timeMinute", 0)
+                    }
+                } else if (number.isNotBlank()) {
+                    names.add(number)
+                    vehicles++
                 }
             }
             val first = legs.optJSONObject(0)
             val last = legs.optJSONObject(legs.length() - 1)
+            fun endpoint(leg: JSONObject?, departure: Boolean): JSONObject? {
+                if (leg == null) return null
+                val points = leg.optJSONArray("points")
+                return if (points != null && points.length() > 0)
+                    points.optJSONObject(if (departure) 0 else points.length() - 1)
+                else leg.optJSONObject(if (departure) "origin" else "destination")
+            }
+            fun efaTime(point: JSONObject?): String {
+                val dt = point?.optJSONObject("dateTime")
+                val live = dt?.optString("rtTime").orEmpty()
+                val planned = dt?.optString("time").orEmpty()
+                return live.ifBlank { planned }.ifBlank { time(point) }
+            }
+            if (names.isEmpty() && vehicles == 0 && walkingMinutes == 0) continue
             results.add(JourneyOption(
-                departure = time(first?.optJSONObject("origin")),
-                arrival = time(last?.optJSONObject("destination")),
+                departure = efaTime(endpoint(first, true)),
+                arrival = efaTime(endpoint(last, false)),
                 summary = names.joinToString(" → ").ifBlank { "Verbindung ohne Linienangabe" },
                 changes = (vehicles - 1).coerceAtLeast(0),
                 walkingMinutes = walkingMinutes
