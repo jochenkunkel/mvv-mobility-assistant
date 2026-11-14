@@ -29,7 +29,15 @@ for trip in trips[:4]:
     print("Trip:", len(legs), "legs; last destination:", json.dumps((legs[-1].get("destination") if legs else {}), ensure_ascii=False)[:300])
     print("Trip keys:", list(trip.keys()))
     for leg in legs[:3]:
-        print("Leg sample:", json.dumps(leg, ensure_ascii=False)[:2400])
+        print("Leg schema:", list(leg.keys()), "mode:", (leg.get("mode") or {}).get("number"))
     if not legs:
         raise SystemExit("Trip without legs")
+    if not any((leg.get("mode") or {}).get("number") for leg in legs):
+        raise SystemExit("Trip has no readable transit line in mode.number")
+    if not (legs[0].get("points") and legs[-1].get("points")):
+        raise SystemExit("Trip missing EFA points for departure/arrival")
+    if not (legs[0]["points"][0].get("dateTime") or {}).get("time"):
+        raise SystemExit("Trip missing departure time")
+    if not (legs[-1]["points"][-1].get("dateTime") or {}).get("time"):
+        raise SystemExit("Trip missing arrival time")
 print("PASS: coordinate destination yields", len(trips), "journeys")
