@@ -49,9 +49,10 @@ class MainActivity : ComponentActivity() {
                     }
                     var visibleAppointments by remember { mutableIntStateOf(10) }
                     var selectedAppointmentStart by remember { mutableStateOf<Long?>(null) }
+                    val fixtureBaseTime = remember { System.currentTimeMillis() }
                     val appointments = remember(allowed, refresh, visibleAppointments) {
                         if (fixture) (1..visibleAppointments).map { index ->
-                            UpcomingAppointment("Testtermin $index", "Olympiapark München", System.currentTimeMillis() + index * 3600000L)
+                            UpcomingAppointment("Testtermin $index", "Olympiapark München", fixtureBaseTime + index * 3600000L)
                         } else if (allowed) DeviceCalendarRepository.appointments(this, visibleAppointments) else emptyList()
                     }
                     val appointment = appointments.firstOrNull { it.startMillis == selectedAppointmentStart } ?: appointments.firstOrNull()
