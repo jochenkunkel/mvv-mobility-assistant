@@ -30,10 +30,22 @@ else:
     raise SystemExit('MVV button not visible in fixture mode')
 PY
 sleep 3
+# The result card may appear below the viewport after tapping the button.
+adb shell input swipe 500 1500 500 350 400
+sleep 2
 adb shell uiautomator dump /sdcard/fixture.xml >/dev/null
 adb pull /sdcard/fixture.xml test-results/fixture-result.xml >/dev/null
-grep -q 'Testverbindung geladen' test-results/fixture-result.xml
-grep -q 'U3' test-results/fixture-result.xml
+if ! grep -q 'Testverbindung geladen' test-results/fixture-result.xml || ! grep -q 'U3' test-results/fixture-result.xml; then
+    echo "ERROR: expected fixture result is not visible; UI texts:"
+    python3 - <<'PY'
+import xml.etree.ElementTree as ET
+root=ET.parse('test-results/fixture-result.xml').getroot()
+print(' | '.join(n.attrib.get('text','') for n in root.iter('node') if n.attrib.get('text')))
+PY
+    adb shell screencap -p /sdcard/fixture-failure.png
+    adb pull /sdcard/fixture-failure.png test-results/fixture-failure.png >/dev/null
+    exit 1
+fi
 adb shell screencap -p /sdcard/fixture.png
 adb pull /sdcard/fixture.png test-results/fixture-screenshot.png >/dev/null
 echo "PASS: debug fixture calendar, GPS, route search, MVV rendering"
