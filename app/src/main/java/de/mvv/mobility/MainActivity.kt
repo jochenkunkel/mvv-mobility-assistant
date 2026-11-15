@@ -53,6 +53,8 @@ class MainActivity : ComponentActivity() {
                         scope.launch { JourneyWidget().updateAll(this@MainActivity) }
                     }
                     var visibleAppointments by remember { mutableIntStateOf(10) }
+                    var appointmentPickerExpanded by remember { mutableStateOf(false) }
+                    var advancedExpanded by remember { mutableStateOf(false) }
                     var selectedAppointmentStart by remember { mutableStateOf<Long?>(null) }
                     val fixtureBaseTime = remember { System.currentTimeMillis() }
                     val appointments = remember(allowed, refresh, visibleAppointments) {
@@ -100,7 +102,7 @@ class MainActivity : ComponentActivity() {
                     }
                     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         Text("Mein Weg", modifier = Modifier.testTag("app_title"), style = MaterialTheme.typography.headlineMedium)
-                        Text("Phase 5 · MVV-Verbindungen (Test)", color = MaterialTheme.colorScheme.primary)
+                        Text("Dein Weg zum nächsten Termin", color = MaterialTheme.colorScheme.primary)
                         if (fixture) Text("TESTMODUS: simulierte Kalender-, GPS- und MVV-Daten", color = MaterialTheme.colorScheme.error)
                         if (!allowed && !fixture) {
                             Text("Damit Mein Weg deine Termine anzeigen kann, erlaube den Kalenderzugriff. Die Daten bleiben auf deinem Gerät.")
@@ -108,30 +110,43 @@ class MainActivity : ComponentActivity() {
                                 Text("Kalenderzugriff erlauben")
                             }
                         } else {
-                            Button(onClick = {
-                                refresh++
-                                scope.launch { JourneyWidget().updateAll(this@MainActivity) }
-                            }) { Text("Termine aktualisieren") }
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text("Nächster Termin", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                                TextButton(onClick = {
+                                    refresh++
+                                    scope.launch { JourneyWidget().updateAll(this@MainActivity) }
+                                }) { Text("Aktualisieren") }
+                            }
                             if (appointment == null) {
                                 Text("Keine bevorstehenden Termine mit Uhrzeit gefunden.")
                             } else {
-                                Text("Kalendertermin auswählen", style = MaterialTheme.typography.titleMedium)
-                                appointments.forEach { item ->
-                                    OutlinedButton(modifier = Modifier.fillMaxWidth().testTag("calendar_appointment"), onClick = {
-                                        selectedAppointmentStart = item.startMillis
-                                        journeys = emptyList()
-                                        mvvCandidates = emptyList()
-                                        routeStatus = ""
-                                    }) { Text(item.timeLabel() + " · " + item.title + if (item.startMillis == appointment.startMillis) " ✓" else "") }
-                                }
-                                if (appointments.size == visibleAppointments) {
-                                    OutlinedButton(modifier = Modifier.fillMaxWidth().testTag("calendar_more"), onClick = { visibleAppointments += 10 }) {
-                                        Text("Weitere 10 Termine anzeigen")
+                                Card(Modifier.fillMaxWidth()) {
+                                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Text(appointment.title, style = MaterialTheme.typography.titleLarge)
+                                        Text(appointment.timeLabel())
+                                        Text(appointment.location ?: "Zieladresse bitte ergänzen")
+                                        TextButton(onClick = { appointmentPickerExpanded = !appointmentPickerExpanded },
+                                            modifier = Modifier.testTag("calendar_appointment")) {
+                                            Text(if (appointmentPickerExpanded) "Terminauswahl schließen" else "Anderen Termin wählen")
+                                        }
                                     }
                                 }
-                                Text("Ausgewählter Termin", style = MaterialTheme.typography.titleMedium)
-                                Text(appointment.title, style = MaterialTheme.typography.titleLarge)
-                                Text("Beginn: ${appointment.timeLabel()}")
+                                if (appointmentPickerExpanded) {
+                                    appointments.forEach { item ->
+                                        OutlinedButton(modifier = Modifier.fillMaxWidth().testTag("calendar_appointment"), onClick = {
+                                            selectedAppointmentStart = item.startMillis
+                                            journeys = emptyList()
+                                            mvvCandidates = emptyList()
+                                            routeStatus = ""
+                                            appointmentPickerExpanded = false
+                                        }) { Text(item.timeLabel() + " · " + item.title + if (item.startMillis == appointment.startMillis) " ✓" else "") }
+                                    }
+                                    if (appointments.size == visibleAppointments) {
+                                        OutlinedButton(modifier = Modifier.fillMaxWidth().testTag("calendar_more"), onClick = { visibleAppointments += 10 }) {
+                                            Text("Weitere 10 Termine anzeigen")
+                                        }
+                                    }
+                                }
                                 if (appointment.location == null) {
                                     Text("Für diesen Termin fehlt ein Zielort. Bitte bestätigen oder ergänzen.")
                                 } else {
@@ -197,47 +212,63 @@ class MainActivity : ComponentActivity() {
                         }
                         Text("Die Position wird nur auf Anfrage ermittelt, nicht gespeichert und nicht im Hintergrund verfolgt.")
                         HorizontalDivider()
-                        Text("Gehgeschwindigkeit", style = MaterialTheme.typography.titleMedium)
-                        Text("%.1f km/h".format(java.util.Locale.GERMANY, walkingSpeed))
-                        Slider(
-                            value = walkingSpeed,
-                            onValueChange = {
-                                walkingSpeed = it
-                                getPreferences(MODE_PRIVATE).edit().putFloat("walking_speed_kmh", it).apply()
-                            },
-                            valueRange = 2.0f..5.0f,
-                            steps = 5
-                        )
-                        HorizontalDivider()
-                        Text("Wegewahl vor der Suche", style = MaterialTheme.typography.titleMedium)
-                        listOf(
-                            RouteFilterMode.ANY to "Alle Verbindungen",
-                            RouteFilterMode.CONTAINS to "Linie oder Verkehrsmittel muss vorkommen",
-                            RouteFilterMode.ONLY_LINE_WITH_WALK to "Nur diese Linie und Fußwege"
-                        ).forEach { (mode, label) ->
-                            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                                RadioButton(selected = routeFilterMode == mode, onClick = { routeFilterMode = mode; journeys = emptyList() },
-                                    modifier = Modifier.testTag("route_filter_mode_${mode.name}"))
-                                Text(label)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Verkehrsmittel", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            TextButton(onClick = { advancedExpanded = !advancedExpanded }) {
+                                Text(if (advancedExpanded) "Weniger" else "Mehr Optionen")
                             }
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(selected = routeFilterMode == RouteFilterMode.ANY,
+                                onClick = { routeFilterMode = RouteFilterMode.ANY; journeys = emptyList() },
+                                label = { Text("Alle") }, modifier = Modifier.testTag("route_filter_mode_ANY"))
+                            FilterChip(selected = routeFilterMode == RouteFilterMode.ONLY_LINE_WITH_WALK,
+                                onClick = { routeFilterMode = RouteFilterMode.ONLY_LINE_WITH_WALK; journeys = emptyList() },
+                                label = { Text("Nur Linie") }, modifier = Modifier.testTag("route_filter_mode_ONLY_LINE_WITH_WALK"))
+                            FilterChip(selected = routeFilterMode == RouteFilterMode.CONTAINS,
+                                onClick = { routeFilterMode = RouteFilterMode.CONTAINS; journeys = emptyList() },
+                                label = { Text("Mit Linie") }, modifier = Modifier.testTag("route_filter_mode_CONTAINS"))
                         }
                         if (routeFilterMode != RouteFilterMode.ANY) {
                             OutlinedTextField(value = routeFilterQuery, onValueChange = { routeFilterQuery = it; journeys = emptyList() },
-                                label = { Text("Linie oder Verkehrsmittel: 166, U3, Bus, U-Bahn") },
+                                label = { Text("Linie, z. B. 134 oder U3") },
                                 singleLine = true, modifier = Modifier.fillMaxWidth().testTag("route_filter_query"))
-                            Text("Filtert die abgefragten MVV-Verbindungen; kein Treffer bedeutet nicht, dass die Linie nie fährt.")
+                        }
+                        if (advancedExpanded) {
+                            Card(Modifier.fillMaxWidth()) {
+                                Column(Modifier.padding(14.dp)) {
+                                    Text("Gehgeschwindigkeit", style = MaterialTheme.typography.titleMedium)
+                                    Text("%.1f km/h".format(java.util.Locale.GERMANY, walkingSpeed))
+                                    Slider(value = walkingSpeed, onValueChange = {
+                                        walkingSpeed = it
+                                        getPreferences(MODE_PRIVATE).edit().putFloat("walking_speed_kmh", it).apply()
+                                    }, valueRange = 2.0f..5.0f, steps = 5)
+                                    Text("Standort wird nur auf Anfrage ermittelt, nicht dauerhaft verfolgt.",
+                                        style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
                         }
                         if (appointment != null) {
                             HorizontalDivider()
                             Text("Ankunft zum Kalendertermin", style = MaterialTheme.typography.titleMedium)
                             Text("Terminbeginn: ${appointment.timeLabel()}")
-                            Text("Gewünschter Zeitpuffer vor dem Termin")
-                            listOf(10, 20, 30, 45, 60).forEach { minutes ->
-                                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                                    RadioButton(selected = arrivalBufferMinutes == minutes,
-                                        onClick = { arrivalBufferMinutes = minutes; journeys = emptyList() })
-                                    Text("$minutes Minuten früher ankommen")
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text("Ankunftspuffer", modifier = Modifier.weight(1f))
+                                Text("$arrivalBufferMinutes Min. früher", color = MaterialTheme.colorScheme.primary,
+                                    style = MaterialTheme.typography.titleMedium)
+                            }
+                            Slider(value = arrivalBufferMinutes.toFloat(), onValueChange = {
+                                val updated = (it / 5f).toInt().coerceIn(1, 12) * 5
+                                if (updated != arrivalBufferMinutes) {
+                                    arrivalBufferMinutes = updated
+                                    journeys = emptyList()
                                 }
+                            }, valueRange = 5f..60f, steps = 10,
+                                modifier = Modifier.testTag("arrival_buffer_slider"))
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("5 Min.", style = MaterialTheme.typography.labelSmall)
+                                Text("30 Min.", style = MaterialTheme.typography.labelSmall)
+                                Text("60 Min.", style = MaterialTheme.typography.labelSmall)
                             }
                             val arrivalTarget = java.util.Date(appointment.startMillis - arrivalBufferMinutes * 60000L)
                             val arrivalFormat = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", java.util.Locale.GERMANY)
@@ -277,7 +308,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }, preference = RoutePreference(routeFilterMode, routeFilterQuery), arrivalByMillis = arrivalBy)
                             }
-                        ) { Text(if (journeyLoading) "Suche läuft …" else "MVV-Verbindungen direkt anzeigen (Test)") }
+                        ) { Text(if (journeyLoading) "Suche läuft …" else "Verbindung finden") }
                         mvvCandidates.forEach { candidate ->
                             OutlinedButton(
                                 modifier = Modifier.fillMaxWidth(),
@@ -324,8 +355,8 @@ class MainActivity : ComponentActivity() {
                                 }
                                 Card(Modifier.fillMaxWidth().testTag("walking_dashboard")) {
                                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        Text("MEINE FAHRT · GEH-DASHBOARD", style = MaterialTheme.typography.titleMedium)
-                                        Text("Nächster Schritt: Zur Einstiegshaltestelle gehen", style = MaterialTheme.typography.headlineSmall)
+                                        Text("Meine Fahrt · Dein Wegbegleiter", style = MaterialTheme.typography.titleMedium)
+                                        Text("Jetzt zur Haltestelle", style = MaterialTheme.typography.headlineSmall)
                                         Text(boarding?.from?.ifBlank { "Haltestelle noch nicht übermittelt" } ?: "Kein Verkehrsmittel in dieser Verbindung")
                                         if (boarding != null) {
                                             Text("Linie ${boarding.line} · Abfahrt ${boarding.departure}", style = MaterialTheme.typography.titleLarge)
@@ -374,8 +405,8 @@ class MainActivity : ComponentActivity() {
                             val busIn = firstBus?.let { minutesUntil(it.departure) }
                             Card(Modifier.fillMaxWidth()) {
                                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Text("${trip.departure} – ${trip.arrival}", style = MaterialTheme.typography.titleMedium)
-                                    Text(trip.summary, modifier = Modifier.testTag("journey_summary"))
+                                    Text("${trip.departure} – ${trip.arrival}", style = MaterialTheme.typography.titleLarge)
+                                    Text(trip.summary, modifier = Modifier.testTag("journey_summary"), color = MaterialTheme.colorScheme.primary)
                                     OutlinedButton(onClick = { dashboardJourney = index }, modifier = Modifier.testTag("open_walking_dashboard")) { Text("Meine Fahrt · Dashboard öffnen") }
                                     Text("${trip.changes} Umstiege · Fußweg geschätzt: ${trip.walkingMinutes} Min. bei %.1f km/h".format(java.util.Locale.GERMANY, walkingSpeed))
                                     if (leaveIn != null) {
@@ -414,7 +445,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
-                        Text("Experimenteller MVV-Datenzugriff: Zeiten und Fußwege bitte mit der offiziellen MVV-Auskunft vergleichen. Die Fußweg-Schätzung berücksichtigt nur gemeldete Streckenlängen.")
+                        Text("MVV-Zeiten können sich ändern. Gehzeiten sind Schätzungen.", style = MaterialTheme.typography.bodySmall)
                         Button(
                             enabled = location != null && destination.isNotBlank(),
                             onClick = {
