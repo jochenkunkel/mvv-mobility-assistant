@@ -28,6 +28,8 @@ import de.mvv.mobility.data.RoutePreference
 import de.mvv.mobility.data.filterJourneys
 import de.mvv.mobility.data.selectAppointmentJourneys
 import de.mvv.mobility.data.UpcomingAppointment
+import de.mvv.mobility.ui.components.ArrivalBufferControl
+import de.mvv.mobility.ui.components.RouteFilterControl
 import de.mvv.mobility.widget.JourneyWidget
 import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.launch
@@ -218,22 +220,9 @@ class MainActivity : ComponentActivity() {
                                 Text(if (advancedExpanded) "Weniger" else "Mehr Optionen")
                             }
                         }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(selected = routeFilterMode == RouteFilterMode.ANY,
-                                onClick = { routeFilterMode = RouteFilterMode.ANY; journeys = emptyList() },
-                                label = { Text("Alle") }, modifier = Modifier.testTag("route_filter_mode_ANY"))
-                            FilterChip(selected = routeFilterMode == RouteFilterMode.ONLY_LINE_WITH_WALK,
-                                onClick = { routeFilterMode = RouteFilterMode.ONLY_LINE_WITH_WALK; journeys = emptyList() },
-                                label = { Text("Nur Linie") }, modifier = Modifier.testTag("route_filter_mode_ONLY_LINE_WITH_WALK"))
-                            FilterChip(selected = routeFilterMode == RouteFilterMode.CONTAINS,
-                                onClick = { routeFilterMode = RouteFilterMode.CONTAINS; journeys = emptyList() },
-                                label = { Text("Mit Linie") }, modifier = Modifier.testTag("route_filter_mode_CONTAINS"))
-                        }
-                        if (routeFilterMode != RouteFilterMode.ANY) {
-                            OutlinedTextField(value = routeFilterQuery, onValueChange = { routeFilterQuery = it; journeys = emptyList() },
-                                label = { Text("Linie, z. B. 134 oder U3") },
-                                singleLine = true, modifier = Modifier.fillMaxWidth().testTag("route_filter_query"))
-                        }
+                        RouteFilterControl(routeFilterMode, routeFilterQuery,
+                            onModeChange = { routeFilterMode = it; journeys = emptyList() },
+                            onQueryChange = { routeFilterQuery = it; journeys = emptyList() })
                         if (advancedExpanded) {
                             Card(Modifier.fillMaxWidth()) {
                                 Column(Modifier.padding(14.dp)) {
@@ -252,23 +241,9 @@ class MainActivity : ComponentActivity() {
                             HorizontalDivider()
                             Text("Ankunft zum Kalendertermin", style = MaterialTheme.typography.titleMedium)
                             Text("Terminbeginn: ${appointment.timeLabel()}")
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text("Ankunftspuffer", modifier = Modifier.weight(1f))
-                                Text("$arrivalBufferMinutes Min. früher", color = MaterialTheme.colorScheme.primary,
-                                    style = MaterialTheme.typography.titleMedium)
-                            }
-                            Slider(value = arrivalBufferMinutes.toFloat(), onValueChange = {
-                                val updated = (it / 5f).toInt().coerceIn(1, 12) * 5
-                                if (updated != arrivalBufferMinutes) {
-                                    arrivalBufferMinutes = updated
-                                    journeys = emptyList()
-                                }
-                            }, valueRange = 5f..60f, steps = 10,
-                                modifier = Modifier.testTag("arrival_buffer_slider"))
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("5 Min.", style = MaterialTheme.typography.labelSmall)
-                                Text("30 Min.", style = MaterialTheme.typography.labelSmall)
-                                Text("60 Min.", style = MaterialTheme.typography.labelSmall)
+                            ArrivalBufferControl(arrivalBufferMinutes) {
+                                arrivalBufferMinutes = it
+                                journeys = emptyList()
                             }
                             val arrivalTarget = java.util.Date(appointment.startMillis - arrivalBufferMinutes * 60000L)
                             val arrivalFormat = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", java.util.Locale.GERMANY)
