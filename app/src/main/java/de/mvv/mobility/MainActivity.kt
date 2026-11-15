@@ -436,24 +436,41 @@ class MainActivity : ComponentActivity() {
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth().testTag("setup_destination_input")
                         )
-                        TextButton(
-                            onClick = {
-                                val query = confirmedDestination.trim().ifBlank { appointment?.location.orEmpty() }
-                                lookupRequest++
-                                val requestId = lookupRequest
-                                addressSuggestions = emptyList()
-                                lookupStatus = "Suche passende Adressen …"
-                                DestinationLookup.search(this@MainActivity, query) { results ->
-                                    if (requestId == lookupRequest) {
-                                        addressSuggestions = results
-                                        lookupStatus = if (results.isEmpty()) "Kein eindeutiger Treffer. Adresse direkt verwenden oder präzisieren." else "Passenden Treffer antippen:"
+                        Row(Modifier.fillMaxWidth().testTag("destination_status_row"),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween) {
+                            Row(verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(if (lookupStatus.startsWith("✓") || confirmedDestination.isNotBlank()) "✓" else "?",
+                                    color = if (confirmedDestination.isNotBlank()) Color(0xFF237A45)
+                                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.Bold)
+                                Text(if (lookupStatus.startsWith("✓")) "Ziel geprüft"
+                                    else if (confirmedDestination.isNotBlank()) "Ziel eingetragen"
+                                    else "Ziel fehlt", style = MaterialTheme.typography.labelMedium)
+                            }
+                            TextButton(
+                                onClick = {
+                                    val query = confirmedDestination.trim().ifBlank { appointment?.location.orEmpty() }
+                                    lookupRequest++
+                                    val requestId = lookupRequest
+                                    addressSuggestions = emptyList()
+                                    lookupStatus = "Adresse wird geprüft …"
+                                    DestinationLookup.search(this@MainActivity, query) { results ->
+                                        if (requestId == lookupRequest) {
+                                            addressSuggestions = results
+                                            lookupStatus = if (results.isEmpty()) "Kein eindeutiger Treffer"
+                                                else "Treffer auswählen"
+                                        }
                                     }
-                                }
-                            },
-                            enabled = confirmedDestination.isNotBlank() || !appointment?.location.isNullOrBlank(),
-                            modifier = Modifier.testTag("setup_destination_lookup")
-                        ) { Text("⌕ Adresse erneut prüfen") }
-                        if (lookupStatus.isNotBlank()) Text(lookupStatus, style = MaterialTheme.typography.bodySmall)
+                                },
+                                enabled = confirmedDestination.isNotBlank() || !appointment?.location.isNullOrBlank(),
+                                modifier = Modifier.testTag("setup_destination_lookup")
+                            ) { Text("Prüfen ↻", style = MaterialTheme.typography.labelMedium) }
+                        }
+                        if (lookupStatus.isNotBlank() && !lookupStatus.startsWith("✓")) {
+                            Text(lookupStatus, style = MaterialTheme.typography.labelSmall)
+                        }
                         addressSuggestions.take(4).forEach { suggestion ->
                             TextButton(
                                 onClick = {
@@ -465,13 +482,21 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.fillMaxWidth().testTag("setup_destination_suggestion")
                             ) { Text(suggestion) }
                         }
-                        Text("Von wo?", style = MaterialTheme.typography.titleMedium)
+                        Row(Modifier.fillMaxWidth().testTag("setup_location_status"),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Start · GPS", style = MaterialTheme.typography.titleMedium)
+                            Text(if (usableLocation != null) "✓ Bereit"
+                                else if (!locationPermissionGranted) "✕ Freigabe fehlt"
+                                else "◌ Suche …",
+                                color = if (usableLocation != null) Color(0xFF237A45)
+                                    else MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.labelMedium)
+                        }
                         if (!locationPermissionGranted && !fixture) {
                             Text("Standortzugriff in Android für Mein Weg erlauben. Ohne Standort ist keine Verbindungssuche möglich.",
                                 color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                         }
-                        Text(if (usableLocation != null) "✓ Aktueller Standort verfügbar · wird für die Route verwendet" else effectiveLocationStatus, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("setup_location_status"))
-                        Text("Standort wird bei geöffneter App ungefähr alle 5 Sekunden aktualisiert; keine Hintergrundverfolgung.", style = MaterialTheme.typography.bodySmall)
                         if (!(fixture && !visualFixture)) Button(onClick = { activeSetupStep = 2 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_preferences")) { Text("Weiter · Fahrtwunsch →") }
                         }
                         SetupStepHeader(3, "Fahrtwunsch", "Verkehrsmittel & Ankunft", activeSetupStep == 2, "setup_step_preferences") { activeSetupStep = 2 }
