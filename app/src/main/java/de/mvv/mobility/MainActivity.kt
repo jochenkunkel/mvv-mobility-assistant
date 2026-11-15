@@ -464,10 +464,14 @@ class MainActivity : ComponentActivity() {
                         }
                         SetupStepHeader(3, "Fahrtwunsch", "Verkehrsmittel & Ankunft", activeSetupStep == 2, "setup_step_preferences") { activeSetupStep = 2 }
                         if (activeSetupStep == 2 || (fixture && !visualFixture)) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Verkehrsmittel", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                            TextButton(onClick = { advancedExpanded = !advancedExpanded }) {
-                                Text(if (advancedExpanded) "Weniger" else "Mehr Optionen")
+                        Row(modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Verkehrsmittel", style = MaterialTheme.typography.titleMedium)
+                            TextButton(onClick = { advancedExpanded = !advancedExpanded },
+                                modifier = Modifier.testTag("advanced_options_toggle")) {
+                                Text(if (advancedExpanded) "Optionen ▲" else "Optionen ▼",
+                                    style = MaterialTheme.typography.labelMedium)
                             }
                         }
                         RouteFilterControl(routeFilterMode, routeFilterQuery,
@@ -490,7 +494,7 @@ class MainActivity : ComponentActivity() {
                                         walkingSpeed = it
                                         getPreferences(MODE_PRIVATE).edit().putFloat("walking_speed_kmh", it).apply()
                                     }, valueRange = 2.0f..5.0f, steps = 5)
-                                    Text("Standort wird nur auf Anfrage ermittelt, nicht dauerhaft verfolgt.",
+                                    Text("Standort wird bei geöffneter App automatisch aktualisiert.",
                                         style = MaterialTheme.typography.bodySmall)
                                 }
                             }
