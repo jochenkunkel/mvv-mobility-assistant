@@ -125,6 +125,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     var journeyLoading by remember { mutableStateOf(false) }
+                    var searchGeneration by remember { mutableIntStateOf(0) }
                     val settings = remember { getPreferences(MODE_PRIVATE) }
                     var routeFilterMode by remember {
                         mutableStateOf(
@@ -495,10 +496,15 @@ class MainActivity : ComponentActivity() {
                         Spacer(Modifier.height(1.dp).bringIntoViewRequester(connectionsAnchor))
                         }
                         val destination = confirmedDestination.trim().ifBlank { appointment?.location?.trim().orEmpty() }
+                        LaunchedEffect(destination, appointment?.startMillis, arrivalBufferMinutes, routeFilterMode, routeFilterQuery, walkingSpeed) {
+                            searchGeneration++
+                            journeyLoading = false
+                        }
                         val searchConnections: () -> Unit = {
                                 val start = location
                                 if (start != null) {
                                 val arrivalBy = appointment?.startMillis?.minus(arrivalBufferMinutes * 60000L)
+                                val requestId = ++searchGeneration
                                 journeyLoading = true
                                 journeys = emptyList()
                                 mvvCandidates = emptyList()
@@ -509,6 +515,7 @@ class MainActivity : ComponentActivity() {
                                     routeStatus = "Testverbindung geladen"
                                 } else MvvJourneyRepository.searchAddress(this@MainActivity, start, destination, walkingSpeed, callback = { result ->
                                     runOnUiThread {
+                                        if (requestId != searchGeneration) return@runOnUiThread
                                         journeyLoading = false
                                         result.fold(
                                             onSuccess = {
@@ -555,11 +562,13 @@ class MainActivity : ComponentActivity() {
                                 enabled = !journeyLoading,
                                 onClick = {
                                     val start = location ?: return@OutlinedButton
+                                    val requestId = ++searchGeneration
                                     journeyLoading = true
                                     mvvCandidates = emptyList()
                                     routeStatus = "Prüfe MVV-Haltestelle ${candidate.name} …"
                                     MvvJourneyRepository.search(start, destination, walkingSpeed, { result ->
                                         runOnUiThread {
+                                            if (requestId != searchGeneration) return@runOnUiThread
                                             journeyLoading = false
                                             result.fold(
                                                 onSuccess = {
