@@ -31,3 +31,8 @@ Stand: 15.11.2026. Ziel: brauchbare Android-Testversion für den Termin am 16.11
 
 ## Arbeitsregel
 Keine Hintergrundentwicklung ohne explizit eingerichtete Automation. Änderungen und Entscheidungen im Repository dokumentieren. Für Zwischenstände schnelle Unit-Tests und Build; schwere Tests für Release. Kein Anspruch auf produktive Echtzeitnavigation allein durch einen grünen Build.
+
+## UI-Nachtrag: Verbindungsdetails (Commit `70790706`)
+- Anlass: Geräte-Screenshot zeigt übergroße ungegliederte Textblöcke und veralteten Google-Maps-Hinweis in der aufgeklappten Etappenansicht.
+- Umsetzung: kompakte weiße Etappenkarten mit Fuß-/Bus-Icon, Abfahrt rechts, Ankunft darunter, Start/Ziel und Fußwegdauer; Navigation führt zur integrierten Meine-Fahrt-Ansicht.
+- **Noch offen:** Android-CI für diesen Commit und Sichtprüfung der tatsächlich gerenderten Etappenkarten auf dem Gerät; keine UI-Freigabe allein durch Codeänderung.
