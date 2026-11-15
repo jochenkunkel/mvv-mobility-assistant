@@ -30,6 +30,7 @@ import de.mvv.mobility.data.UpcomingAppointment
 import de.mvv.mobility.widget.JourneyWidget
 import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,6 +67,14 @@ class MainActivity : ComponentActivity() {
                     var walkingSpeed by remember { mutableFloatStateOf(getPreferences(MODE_PRIVATE).getFloat("walking_speed_kmh", 3.0f)) }
                     var routeStatus by remember { mutableStateOf("") }
                     var journeys by remember { mutableStateOf<List<JourneyOption>>(emptyList()) }
+                    var expandedJourney by remember { mutableStateOf<Int?>(null) }
+                    var clockMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+                    LaunchedEffect(Unit) {
+                        while (true) {
+                            clockMillis = System.currentTimeMillis()
+                            delay(30000)
+                        }
+                    }
                     var journeyLoading by remember { mutableStateOf(false) }
                     var routeFilterMode by remember { mutableStateOf(RouteFilterMode.ANY) }
                     var routeFilterQuery by remember { mutableStateOf("") }
@@ -291,12 +300,61 @@ class MainActivity : ComponentActivity() {
                                 }
                             ) { Text(candidate.name) }
                         }
-                        journeys.sortedWith(compareBy<JourneyOption> { it.changes }.thenBy { it.walkingMinutes }).forEach { trip ->
+                        journeys.sortedWith(compareBy<JourneyOption> { it.changes }.thenBy { it.walkingMinutes }).forEachIndexed { index, trip ->
+                            val firstBus = trip.steps.firstOrNull { !it.walking }
+                            val targetDay = appointment?.startMillis?.minus(arrivalBufferMinutes * 60000L)
+                            fun minutesUntil(clock: String): Long? {
+                                if (targetDay == null || !Regex("""\\d{1,2}:\\d{2}""").matches(clock)) return null
+                                val parts = clock.split(":")
+                                val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("Europe/Berlin"))
+                                cal.timeInMillis = targetDay
+                                cal.set(java.util.Calendar.HOUR_OF_DAY, parts[0].toInt())
+                                cal.set(java.util.Calendar.MINUTE, parts[1].toInt())
+                                cal.set(java.util.Calendar.SECOND, 0)
+                                cal.set(java.util.Calendar.MILLISECOND, 0)
+                                if (cal.timeInMillis > targetDay + 30 * 60000L) cal.add(java.util.Calendar.DAY_OF_MONTH, -1)
+                                return (cal.timeInMillis - clockMillis) / 60000L
+                            }
+                            val leaveIn = minutesUntil(trip.departure)
+                            val busIn = firstBus?.let { minutesUntil(it.departure) }
                             Card(Modifier.fillMaxWidth()) {
                                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                     Text("${trip.departure} – ${trip.arrival}", style = MaterialTheme.typography.titleMedium)
                                     Text(trip.summary, modifier = Modifier.testTag("journey_summary"))
                                     Text("${trip.changes} Umstiege · Fußweg geschätzt: ${trip.walkingMinutes} Min. bei %.1f km/h".format(java.util.Locale.GERMANY, walkingSpeed))
+                                    if (leaveIn != null) {
+                                        Text(if (leaveIn > 0) "Losgehen in ca. $leaveIn Minuten · ${trip.departure}"
+                                            else if (leaveIn >= -5) "Jetzt losgehen · ${trip.departure}"
+                                            else "Diese Verbindung liegt bereits in der Vergangenheit.",
+                                            color = MaterialTheme.colorScheme.primary)
+                                    }
+                                    if (firstBus != null) {
+                                        Text("Einsteigen: ${firstBus.line} · ${firstBus.from.ifBlank { "Haltestelle nicht übermittelt" }} · ${firstBus.departure}")
+                                        if (busIn != null && busIn > 0) Text("Abfahrt in ca. $busIn Minuten")
+                                    }
+                                    TextButton(onClick = { expandedJourney = if (expandedJourney == index) null else index },
+                                        modifier = Modifier.testTag("journey_details")) {
+                                        Text(if (expandedJourney == index) "Details schließen" else "Wegbeschreibung und Haltestellen")
+                                    }
+                                    if (expandedJourney == index) {
+                                        trip.steps.forEachIndexed { stepIndex, step ->
+                                            Text("${stepIndex + 1}. " + if (step.walking) "Zu Fuß" else "Linie ${step.line}")
+                                            Text("${step.from.ifBlank { "Startpunkt" }} → ${step.to.ifBlank { "Zielpunkt" }}")
+                                            Text("${step.departure} – ${step.arrival}" + if (step.walking && step.minutes > 0) " · ca. ${step.minutes} Min." else "")
+                                        }
+                                        if (firstBus?.from?.isNotBlank() == true && location != null) {
+                                            OutlinedButton(onClick = {
+                                                val start = location ?: return@OutlinedButton
+                                                val uri = Uri.parse("https://www.google.com/maps/dir/?api=1").buildUpon()
+                                                    .appendQueryParameter("origin", "${start.latitude},${start.longitude}")
+                                                    .appendQueryParameter("destination", firstBus.from + ", München")
+                                                    .appendQueryParameter("travelmode", "walking").build()
+                                                startActivity(Intent(Intent.ACTION_VIEW, uri))
+                                            }) { Text("Fußweg zur Einstiegshaltestelle öffnen") }
+                                        }
+                                        Text("Zeiten und Haltestellen aus MVV; die Fußweg-Navigation erfolgt in Google Maps.")
+                                    }
+
                                 }
                             }
                         }
