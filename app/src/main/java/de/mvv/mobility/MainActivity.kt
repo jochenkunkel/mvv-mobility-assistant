@@ -875,16 +875,40 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                     if (firstBus != null) {
-                                        Text(firstBus.from.ifBlank { "Einstiegshaltestelle unbekannt" },
-                                            style = MaterialTheme.typography.bodySmall)
+                                        Surface(shape = RoundedCornerShape(12.dp), color = Color.White,
+                                            modifier = Modifier.fillMaxWidth().testTag("journey_stop_card")) {
+                                            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Row(verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                    Text("🚏", style = MaterialTheme.typography.titleMedium)
+                                                    Column {
+                                                        Text("ERSTE HALTESTELLE", style = MaterialTheme.typography.labelSmall,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                        Text(firstBus.from.ifBlank { "Einstieg noch unbekannt" },
+                                                            fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                                    }
+                                                }
+                                                if (firstBus.to.isNotBlank()) {
+                                                    HorizontalDivider()
+                                                    Row(verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                        Text("🚌", style = MaterialTheme.typography.titleMedium)
+                                                        Column {
+                                                            Text("LINIE ${firstBus.line} · NÄCHSTER AUSSTIEG",
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                            Text(firstBus.to, fontWeight = FontWeight.Bold,
+                                                                style = MaterialTheme.typography.bodyMedium)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                     if (totalWalk > knownWalk) {
-                                        Text("Weitere Fußwege / Umstiege: ca. ${totalWalk - knownWalk} Min.",
+                                        Text("🚶 Weitere Fußwege: ca. ${totalWalk - knownWalk} Min.",
                                             style = MaterialTheme.typography.labelSmall)
                                     }
-                                    Text(trip.summary, modifier = Modifier.testTag("journey_summary"),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     OutlinedButton(
                                         onClick = { dashboardJourney = index; selectedTab = CockpitTab.JOURNEY },
                                         modifier = Modifier.fillMaxWidth().testTag("open_walking_dashboard")
