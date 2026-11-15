@@ -991,25 +991,82 @@ class MainActivity : ComponentActivity() {
                                     }
                                     TextButton(onClick = { expandedJourney = if (expandedJourney == index) null else index },
                                         modifier = Modifier.testTag("journey_details")) {
-                                        Text(if (expandedJourney == index) "Details schließen" else "Wegbeschreibung und Haltestellen")
+                                        Text(if (expandedJourney == index) "Details ausblenden  ⌃" else "Alle Etappen ansehen  ⌄",
+                                            style = MaterialTheme.typography.labelLarge)
                                     }
                                     if (expandedJourney == index) {
-                                        trip.steps.forEachIndexed { stepIndex, step ->
-                                            Text("${stepIndex + 1}. " + if (step.walking) "Zu Fuß" else "Linie ${step.line}")
-                                            Text("${step.from.ifBlank { "Startpunkt" }} → ${step.to.ifBlank { "Zielpunkt" }}")
-                                            Text("${step.departure} – ${step.arrival}" + if (step.walking && step.minutes > 0) " · ca. ${step.minutes} Min." else "")
+                                        Column(verticalArrangement = Arrangement.spacedBy(8.dp),
+                                            modifier = Modifier.fillMaxWidth().testTag("journey_detail_cards")) {
+                                            trip.steps.forEachIndexed { stepIndex, step ->
+                                                Surface(
+                                                    shape = RoundedCornerShape(16.dp),
+                                                    color = Color.White,
+                                                    modifier = Modifier.fillMaxWidth().testTag("journey_detail_step_${stepIndex}")
+                                                ) {
+                                                    Column(Modifier.padding(12.dp),
+                                                        verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                        Row(verticalAlignment = Alignment.CenterVertically,
+                                                            horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                                            Surface(shape = RoundedCornerShape(12.dp),
+                                                                color = if (step.walking) Color(0xFFECE8FA) else Color(0xFF5635B1)) {
+                                                                Text(if (step.walking) "🚶" else "🚌",
+                                                                    modifier = Modifier.padding(10.dp),
+                                                                    style = MaterialTheme.typography.titleMedium)
+                                                            }
+                                                            Column(Modifier.weight(1f)) {
+                                                                Text(if (step.walking) "ETAPPE ${stepIndex + 1} · FUSSWEG"
+                                                                    else "ETAPPE ${stepIndex + 1} · LINIE ${step.line.ifBlank { "ÖPNV" }}",
+                                                                    style = MaterialTheme.typography.labelSmall,
+                                                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                                Text(if (step.walking) "Zu Fuß" else "Linie ${step.line.ifBlank { "ÖPNV" }}",
+                                                                    style = MaterialTheme.typography.titleMedium,
+                                                                    fontWeight = FontWeight.Bold)
+                                                            }
+                                                            Column(horizontalAlignment = Alignment.End) {
+                                                                Text(step.departure.ifBlank { "–" },
+                                                                    style = MaterialTheme.typography.titleMedium,
+                                                                    fontWeight = FontWeight.Bold)
+                                                                Text("bis ${step.arrival.ifBlank { "–" }}",
+                                                                    style = MaterialTheme.typography.labelSmall,
+                                                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                            }
+                                                        }
+                                                        HorizontalDivider(color = Color(0xFFF0EDF6))
+                                                        Row(verticalAlignment = Alignment.Top,
+                                                            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                            Text("●\n│\n●", color = Color(0xFF7659AE),
+                                                                style = MaterialTheme.typography.labelSmall)
+                                                            Column(Modifier.weight(1f),
+                                                                verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                                Text(step.from.ifBlank { "Startpunkt" },
+                                                                    style = MaterialTheme.typography.bodyMedium,
+                                                                    fontWeight = FontWeight.Medium)
+                                                                Text(step.to.ifBlank { "Zielpunkt" },
+                                                                    style = MaterialTheme.typography.bodyMedium,
+                                                                    fontWeight = FontWeight.Medium)
+                                                            }
+                                                        }
+                                                        if (step.walking && step.minutes > 0) {
+                                                            Text("⏱  ca. ${step.minutes} Min. Fußweg",
+                                                                style = MaterialTheme.typography.labelMedium,
+                                                                color = Color(0xFF604993))
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            if (firstBus?.from?.isNotBlank() == true && usableLocation != null) {
+                                                Button(onClick = {
+                                                    dashboardJourney = index
+                                                    selectedTab = CockpitTab.JOURNEY
+                                                }, modifier = Modifier.fillMaxWidth(),
+                                                    shape = RoundedCornerShape(14.dp)) {
+                                                    Text("🚶  Fußweg-Navigation öffnen")
+                                                }
+                                            }
+                                            Text("MVV-Fahrplanzeiten · Fußwege geschätzt",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
-                                        if (firstBus?.from?.isNotBlank() == true && location != null) {
-                                            OutlinedButton(onClick = {
-                                                val start = usableLocation ?: return@OutlinedButton
-                                                val uri = Uri.parse("https://www.google.com/maps/dir/?api=1").buildUpon()
-                                                    .appendQueryParameter("origin", "${start.latitude},${start.longitude}")
-                                                    .appendQueryParameter("destination", firstBus.from + ", München")
-                                                    .appendQueryParameter("travelmode", "walking").build()
-                                                startActivity(Intent(Intent.ACTION_VIEW, uri))
-                                            }) { Text("Fußweg zur Einstiegshaltestelle öffnen") }
-                                        }
-                                        Text("Zeiten und Haltestellen aus MVV; die Fußweg-Navigation erfolgt in Google Maps.")
                                     }
 
                                 }
