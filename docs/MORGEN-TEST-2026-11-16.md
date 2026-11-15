@@ -36,3 +36,9 @@ Keine Hintergrundentwicklung ohne explizit eingerichtete Automation. Änderungen
 - Anlass: Geräte-Screenshot zeigt übergroße ungegliederte Textblöcke und veralteten Google-Maps-Hinweis in der aufgeklappten Etappenansicht.
 - Umsetzung: kompakte weiße Etappenkarten mit Fuß-/Bus-Icon, Abfahrt rechts, Ankunft darunter, Start/Ziel und Fußwegdauer; Navigation führt zur integrierten Meine-Fahrt-Ansicht.
 - **Noch offen:** Android-CI für diesen Commit und Sichtprüfung der tatsächlich gerenderten Etappenkarten auf dem Gerät; keine UI-Freigabe allein durch Codeänderung.
+
+## UI-Nachtrag: kompakter GPS-Status (Commit `851f44fd`)
+- Anlass: Der Nutzer-Screenshot vom 15.11. zeigt eine übergroße GPS-Statuskarte über den Losgehen-/Bus-Kacheln.
+- Umsetzung: Die separate GPS-Karte in „Meine Fahrt“ entfällt. Stattdessen erscheint rechts im Kopf ein kompakter GPS-Indikator: grün bei frischer Position, gelb bei erteilter Berechtigung ohne frische Position, rot ohne Berechtigung.
+- Der Indikator bezeichnet nur Standortdaten, **keine MVV-Echtzeitabfahrten**. Die bestehende Freshness-Prüfung bleibt erhalten.
+- Prüfung offen: GitHub-Actions-Status des Pushs, Emulator-Screenshot und Sichtprüfung auf dem Galaxy S25. Keine Behauptung eines erfolgreichen Builds vor CI-Nachweis.
