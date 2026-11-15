@@ -42,3 +42,33 @@ Keine Hintergrundentwicklung ohne explizit eingerichtete Automation. Änderungen
 - Umsetzung: Die separate GPS-Karte in „Meine Fahrt“ entfällt. Stattdessen erscheint rechts im Kopf ein kompakter GPS-Indikator: grün bei frischer Position, gelb bei erteilter Berechtigung ohne frische Position, rot ohne Berechtigung.
 - Der Indikator bezeichnet nur Standortdaten, **keine MVV-Echtzeitabfahrten**. Die bestehende Freshness-Prüfung bleibt erhalten.
 - Prüfung offen: GitHub-Actions-Status des Pushs, Emulator-Screenshot und Sichtprüfung auf dem Galaxy S25. Keine Behauptung eines erfolgreichen Builds vor CI-Nachweis.
+
+## Verbindliche Aufgabenliste für Montag, 16.11.2026 (aktualisiert am Vorabend)
+
+Diese Liste bündelt die noch offenen Punkte aus `IMPLEMENTATION-ROADMAP.md`, `CODE-AUDIT-2026-11-15.md`, `COCKPIT-V2-PLAN.md` und den letzten UI-Änderungen. Die älteren Statusabschnitte bleiben als Historie erhalten. **Kein Punkt gilt allein wegen eines Commits als getestet.**
+
+### P0 – Vor dem ersten Termin: belastbare Testversion
+- [ ] **Aktuellen HEAD und Actions prüfen.** Commits `851f44fd` (GPS-Kompaktanzeige) und `a9842d8d` (Dokumentation) samt nachfolgenden Änderungen auf Build-/Teststatus prüfen. Der letzte hier dokumentierte grüne Build `43765445404` ist älter. Prüfen, ob ein Push-Build lief; falls nicht, `Android CI` bewusst starten. Kein CI-Erfolg behauptet, solange kein Lauf nachgewiesen ist.
+- [ ] **Build-Gate:** Unit-Tests und Debug-APK, danach gezielt manueller `test_level=release` mit Emulator/Lint/MVV-Probes, soweit verfügbar. Fehler vor neuen Features beheben. APK-Artefakt und Signatur/Installationshinweise dokumentieren.
+- [ ] **Visuelle Abnahme:** Echte Emulator-Screenshots der drei Tabs und Verbindungsdetails ansehen. Speziell prüfen: GPS-Status rechts in der Kopfzeile statt eigener Kachel; keine abgeschnittene Überschrift auf Galaxy-S25-Breite und bei größerer Schrift; grün/gelb/rot verständlich, kein irreführendes MVV-„LIVE“.
+- [ ] **Galaxy-S25-Praxistest:** Erststart, Standort- und Kalenderberechtigungen, Termin/Ziel, MVV-Suche, Verbindungsdetails, Losgehzeit, Fahrt-Cockpit, Fußweg-Navigation und Rücknavigation. Screenshots und reproduzierbare Fehler sammeln. Vor realer Fahrt Ankunftszeit mit offizieller MVV-Auskunft abgleichen.
+- [ ] **Sicherheitsgrenze:** OSM-Fußwegführung ist experimentell; bei Fehler/Offline/zweifelhaftem Abbiegehinweis nicht als zuverlässige alleinige Navigation empfehlen.
+
+### P1 – Nächste Codepakete, jeweils einzeln testen und committen
+- [ ] **Asynchrone MVV-Suche absichern (Audit #2):** Request-Generation/Ignore-Stale-Callbacks bei Termin-, Ziel-, Filter- und Standortwechsel; Tests mit vertauschter Antwortreihenfolge.
+- [ ] **Routen- und Zeitkorrektheit (Audit #3–5):** Haltestellen-Fallback auf denselben Ankunftszeit-/Präferenzpfad bringen; Datum/Zeitzone statt bloß `HH:mm` (Mitternacht/Sommerzeit); Umstiege trotz fehlender Liniennummer korrekt zählen.
+- [ ] **GPS-Freshness und Berechtigungen (Audit #6–7):** Alter und Genauigkeit der Position prüfen; Ausfall/Veralten erkennbar machen, ohne „aktuell“ vorzutäuschen; Berechtigungsreihenfolge und Ablehnungsfall testen.
+- [ ] **Fußweg-Navigation absichern:** Routengeometrie und Fortschritt entlang der Route statt räumlich nächstem Manöver; Abweichung/Neuberechnung, Haltestellenkoordinaten statt unsicherem Namens-Geocoding; Offline-/Fehlerfälle testen.
+- [ ] **Meine Fahrt und Verbindungsdetails polieren:** Kachelhierarchie, Zeiten/Icons, Status „später/bald/jetzt“, Countdown-Grenzen und geplante vs. geschätzte vs. echte Live-Werte; keine übergroßen Textblöcke.
+
+### P2 – Qualität, Wartbarkeit und spätere Freigabe
+- [ ] Screenshot-Navigation von festen Pixel-Taps auf Semantik-Tags/Compose-Tests umstellen; alte Smoke-Skripte prüfen und aktualisieren; Settings-UI-Test und größere Schrift/Tablet-Matrix ergänzen.
+- [ ] Einstellungen und Startablauf: Persistenz Zuhause/Gehgeschwindigkeit/Puffer/Linienfilter nach Neustart; Ziel-Mehrdeutigkeit/Offline/Terminwechsel; Verkehrsmittel- und Sprachwahl nur als funktionierend anzeigen, wenn wirklich implementiert.
+- [ ] MainActivity schrittweise in Komponenten und testbaren State zerlegen; Demo-Dateien erst nach Referenzprüfung aufräumen.
+- [ ] MVV-Echtzeitrefresh nur mit verlässlicher Quelle und korrekter Kennzeichnung; kein Hintergrundtracking. Release-Signierung und N→N+1-Update mit Datenerhalt gesondert nachweisen.
+
+### Arbeits- und Übergaberegel
+1. Vor jeder Änderung HEAD/Workflow prüfen, keine parallelen widersprüchlichen Arbeiten.
+2. Ein kleines Paket umsetzen → gezielte Tests → CI → Screenshot-Sichtprüfung → Commit/Status mit Link und offenen Risiken.
+3. Nach jedem Paket diese Liste mit **Commit, CI-Lauf, Ergebnis und nächstem Schritt** fortschreiben; erledigte Punkte erst nach Nachweis abhaken.
+4. Ohne explizit eingerichtete Automation erfolgt keine eigenständige Entwicklung über Nacht.
