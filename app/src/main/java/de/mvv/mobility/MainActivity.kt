@@ -12,6 +12,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -65,6 +66,9 @@ class MainActivity : ComponentActivity() {
                         allowed = granted
                         refresh++
                         scope.launch { JourneyWidget().updateAll(this@MainActivity) }
+                    }
+                    LaunchedEffect(Unit) {
+                        if (!fixture && !allowed) permissionLauncher.launch(Manifest.permission.READ_CALENDAR)
                     }
                     var visibleAppointments by remember { mutableIntStateOf(10) }
                     var appointmentPickerExpanded by remember { mutableStateOf(false) }
@@ -240,30 +244,28 @@ class MainActivity : ComponentActivity() {
                                 Text("Kalenderzugriff erlauben")
                             }
                         } else {
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text("Nächster Termin", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                                TextButton(onClick = {
-                                    refresh++
-                                    scope.launch { JourneyWidget().updateAll(this@MainActivity) }
-                                }) { Text("Aktualisieren") }
-                            }
+                            Text("Nächster Termin", style = MaterialTheme.typography.titleMedium)
                             if (appointment == null) {
                                 Text("Keine bevorstehenden Termine mit Uhrzeit gefunden.")
                             } else {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                Card(
+                                    onClick = { appointmentPickerExpanded = !appointmentPickerExpanded },
+                                    modifier = Modifier.fillMaxWidth().testTag("calendar_appointment"),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color.White)
                                 ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(appointment.title, style = MaterialTheme.typography.titleMedium, maxLines = 1)
-                                        Text(appointment.timeLabel(), style = MaterialTheme.typography.bodySmall)
-                                        Text(appointment.location ?: "Zieladresse ergänzen", style = MaterialTheme.typography.bodySmall, maxLines = 1)
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(appointment.title, style = MaterialTheme.typography.titleMedium, maxLines = 1)
+                                            Text(appointment.timeLabel(), style = MaterialTheme.typography.bodySmall)
+                                            Text(appointment.location ?: "Zieladresse ergänzen", style = MaterialTheme.typography.bodySmall, maxLines = 1)
+                                        }
+                                        Text(if (appointmentPickerExpanded) "⌃" else "⌄", color = Color(0xFF5635B1))
                                     }
-                                    TextButton(
-                                        onClick = { appointmentPickerExpanded = !appointmentPickerExpanded },
-                                        modifier = Modifier.testTag("calendar_appointment")
-                                    ) { Text(if (appointmentPickerExpanded) "Schließen" else "Ändern") }
                                 }
                                 if (appointmentPickerExpanded) {
                                     appointments.forEach { item ->
