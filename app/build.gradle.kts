@@ -50,6 +50,8 @@ dependencies {
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.glance:glance-appwidget:1.1.1")
     testImplementation("junit:junit:4.13.2")
+    // Real JSON implementation for offline JVM routing tests (Android org.json is stubbed).
+    testImplementation("org.json:json:20240303")
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test:core:1.6.1")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
