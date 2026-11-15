@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import de.mvv.mobility.data.CurrentLocationRepository
+import de.mvv.mobility.data.LocationFreshness
 import de.mvv.mobility.data.DeviceCalendarRepository
 import de.mvv.mobility.data.DestinationLookup
 import de.mvv.mobility.data.MvvJourneyRepository
@@ -152,6 +153,18 @@ class MainActivity : ComponentActivity() {
                         mutableStateOf(CurrentLocationRepository.hasPermission(this@MainActivity))
                     }
                     var appForeground by remember { mutableStateOf(false) }
+                    var locationClock by remember { mutableLongStateOf(System.currentTimeMillis()) }
+                    LaunchedEffect(appForeground) {
+                        while (appForeground) {
+                            locationClock = System.currentTimeMillis()
+                            delay(15_000L)
+                        }
+                    }
+                    val usableLocation = if (fixture) location else location?.takeIf {
+                        LocationFreshness.isFresh(it.time, locationClock)
+                    }
+                    val effectiveLocationStatus = if (!fixture && location != null && usableLocation == null)
+                        "Standort veraltet – bitte aktualisieren" else locationStatus
                     var locationRetry by remember { mutableIntStateOf(0) }
                     val lifecycleOwner = LocalLifecycleOwner.current
                     DisposableEffect(lifecycleOwner) {
@@ -185,8 +198,11 @@ class MainActivity : ComponentActivity() {
                             val stop = CurrentLocationRepository.observeForeground(this@MainActivity) { found ->
                                 if (found != null) {
                                     location = found
-                                    locationStatus = "✓ Standort aktuell"
-                                } else if (location == null) {
+                                    locationClock = System.currentTimeMillis()
+                                    locationStatus = if (LocationFreshness.isFresh(found.time, locationClock))
+                                        "✓ Standort aktuell" else "Standort veraltet – bitte aktualisieren"
+                                } else {
+                                    location = null
                                     locationStatus = "Standort nicht verfügbar. Standortdienste prüfen."
                                 }
                             }
@@ -427,7 +443,7 @@ class MainActivity : ComponentActivity() {
                             ) { Text(suggestion) }
                         }
                         Text("Von wo?", style = MaterialTheme.typography.titleMedium)
-                        Text(locationStatus, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("setup_location_status"))
+                        Text(effectiveLocationStatus, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("setup_location_status"))
                         if (location == null && !fixture) {
                             TextButton(onClick = {
                                 if (!CurrentLocationRepository.hasPermission(this@MainActivity)) {
@@ -501,7 +517,7 @@ class MainActivity : ComponentActivity() {
                             journeyLoading = false
                         }
                         val searchConnections: () -> Unit = {
-                                val start = location
+                                val start = usableLocation
                                 if (start != null) {
                                 val arrivalBy = appointment?.startMillis?.minus(arrivalBufferMinutes * 60000L)
                                 val requestId = ++searchGeneration
@@ -540,7 +556,7 @@ class MainActivity : ComponentActivity() {
                                     selectedTab = CockpitTab.CONNECTIONS
                                     searchConnections()
                                 },
-                                enabled = location != null && destination.isNotBlank() && !journeyLoading &&
+                                enabled = usableLocation != null && destination.isNotBlank() && !journeyLoading &&
                                     (routeFilterMode == RouteFilterMode.ANY || routeFilterQuery.isNotBlank()),
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("setup_find_connections"),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5635B1)),
@@ -553,7 +569,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("mvv_search_button"),
                             shape = RoundedCornerShape(18.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5635B1)),
-                            enabled = location != null && destination.isNotBlank() && !journeyLoading && (routeFilterMode == RouteFilterMode.ANY || routeFilterQuery.isNotBlank()),
+                            enabled = usableLocation != null && destination.isNotBlank() && !journeyLoading && (routeFilterMode == RouteFilterMode.ANY || routeFilterQuery.isNotBlank()),
                             onClick = searchConnections
                         ) { Text(if (journeyLoading) "Suche läuft …" else "Verbindung finden") }
                         mvvCandidates.forEach { candidate ->
@@ -561,7 +577,7 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.fillMaxWidth(),
                                 enabled = !journeyLoading,
                                 onClick = {
-                                    val start = location ?: return@OutlinedButton
+                                    val start = usableLocation ?: return@OutlinedButton
                                     val requestId = ++searchGeneration
                                     journeyLoading = true
                                     mvvCandidates = emptyList()
@@ -632,7 +648,7 @@ class MainActivity : ComponentActivity() {
                                         Text("Für echte Abbiegungen und die verbleibenden Meter bitte die Fußweg-Navigation öffnen. Dieses Dashboard verfolgt deinen Standort nicht automatisch.")
                                         if (boarding?.from?.isNotBlank() == true && location != null) {
                                             Button(onClick = {
-                                                val start = location ?: return@Button
+                                                val start = usableLocation ?: return@Button
                                                 val uri = Uri.parse("https://www.google.com/maps/dir/?api=1").buildUpon()
                                                     .appendQueryParameter("origin", "${start.latitude},${start.longitude}")
                                                     .appendQueryParameter("destination", boarding.from + ", München")
@@ -749,7 +765,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                         if (firstBus?.from?.isNotBlank() == true && location != null) {
                                             OutlinedButton(onClick = {
-                                                val start = location ?: return@OutlinedButton
+                                                val start = usableLocation ?: return@OutlinedButton
                                                 val uri = Uri.parse("https://www.google.com/maps/dir/?api=1").buildUpon()
                                                     .appendQueryParameter("origin", "${start.latitude},${start.longitude}")
                                                     .appendQueryParameter("destination", firstBus.from + ", München")
@@ -765,9 +781,9 @@ class MainActivity : ComponentActivity() {
                         }
                         Text("MVV-Zeiten können sich ändern. Gehzeiten sind Schätzungen.", style = MaterialTheme.typography.bodySmall)
                         Button(
-                            enabled = location != null && destination.isNotBlank(),
+                            enabled = usableLocation != null && destination.isNotBlank(),
                             onClick = {
-                                val start = location ?: return@Button
+                                val start = usableLocation ?: return@Button
                                 val uri = Uri.parse("https://www.google.com/maps/dir/?api=1").buildUpon()
                                     .appendQueryParameter("origin", "${start.latitude},${start.longitude}")
                                     .appendQueryParameter("destination", destination)
@@ -781,7 +797,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         ) { Text("ÖPNV-Route anzeigen") }
-                        if (location == null) Text("Bitte zuerst den aktuellen Standort ermitteln.")
+                        if (usableLocation == null) Text("Bitte zuerst den aktuellen Standort ermitteln.")
                         if (destination.isBlank()) Text("Bitte einen Zielort im Kalender ergänzen oder oben eingeben.")
                         if (routeStatus.isNotBlank()) Text(routeStatus, modifier = Modifier.testTag("route_status"))
                         Text("Die Route öffnet sich zunächst in Google Maps mit ÖPNV-Auswahl. Die Einstellung für 3,0 km/h wird in Mein Weg gespeichert, aber vom externen Routenplaner noch nicht berücksichtigt. Eine eigene MVV-Routenbewertung folgt.")
