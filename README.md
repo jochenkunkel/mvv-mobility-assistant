@@ -2,6 +2,10 @@
 
 Android-App mit Kalenderterminen, aktueller Standortabfrage auf Anfrage, MVV-Tür-zu-Tür-Verbindungen, Linienfilter, Ankunftspuffer und Geh-Dashboard.
 
+## Produktentscheidungen und Designziel
+
+Die begründeten Architektur-, UX- und Funktionsentscheidungen inklusive Umsetzungsstatus, Risiken und nächster Schritte stehen in [docs/DECISIONS.md](docs/DECISIONS.md). Maßstab ist die abgestimmte Drei-Screen-Designvorlage (Start, Verbindungen, Meine Fahrt) mit zusätzlichem Einstellungszugang. Ein erfolgreicher CI-Lauf belegt nicht automatisch visuelle Übereinstimmung. Die Sprachwahl ist derzeit nur vorbereitet; echte Übersetzungen folgen.
+
 ## Entwickeln und testen
 JDK 17, Android SDK 35 und Gradle 8.13. `gradle :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest`.
 
