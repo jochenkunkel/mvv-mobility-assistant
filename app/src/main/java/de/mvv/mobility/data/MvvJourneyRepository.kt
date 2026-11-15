@@ -10,6 +10,7 @@ import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 data class JourneyOption(
     val departure: String, val arrival: String, val summary: String,
@@ -70,7 +71,7 @@ object MvvJourneyRepository {
             )
         }
         val results = mutableListOf<JourneyOption>()
-        if (trips != null) for (i in 0 until minOf(trips.length(), 6)) {
+        if (trips != null) for (i in 0 until minOf(trips.length(), 24)) {
             val trip = trips.optJSONObject(i) ?: continue
             val legs = trip.optJSONArray("legs") ?: continue
             val names = mutableListOf<String>()
@@ -134,17 +135,19 @@ object MvvJourneyRepository {
     class AmbiguousDestination(val candidates: List<StopCandidate>) :
         IllegalStateException("Mehrere MVV-Ziele gefunden. Bitte die passende Haltestelle auswählen.")
 
-    private fun request(origin: Location, destination: String, type: String): String {
+    private fun request(origin: Location, destination: String, type: String, arrivalByMillis: Long? = null, directOnly: Boolean = false): String {
         val originCoords = "${origin.longitude}:${origin.latitude}:WGS84"
-        val now = Date()
-        val date = SimpleDateFormat("yyyyMMdd", Locale.GERMANY).format(now)
-        val clock = SimpleDateFormat("HHmm", Locale.GERMANY).format(now)
+        val requested = Date(arrivalByMillis ?: System.currentTimeMillis())
+        val berlin = TimeZone.getTimeZone("Europe/Berlin")
+        val date = SimpleDateFormat("yyyyMMdd", Locale.GERMANY).apply { timeZone = berlin }.format(requested)
+        val clock = SimpleDateFormat("HHmm", Locale.GERMANY).apply { timeZone = berlin }.format(requested)
         val url = "https://efa.mvv-muenchen.de/ng/XML_TRIP_REQUEST2?" +
             "outputFormat=JSON&tripReductionMacro=1&coordOutputFormat=WGS84&locationServerActive=1&" +
             "type_origin=coord&name_origin=${param(originCoords)}&" +
             "type_destination=$type&name_destination=${param(destination)}&" +
-            "itdDate=$date&itdTime=$clock&itdTripDateTimeDepArr=dep&" +
-            "calcNumberOfTrips=12&useRealtime=1"
+            "itdDate=$date&itdTime=$clock&itdTripDateTimeDepArr=${if (arrivalByMillis == null) "dep" else "arr"}&" +
+            "calcNumberOfTrips=12&useRealtime=1" +
+            (if (directOnly) "&itOptionsActive=1&maxChanges=0" else "")
         val connection = URL(url).openConnection() as HttpURLConnection
         connection.connectTimeout = 12000
         connection.readTimeout = 15000
@@ -203,7 +206,8 @@ object MvvJourneyRepository {
         address: String,
         walkingKmh: Float,
         callback: (Result<ResolvedJourney>) -> Unit,
-        preference: RoutePreference = RoutePreference()
+        preference: RoutePreference = RoutePreference(),
+        arrivalByMillis: Long? = null
     ) {
         Thread {
             try {
@@ -220,8 +224,12 @@ object MvvJourneyRepository {
                 }
                 if (ambiguous) error("Mehrdeutige Zieladresse. Bitte vollständige Straße, Hausnummer und Ort angeben.")
                 val coordinates = "${first.longitude}:${first.latitude}:WGS84"
-                val response = request(origin, coordinates, "coord")
-                val trips = filterJourneys(parseTrips(response, walkingKmh), preference)
+                val response = request(origin, coordinates, "coord", arrivalByMillis)
+                var trips = filterJourneys(parseTrips(response, walkingKmh), preference)
+                if (trips.isEmpty() && preference.mode == RouteFilterMode.ONLY_LINE_WITH_WALK) {
+                    val alternate = request(origin, coordinates, "coord", arrivalByMillis, directOnly = true)
+                    trips = filterJourneys(parseTrips(alternate, walkingKmh), preference)
+                }
                 val destination = StopCandidate(coordinates, first.getAddressLine(0) ?: address, 0)
                 callback(Result.success(ResolvedJourney(trips, destination)))
             } catch (e: Exception) { callback(Result.failure(e)) }
