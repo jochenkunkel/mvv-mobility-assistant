@@ -81,6 +81,11 @@ Die folgenden drei Wireframes zeigen die **beabsichtigte Informationshierarchie*
 5. **Phase 5:** MVV-Aktualisierungen im sichtbaren Betrieb, Positionsbezug erst mit echter Weggeometrie; kein ungefragtes Hintergrundtracking.
 6. **Phase 6:** CI, Emulatorbilder tatsächlich ansehen, Tests auf echtem Android-Gerät, Signierung/Updatepfad, erst dann APK-Empfehlung.
 
+## Nachtrag Phase 2B (15.11.2026)
+- Commit `74bc95f4`: Linienfilter-Modus und Linienkennung werden nun in Android Preferences gespeichert und beim App-Neustart wiederhergestellt. Die Einstellungen und die Startansicht verwenden dieselben Werte; Filteränderungen leeren veraltete Verbindungsergebnisse.
+- Der Verkehrsmittel-Filter ist **nicht** implementiert und wird ausdrücklich nicht als wirksame Einstellung ausgegeben. Die vorhandene Linienfilterfunktion ist der aktuell unterstützte Präferenzumfang.
+- CI und Gerätetest für `74bc95f4` sind zum Zeitpunkt dieses Nachtrags noch offen.
+
 ## Risiken und offene Entscheidungen
 - **Doppelter Android-Berechtigungsdialog beim ersten Start:** Kalender und GPS werden derzeit beide beim Start angestoßen. Reihenfolge und Ablehnungsfall auf echtem Gerät prüfen und ggf. sequenzieren.
 - **Geocoder:** Automatische Adressauflösung ist implementiert, aber kein garantierter Online-Dienst; Fehler und 0 Treffer sind noch nicht sauber differenziert.
