@@ -26,6 +26,7 @@ import de.mvv.mobility.data.JourneyOption
 import de.mvv.mobility.data.RouteFilterMode
 import de.mvv.mobility.data.RoutePreference
 import de.mvv.mobility.data.filterJourneys
+import de.mvv.mobility.data.selectAppointmentJourneys
 import de.mvv.mobility.data.UpcomingAppointment
 import de.mvv.mobility.widget.JourneyWidget
 import androidx.glance.appwidget.updateAll
@@ -254,7 +255,7 @@ class MainActivity : ComponentActivity() {
                                 mvvCandidates = emptyList()
                                 routeStatus = "MVV-Ziel wird geprüft …"
                                 if (fixture) {
-                                    journeys = filterJourneys(MvvJourneyRepository.parseTrips("""{"trips":[{"legs":[{"origin":{"dateTime":{"hour":"09","minute":"10"}},"distance":300},{"transportation":{"number":"U3"},"destination":{"dateTime":{"hour":"09","minute":"30"}}}]}]}""", walkingSpeed), RoutePreference(routeFilterMode, routeFilterQuery))
+                                    journeys = filterJourneys(MvvJourneyRepository.parseTrips("""{"trips":[{"legs":[{"origin":{"dateTime":{"hour":"09","minute":"10"}},"distance":300},{"transportation":{"number":"U3"},"destination":{"dateTime":{"hour":"09","minute":"30"}}}]}]}""", walkingSpeed), RoutePreference(routeFilterMode, routeFilterQuery)).take(3)
                                     journeyLoading = false
                                     routeStatus = "Testverbindung geladen"
                                 } else MvvJourneyRepository.searchAddress(this@MainActivity, start, destination, walkingSpeed, callback = { result ->
@@ -263,7 +264,7 @@ class MainActivity : ComponentActivity() {
                                         result.fold(
                                             onSuccess = {
                                                 journeys = it.options
-                                                routeStatus = if (it.options.isEmpty() && routeFilterMode != RouteFilterMode.ANY) "Keine passende Linie unter den geprüften MVV-Verbindungen gefunden. Bitte andere Auswahl versuchen." else "${it.options.size} Verbindungen nach ${it.destination.name} geladen"
+                                                routeStatus = if (it.options.isEmpty()) "Keine passende Verbindung innerhalb von zwei Stunden vor der gewünschten Ankunft gefunden." else "${it.options.size} passende Verbindungen nach ${it.destination.name} geladen"
                                             },
                                             onFailure = {
                                                 if (it is MvvJourneyRepository.AmbiguousDestination) {
@@ -300,7 +301,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             ) { Text(candidate.name) }
                         }
-                        journeys.sortedWith(compareBy<JourneyOption> { it.changes }.thenBy { it.walkingMinutes }).forEachIndexed { index, trip ->
+                        journeys.forEachIndexed { index, trip ->
                             val firstBus = trip.steps.firstOrNull { !it.walking }
                             val targetDay = appointment?.startMillis?.minus(arrivalBufferMinutes * 60000L)
                             fun minutesUntil(clock: String): Long? {
