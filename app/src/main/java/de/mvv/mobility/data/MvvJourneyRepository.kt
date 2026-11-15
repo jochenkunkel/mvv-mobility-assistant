@@ -65,9 +65,16 @@ fun selectAppointmentJourneys(options: List<JourneyOption>, arrivalByMillis: Lon
         }.timeInMillis
     }
     return options.mapNotNull { trip ->
-        val arrival = epoch(trip.arrival) ?: return@mapNotNull null
-        val early = arrivalByMillis - arrival
-        if (early < 0 || early > maximumMinutesEarly * 60000L) null else trip to arrival
+        val sameDayArrival = epoch(trip.arrival) ?: return@mapNotNull null
+        // EFA clock-only fixtures may cross midnight. Consider the preceding
+        // calendar day instead of silently dropping a valid late connection.
+        val calendar = java.util.Calendar.getInstance(zone).apply { timeInMillis = sameDayArrival }
+        calendar.add(java.util.Calendar.DAY_OF_MONTH, -1)
+        val previousDayArrival = calendar.timeInMillis
+        val arrival = listOf(sameDayArrival, previousDayArrival)
+            .filter { it <= arrivalByMillis && arrivalByMillis - it <= maximumMinutesEarly * 60000L }
+            .maxOrNull() ?: return@mapNotNull null
+        trip to arrival
     }.distinctBy { it.second to it.first.summary }
         .sortedByDescending { it.second }.take(maximumResults).map { it.first }
 }
