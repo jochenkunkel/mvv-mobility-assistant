@@ -662,13 +662,40 @@ class MainActivity : ComponentActivity() {
                                 elevation = CardDefaults.cardElevation(defaultElevation = if (index == 0) 4.dp else 2.dp)
                             ) {
                                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    if (index == 0) Text("★ ERSTE VERBINDUNG", color = Color(0xFF5635B1),
+                                    if (index == 0) Text("ERSTE VERBINDUNG", color = Color(0xFF5635B1),
                                         fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
-                                    Text("${trip.departure} – ${trip.arrival}", color = Color(0xFF35236D),
-                                        fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall)
-                                    Text(trip.summary, modifier = Modifier.testTag("journey_summary"), color = MaterialTheme.colorScheme.primary)
-                                    OutlinedButton(onClick = { dashboardJourney = index; selectedTab = CockpitTab.JOURNEY }, modifier = Modifier.testTag("open_walking_dashboard")) { Text("Meine Fahrt · Dashboard öffnen") }
-                                    Text("${trip.changes} Umstiege · Fußweg geschätzt: ${trip.walkingMinutes} Min. bei %.1f km/h".format(java.util.Locale.GERMANY, walkingSpeed))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column {
+                                            Text("ABFAHRT", style = MaterialTheme.typography.labelSmall, color = Color(0xFF62577D))
+                                            Text(trip.departure, color = Color(0xFF35236D),
+                                                fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall)
+                                        }
+                                        Text("→", color = Color(0xFF5635B1), style = MaterialTheme.typography.titleLarge)
+                                        Column(horizontalAlignment = Alignment.End) {
+                                            Text("ANKUNFT", style = MaterialTheme.typography.labelSmall, color = Color(0xFF62577D))
+                                            Text(trip.arrival, color = Color(0xFF35236D),
+                                                fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall)
+                                        }
+                                    }
+                                    if (firstBus != null) {
+                                        Text("Linie ${firstBus.line} · ${firstBus.from.ifBlank { "Einstiegshaltestelle unbekannt" }}",
+                                            color = Color(0xFF5635B1), fontWeight = FontWeight.SemiBold,
+                                            style = MaterialTheme.typography.bodyMedium)
+                                    }
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        Text("${trip.changes} Umstiege", style = MaterialTheme.typography.labelMedium)
+                                        Text("Fußweg ca. ${trip.walkingMinutes} Min.", style = MaterialTheme.typography.labelMedium)
+                                    }
+                                    Text(trip.summary, modifier = Modifier.testTag("journey_summary"),
+                                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    OutlinedButton(
+                                        onClick = { dashboardJourney = index; selectedTab = CockpitTab.JOURNEY },
+                                        modifier = Modifier.fillMaxWidth().testTag("open_walking_dashboard")
+                                    ) { Text("Meine Fahrt öffnen") }
                                     if (leaveIn != null) {
                                         Text(if (leaveIn > 0) "Losgehen in ca. $leaveIn Minuten · ${trip.departure}"
                                             else if (leaveIn >= -5) "Jetzt losgehen · ${trip.departure}"
