@@ -5,10 +5,12 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
+import android.location.LocationListener
+import android.os.Looper
 import android.os.Build
 import android.os.CancellationSignal
 
-/** One-shot foreground position only. No background tracking or persistence. */
+/** Foreground-only location helpers. No background tracking or persistence. */
 object CurrentLocationRepository {
     fun hasPermission(context: Context): Boolean =
         context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
@@ -46,4 +48,44 @@ object CurrentLocationRepository {
             onResult(null)
         }
     }
+    /**
+     * Receives fresh positions while the caller is foreground-active.
+     * Call the returned function on STOP/disposal to prevent background updates.
+     */
+    fun observeForeground(context: Context, onResult: (Location?) -> Unit): () -> Unit {
+        if (!hasPermission(context)) {
+            onResult(null)
+            return {}
+        }
+        val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val provider = when {
+            manager.isProviderEnabled(LocationManager.GPS_PROVIDER) &&
+                context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ->
+                LocationManager.GPS_PROVIDER
+            manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
+            else -> null
+        }
+        if (provider == null) {
+            onResult(null)
+            return {}
+        }
+        val listener = LocationListener { location -> onResult(location) }
+        return try {
+            manager.requestLocationUpdates(provider, 5000L, 3f, listener, Looper.getMainLooper())
+            // Show a recent cached fix while awaiting the first fresh update.
+            @Suppress("DEPRECATION")
+            val cached = manager.getLastKnownLocation(provider)
+            if (cached != null && System.currentTimeMillis() - cached.time < 30_000L) {
+                onResult(cached)
+            }
+            { manager.removeUpdates(listener) }
+        } catch (_: SecurityException) {
+            onResult(null)
+            {}
+        } catch (_: IllegalArgumentException) {
+            onResult(null)
+            {}
+        }
+    }
+
 }
