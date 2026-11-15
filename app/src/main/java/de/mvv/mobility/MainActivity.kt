@@ -50,6 +50,7 @@ class MainActivity : ComponentActivity() {
         // Fixture mode is strictly limited to debuggable APKs and is visibly labelled.
         val fixture = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0 &&
             intent.getBooleanExtra("mein_weg_test_fixture", false)
+        val visualFixture = fixture && intent.getBooleanExtra("mein_weg_visual_fixture", false)
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
@@ -148,7 +149,7 @@ class MainActivity : ComponentActivity() {
                             onConnections = { selectedTab = CockpitTab.CONNECTIONS },
                             onJourney = { selectedTab = CockpitTab.JOURNEY }
                         )
-                        if ((selectedTab == CockpitTab.START || fixture) && settingsExpanded) {
+                        if ((selectedTab == CockpitTab.START || (fixture && !visualFixture)) && settingsExpanded) {
                             Card(
                                 modifier = Modifier.fillMaxWidth().testTag("settings_panel"),
                                 shape = RoundedCornerShape(20.dp),
@@ -212,7 +213,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
-                        if (selectedTab == CockpitTab.START || fixture) {
+                        if (selectedTab == CockpitTab.START || (fixture && !visualFixture)) {
                         if (homeSaved) {
                             Button(
                                 onClick = {
@@ -379,7 +380,7 @@ class MainActivity : ComponentActivity() {
                         Spacer(Modifier.height(1.dp).bringIntoViewRequester(connectionsAnchor))
                         }
                         val destination = confirmedDestination.trim().ifBlank { appointment?.location?.trim().orEmpty() }
-                        if (selectedTab == CockpitTab.CONNECTIONS || fixture) {
+                        if (selectedTab == CockpitTab.CONNECTIONS || (fixture && !visualFixture)) {
                         Text("Verbindungen", style = MaterialTheme.typography.titleLarge)
                         Button(
                             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("mvv_search_button"),
@@ -442,7 +443,7 @@ class MainActivity : ComponentActivity() {
                         }
                         Spacer(Modifier.height(1.dp).bringIntoViewRequester(journeyAnchor))
                         }
-                        if (selectedTab == CockpitTab.JOURNEY || fixture) {
+                        if (selectedTab == CockpitTab.JOURNEY || (fixture && !visualFixture)) {
                         Text("Meine Fahrt", style = MaterialTheme.typography.titleLarge)
                         if (dashboardJourney == null) TextButton(onClick = { selectedTab = CockpitTab.CONNECTIONS }) { Text("Verbindungen ansehen") }
                         if (dashboardJourney != null) {
@@ -504,7 +505,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         }
-                        if (selectedTab == CockpitTab.CONNECTIONS || fixture) {
+                        if (selectedTab == CockpitTab.CONNECTIONS || (fixture && !visualFixture)) {
                         journeys.forEachIndexed { index, trip ->
                             val firstBus = trip.steps.firstOrNull { !it.walking }
                             val targetDay = appointment?.startMillis?.minus(arrivalBufferMinutes * 60000L)
