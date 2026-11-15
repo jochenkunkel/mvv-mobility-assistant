@@ -143,6 +143,7 @@ class MainActivity : ComponentActivity() {
                         mutableStateOf(CurrentLocationRepository.hasPermission(this@MainActivity))
                     }
                     var appForeground by remember { mutableStateOf(false) }
+                    var locationRetry by remember { mutableIntStateOf(0) }
                     val lifecycleOwner = LocalLifecycleOwner.current
                     DisposableEffect(lifecycleOwner) {
                         appForeground = lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
@@ -169,7 +170,7 @@ class MainActivity : ComponentActivity() {
                             ))
                         }
                     }
-                    DisposableEffect(appForeground, locationPermissionGranted, fixture) {
+                    DisposableEffect(appForeground, locationPermissionGranted, fixture, locationRetry) {
                         if (!fixture && appForeground && locationPermissionGranted) {
                             locationStatus = "Standort wird laufend ermittelt …"
                             val stop = CurrentLocationRepository.observeForeground(this@MainActivity) { found ->
@@ -401,8 +402,7 @@ class MainActivity : ComponentActivity() {
                                     ))
                                 } else {
                                     // Re-register the foreground subscription after a location-services change.
-                                    locationPermissionGranted = false
-                                    locationPermissionGranted = true
+                                    locationRetry++
                                 }
                             }, modifier = Modifier.testTag("setup_location_retry")) { Text("Standort erneut versuchen") }
                         }
