@@ -75,8 +75,15 @@ fun selectAppointmentJourneys(options: List<JourneyOption>, arrivalByMillis: Lon
             .filter { it <= arrivalByMillis && arrivalByMillis - it <= maximumMinutesEarly * 60000L }
             .maxOrNull() ?: return@mapNotNull null
         trip to arrival
-    }.distinctBy { it.second to it.first.summary }
-        .sortedByDescending { it.second }.take(maximumResults).map { it.first }
+    }.distinctBy { (trip, arrival) ->
+        // Keep distinct departures even when they use the same line and arrive together.
+        listOf(arrival.toString(), trip.departure, trip.arrival, trip.summary,
+            trip.changes.toString(), trip.walkingMinutes.toString(), trip.lines.joinToString("|"))
+    }.sortedWith(
+        compareByDescending<Pair<JourneyOption, Long>> { it.second }
+            .thenBy { it.first.changes }
+            .thenBy { it.first.walkingMinutes }
+    ).take(maximumResults).map { it.first }
 }
 
 object MvvJourneyRepository {
