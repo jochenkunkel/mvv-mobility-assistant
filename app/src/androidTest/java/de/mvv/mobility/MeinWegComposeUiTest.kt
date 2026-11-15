@@ -116,6 +116,17 @@ class MeinWegComposeUiTest {
         compose.onNodeWithTag("walking_dashboard").assertDoesNotExist()
     }
 
+    @Test fun settingsOpenFromEveryTabAndCloseCleanly() = launchFixture {
+        for (tab in listOf("tab_start", "tab_connections", "tab_journey")) {
+            compose.onNodeWithTag(tab).performClick()
+            compose.onNodeWithTag("settings_toggle").performClick()
+            compose.onNodeWithTag("settings_panel").performScrollTo().assertExists()
+            compose.onNodeWithText("Bevorzugte Linien").performScrollTo().assertExists()
+            compose.onNodeWithText("Schließen").performScrollTo().performClick()
+            compose.onNodeWithTag("settings_panel").assertDoesNotExist()
+        }
+    }
+
     @Test fun screenshotFixtureStartAndRouteAreSavedForVisualReview() {
         val app = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
         val intent = Intent(app, MainActivity::class.java)
