@@ -69,6 +69,7 @@ class MainActivity : ComponentActivity() {
                     var routeStatus by remember { mutableStateOf("") }
                     var journeys by remember { mutableStateOf<List<JourneyOption>>(emptyList()) }
                     var expandedJourney by remember { mutableStateOf<Int?>(null) }
+                    var dashboardJourney by remember { mutableStateOf<Int?>(null) }
                     var clockMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
                     LaunchedEffect(Unit) {
                         while (true) {
@@ -301,6 +302,59 @@ class MainActivity : ComponentActivity() {
                                 }
                             ) { Text(candidate.name) }
                         }
+                        if (dashboardJourney != null) {
+                            val chosen = journeys.getOrNull(dashboardJourney!!)
+                            if (chosen != null) {
+                                val boarding = chosen.steps.firstOrNull { !it.walking }
+                                val firstWalk = chosen.steps.takeWhile { it.walking }
+                                val walkMinutes = firstWalk.sumOf { it.minutes }
+                                val approximateMeters = (walkMinutes * walkingSpeed * 1000f / 60f).toInt()
+                                val targetDay = appointment?.startMillis?.minus(arrivalBufferMinutes * 60000L)
+                                fun countdown(clock: String): Long? {
+                                    if (targetDay == null || !Regex("""\d{1,2}:\d{2}""").matches(clock)) return null
+                                    val parts = clock.split(":")
+                                    val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("Europe/Berlin"))
+                                    cal.timeInMillis = targetDay
+                                    cal.set(java.util.Calendar.HOUR_OF_DAY, parts[0].toInt())
+                                    cal.set(java.util.Calendar.MINUTE, parts[1].toInt())
+                                    cal.set(java.util.Calendar.SECOND, 0)
+                                    cal.set(java.util.Calendar.MILLISECOND, 0)
+                                    if (cal.timeInMillis > targetDay + 30 * 60000L) cal.add(java.util.Calendar.DAY_OF_MONTH, -1)
+                                    return (cal.timeInMillis - clockMillis) / 60000L
+                                }
+                                Card(Modifier.fillMaxWidth().testTag("walking_dashboard")) {
+                                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        Text("MEINE FAHRT · GEH-DASHBOARD", style = MaterialTheme.typography.titleMedium)
+                                        Text("Nächster Schritt: Zur Einstiegshaltestelle gehen", style = MaterialTheme.typography.headlineSmall)
+                                        Text(boarding?.from?.ifBlank { "Haltestelle noch nicht übermittelt" } ?: "Kein Verkehrsmittel in dieser Verbindung")
+                                        if (boarding != null) {
+                                            Text("Linie ${boarding.line} · Abfahrt ${boarding.departure}", style = MaterialTheme.typography.titleLarge)
+                                            val untilBus = countdown(boarding.departure)
+                                            if (untilBus != null) Text(if (untilBus >= 0) "Bus/Bahn fährt in ca. $untilBus Min." else "Geplante Abfahrt ist vorbei.",
+                                                style = MaterialTheme.typography.headlineSmall)
+                                        }
+                                        val untilLeave = countdown(chosen.departure)
+                                        if (untilLeave != null) Text(if (untilLeave > 0) "Losgehen in ca. $untilLeave Min." else "Abfahrtszeit für den Fußweg erreicht")
+                                        if (walkMinutes > 0) {
+                                            Text("Fußweg zum Einstieg: ca. $walkMinutes Min. · grob $approximateMeters m (aus Gehzeit geschätzt)")
+                                        }
+                                        Text("Nächste Etappe: ${firstWalk.firstOrNull()?.from?.ifBlank { "Startpunkt" } ?: "Startpunkt"} → ${boarding?.from?.ifBlank { "Einstieg" } ?: "Ziel"}")
+                                        Text("Für echte Abbiegungen und die verbleibenden Meter bitte die Fußweg-Navigation öffnen. Dieses Dashboard verfolgt deinen Standort nicht automatisch.")
+                                        if (boarding?.from?.isNotBlank() == true && location != null) {
+                                            Button(onClick = {
+                                                val start = location ?: return@Button
+                                                val uri = Uri.parse("https://www.google.com/maps/dir/?api=1").buildUpon()
+                                                    .appendQueryParameter("origin", "${start.latitude},${start.longitude}")
+                                                    .appendQueryParameter("destination", boarding.from + ", München")
+                                                    .appendQueryParameter("travelmode", "walking").build()
+                                                startActivity(Intent(Intent.ACTION_VIEW, uri))
+                                            }, modifier = Modifier.fillMaxWidth()) { Text("Fußweg und nächste Abbiegung öffnen") }
+                                        }
+                                        TextButton(onClick = { dashboardJourney = null }) { Text("Dashboard schließen") }
+                                    }
+                                }
+                            }
+                        }
                         journeys.forEachIndexed { index, trip ->
                             val firstBus = trip.steps.firstOrNull { !it.walking }
                             val targetDay = appointment?.startMillis?.minus(arrivalBufferMinutes * 60000L)
@@ -322,6 +376,7 @@ class MainActivity : ComponentActivity() {
                                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                     Text("${trip.departure} – ${trip.arrival}", style = MaterialTheme.typography.titleMedium)
                                     Text(trip.summary, modifier = Modifier.testTag("journey_summary"))
+                                    OutlinedButton(onClick = { dashboardJourney = index }, modifier = Modifier.testTag("open_walking_dashboard")) { Text("Meine Fahrt · Dashboard öffnen") }
                                     Text("${trip.changes} Umstiege · Fußweg geschätzt: ${trip.walkingMinutes} Min. bei %.1f km/h".format(java.util.Locale.GERMANY, walkingSpeed))
                                     if (leaveIn != null) {
                                         Text(if (leaveIn > 0) "Losgehen in ca. $leaveIn Minuten · ${trip.departure}"
