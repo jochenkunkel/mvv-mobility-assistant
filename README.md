@@ -10,6 +10,8 @@ Die begründeten Architektur-, UX- und Funktionsentscheidungen inklusive Umsetzu
 
 Die verbindlichen Anforderungen aus dem Praxistest mit fünf Android-Screenshots, einschließlich automatischer Kalender-/Ziel-/Standortvorbereitung, kompakter Verbindungskarten, Settings und ehrlicher Live-Anzeigen, stehen in **[docs/COCKPIT-V2-PLAN.md](docs/COCKPIT-V2-PLAN.md)**. Dort sind Umsetzungsstand, Reihenfolge und Abnahmekriterien getrennt dokumentiert. Geplant bedeutet nicht implementiert.
 
+Der **[systematische Entwicklungs- und Freigabeplan](docs/IMPLEMENTATION-ROADMAP.md)** definiert sechs Phasen, konkrete Arbeitspakete, Test-Gates und den aktuellen Fortschritt.
+
 ## Entwickeln und testen
 JDK 17, Android SDK 35 und Gradle 8.13. `gradle :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest`.
 
