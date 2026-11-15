@@ -11,6 +11,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -102,9 +106,18 @@ class MainActivity : ComponentActivity() {
                             }
                         } else locationStatus = "Standortberechtigung nicht erteilt"
                     }
-                    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        Text("Mein Weg", modifier = Modifier.testTag("app_title"), style = MaterialTheme.typography.headlineMedium)
-                        Text("Dein Weg zum nächsten Termin", color = MaterialTheme.colorScheme.primary)
+                    Column(Modifier.fillMaxSize().background(Color(0xFFF7F6FB)).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().background(Color(0xFF49309B), RoundedCornerShape(24.dp))
+                                .padding(horizontal = 22.dp, vertical = 26.dp),
+                            verticalArrangement = Arrangement.spacedBy(7.dp)
+                        ) {
+                            Text("MEIN WEG 2.0  ·  MÜNCHEN", color = Color(0xFFD9D1FF), style = MaterialTheme.typography.labelMedium)
+                            Text("Mein Weg", modifier = Modifier.testTag("app_title"), color = Color.White,
+                                fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineLarge)
+                            Text("Entspannt und pünktlich ans Ziel", color = Color(0xFFF0EBFF),
+                                style = MaterialTheme.typography.bodyMedium)
+                        }
                         if (fixture) Text("TESTMODUS: simulierte Kalender-, GPS- und MVV-Daten", color = MaterialTheme.colorScheme.error)
                         if (!allowed && !fixture) {
                             Text("Damit Mein Weg deine Termine anzeigen kann, erlaube den Kalenderzugriff. Die Daten bleiben auf deinem Gerät.")
@@ -122,8 +135,13 @@ class MainActivity : ComponentActivity() {
                             if (appointment == null) {
                                 Text("Keine bevorstehenden Termine mit Uhrzeit gefunden.")
                             } else {
-                                Card(Modifier.fillMaxWidth()) {
-                                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(20.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                                ) {
+                                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                         Text(appointment.title, style = MaterialTheme.typography.titleLarge)
                                         Text(appointment.timeLabel())
                                         Text(appointment.location ?: "Zieladresse bitte ergänzen")
