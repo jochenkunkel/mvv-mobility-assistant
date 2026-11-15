@@ -632,8 +632,14 @@ class MainActivity : ComponentActivity() {
                                     elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                                 ) {
                                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        Text("MEINE FAHRT  ·  LIVE", color = Color(0xFF49309B), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                        Text("Jetzt zur Haltestelle", color = Color(0xFF263B2E), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall)
+                                        Text("MEINE FAHRT  ·  FAHRPLAN", color = Color(0xFF49309B), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Text(if (usableLocation != null) "Weg zur Haltestelle" else "Standort aktualisieren", color = Color(0xFF263B2E), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall)
+                                        Text(if (usableLocation != null) "✓ GPS-Standort aktuell" else "GPS-Standort fehlt oder ist veraltet. Bitte Standort aktualisieren.", style = MaterialTheme.typography.bodySmall)
+                                        if (usableLocation == null && !fixture) {
+                                            TextButton(onClick = { locationRetry++ }, modifier = Modifier.testTag("journey_location_retry")) {
+                                                Text("GPS erneut ermitteln")
+                                            }
+                                        }
                                         Text(boarding?.from?.ifBlank { "Haltestelle noch nicht übermittelt" } ?: "Kein Verkehrsmittel in dieser Verbindung")
                                         if (boarding != null) {
                                             Text("Linie ${boarding.line} · Abfahrt ${boarding.departure}", style = MaterialTheme.typography.titleLarge)
@@ -655,8 +661,14 @@ class MainActivity : ComponentActivity() {
                                             Text("Fußweg zum Einstieg: ca. $walkMinutes Min. · grob $approximateMeters m (aus Gehzeit geschätzt)")
                                         }
                                         Text("Nächste Etappe: ${firstWalk.firstOrNull()?.from?.ifBlank { "Startpunkt" } ?: "Startpunkt"} → ${boarding?.from?.ifBlank { "Einstieg" } ?: "Ziel"}")
-                                        Text("Für echte Abbiegungen und die verbleibenden Meter bitte die Fußweg-Navigation öffnen. Dieses Dashboard verfolgt deinen Standort nicht automatisch.")
-                                        if (boarding?.from?.isNotBlank() == true && location != null) {
+                                        Text("Die Zeiten basieren auf der letzten MVV-Verbindung. Die App berechnet keine GPS-basierte Restgehzeit und aktualisiert den Fahrplan nicht automatisch.")
+                                        if (boarding != null && countdown(boarding.departure)?.let { it < 0 } == true) {
+                                            Text("Die geplante Abfahrt ist vorbei. Bitte unter Verbindungen eine neue Route suchen.", color = MaterialTheme.colorScheme.error)
+                                            TextButton(onClick = { dashboardJourney = null; selectedTab = CockpitTab.CONNECTIONS }) {
+                                                Text("Neue Verbindung suchen")
+                                            }
+                                        }
+                                        if (boarding?.from?.isNotBlank() == true && usableLocation != null) {
                                             Button(onClick = {
                                                 val start = usableLocation ?: return@Button
                                                 val uri = Uri.parse("https://www.google.com/maps/dir/?api=1").buildUpon()
