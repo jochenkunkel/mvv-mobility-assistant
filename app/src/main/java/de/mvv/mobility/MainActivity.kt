@@ -304,7 +304,7 @@ class MainActivity : ComponentActivity() {
                             val firstBus = trip.steps.firstOrNull { !it.walking }
                             val targetDay = appointment?.startMillis?.minus(arrivalBufferMinutes * 60000L)
                             fun minutesUntil(clock: String): Long? {
-                                if (targetDay == null || !Regex("""\\d{1,2}:\\d{2}""").matches(clock)) return null
+                                if (targetDay == null || !Regex("""\d{1,2}:\d{2}""").matches(clock)) return null
                                 val parts = clock.split(":")
                                 val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("Europe/Berlin"))
                                 cal.timeInMillis = targetDay
