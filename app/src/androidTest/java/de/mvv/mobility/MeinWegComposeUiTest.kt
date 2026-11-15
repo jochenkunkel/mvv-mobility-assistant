@@ -9,6 +9,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeRight
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -72,10 +74,10 @@ class MeinWegComposeUiTest {
     @Test fun arrivalSliderIsInteractiveAndUpdatesLabel() = launchFixture {
         compose.onNodeWithTag("arrival_buffer_slider").performScrollTo().assertExists()
         compose.onNodeWithText("10 Min. früher").assertExists()
-        compose.onNodeWithTag("arrival_buffer_slider").performTouchInput { swipeRight() }
+        compose.onNodeWithTag("arrival_buffer_slider").performSemanticsAction(SemanticsActions.SetProgress) { it(60f) }
         compose.onNodeWithText("10 Min. früher").assertDoesNotExist()
         compose.onNodeWithText("60 Min. früher").assertExists()
-        compose.onNodeWithTag("arrival_buffer_slider").performTouchInput { swipeLeft() }
+        compose.onNodeWithTag("arrival_buffer_slider").performSemanticsAction(SemanticsActions.SetProgress) { it(5f) }
         compose.onNodeWithText("5 Min. früher").assertExists()
     }
 
