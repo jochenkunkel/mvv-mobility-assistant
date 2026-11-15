@@ -122,6 +122,7 @@ class MainActivity : ComponentActivity() {
                     val connectionsAnchor = remember { BringIntoViewRequester() }
                     val journeyAnchor = remember { BringIntoViewRequester() }
                     var selectedTab by remember { mutableStateOf(CockpitTab.START) }
+                    var activeSetupStep by remember { mutableIntStateOf(0) }
                     Column(Modifier.fillMaxSize().background(Color(0xFFF7F6FB))) {
                     Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(
@@ -229,6 +230,10 @@ class MainActivity : ComponentActivity() {
                             ) { Text("⌂ Nach Hause navigieren") }
                         }
                         Spacer(Modifier.height(1.dp).bringIntoViewRequester(appointmentAnchor))
+                        TextButton(onClick = { activeSetupStep = 0 }, modifier = Modifier.fillMaxWidth().testTag("setup_step_appointment")) {
+                            Text(if (activeSetupStep == 0) "① TERMIN · Auswahl" else "✓ ① Termin · Antippen zum Ändern")
+                        }
+                        if (activeSetupStep == 0 || (fixture && !visualFixture)) {
                         if (fixture) Text("TESTMODUS: simulierte Kalender-, GPS- und MVV-Daten", color = MaterialTheme.colorScheme.error)
                         if (!allowed && !fixture) {
                             Text("Damit Mein Weg deine Termine anzeigen kann, erlaube den Kalenderzugriff. Die Daten bleiben auf deinem Gerät.")
@@ -321,7 +326,12 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
-                        HorizontalDivider()
+                        if (!(fixture && !visualFixture)) Button(onClick = { activeSetupStep = 1 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_address")) { Text("Weiter · Start & Ziel →") }
+                        }
+                        TextButton(onClick = { activeSetupStep = 1 }, modifier = Modifier.fillMaxWidth().testTag("setup_step_address")) {
+                            Text(if (activeSetupStep == 1) "② START & ZIEL · Auswahl" else "② Start & Ziel · Antippen zum Ändern")
+                        }
+                        if (activeSetupStep == 1 || (fixture && !visualFixture)) {
                         Text("Startpunkt", style = MaterialTheme.typography.titleMedium)
                         Button(onClick = {
                             if (CurrentLocationRepository.hasPermission(this@MainActivity)) {
@@ -342,7 +352,12 @@ class MainActivity : ComponentActivity() {
                             Text("Breite: %.5f · Länge: %.5f".format(java.util.Locale.GERMANY, it.latitude, it.longitude))
                         }
                         Text("Die Position wird nur auf Anfrage ermittelt, nicht gespeichert und nicht im Hintergrund verfolgt.")
-                        HorizontalDivider()
+                        if (!(fixture && !visualFixture)) Button(onClick = { activeSetupStep = 2 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_preferences")) { Text("Weiter · Fahrtwunsch →") }
+                        }
+                        TextButton(onClick = { activeSetupStep = 2 }, modifier = Modifier.fillMaxWidth().testTag("setup_step_preferences")) {
+                            Text(if (activeSetupStep == 2) "③ FAHRTWUNSCH · Auswahl" else "③ Fahrtwunsch · Antippen zum Ändern")
+                        }
+                        if (activeSetupStep == 2 || (fixture && !visualFixture)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("Verkehrsmittel", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                             TextButton(onClick = { advancedExpanded = !advancedExpanded }) {
@@ -379,6 +394,8 @@ class MainActivity : ComponentActivity() {
                             val arrivalFormat = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", java.util.Locale.GERMANY)
                             arrivalFormat.timeZone = java.util.TimeZone.getTimeZone("Europe/Berlin")
                             Text("MVV-Suche: Ankunft spätestens ${arrivalFormat.format(arrivalTarget)}")
+                        }
+                        if (!(fixture && !visualFixture)) Button(onClick = { selectedTab = CockpitTab.CONNECTIONS }, modifier = Modifier.fillMaxWidth().testTag("setup_find_connections")) { Text("Verbindungen finden →") }
                         }
                         Spacer(Modifier.height(1.dp).bringIntoViewRequester(connectionsAnchor))
                         }
