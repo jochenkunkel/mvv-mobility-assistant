@@ -78,13 +78,16 @@ object CurrentLocationRepository {
             if (cached != null && System.currentTimeMillis() - cached.time < 30_000L) {
                 onResult(cached)
             }
-            { manager.removeUpdates(listener) }
+            val stop: () -> Unit = { manager.removeUpdates(listener) }
+            stop
         } catch (_: SecurityException) {
             onResult(null)
-            {}
+            val stop: () -> Unit = {}
+            stop
         } catch (_: IllegalArgumentException) {
             onResult(null)
-            {}
+            val stop: () -> Unit = {}
+            stop
         }
     }
 
