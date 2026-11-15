@@ -241,6 +241,17 @@ class MainActivity : ComponentActivity() {
                                     style = MaterialTheme.typography.titleLarge)
                             }
                         }
+                        if (!fixture && !settingsExpanded) {
+                            Text(
+                                if (usableLocation != null) "● Standort aktiv · automatisch für Verbindungen"
+                                else if (!locationPermissionGranted) "○ Standortfreigabe in Android erforderlich"
+                                else "○ Standort wird automatisch ermittelt",
+                                modifier = Modifier.fillMaxWidth().testTag("global_location_status"),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (usableLocation != null) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         if (fixture && !visualFixture && !settingsExpanded) CockpitOverview(
                             appointment = appointment?.title,
                             destination = confirmedDestination.ifBlank { appointment?.location.orEmpty() },
