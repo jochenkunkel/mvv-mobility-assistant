@@ -166,13 +166,15 @@ class MainActivity : ComponentActivity() {
                         LocationFreshness.isFresh(it.time, locationClock)
                     }
                     val effectiveLocationStatus = if (!fixture && location != null && usableLocation == null)
-                        "Standort veraltet – bitte aktualisieren" else locationStatus
-                    var locationRetry by remember { mutableIntStateOf(0) }
+                        "Standort wird automatisch neu ermittelt …" else locationStatus
                     val lifecycleOwner = LocalLifecycleOwner.current
                     DisposableEffect(lifecycleOwner) {
                         appForeground = lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
                         val observer = LifecycleEventObserver { _, event ->
-                            if (event == Lifecycle.Event.ON_START) appForeground = true
+                            if (event == Lifecycle.Event.ON_START) {
+                                locationPermissionGranted = CurrentLocationRepository.hasPermission(this@MainActivity)
+                                appForeground = true
+                            }
                             if (event == Lifecycle.Event.ON_STOP) appForeground = false
                         }
                         lifecycleOwner.lifecycle.addObserver(observer)
@@ -194,7 +196,7 @@ class MainActivity : ComponentActivity() {
                             ))
                         }
                     }
-                    DisposableEffect(appForeground, locationPermissionGranted, fixture, locationRetry) {
+                    DisposableEffect(appForeground, locationPermissionGranted, fixture) {
                         if (!fixture && appForeground && locationPermissionGranted) {
                             locationStatus = "Standort wird laufend ermittelt …"
                             val stop = CurrentLocationRepository.observeForeground(this@MainActivity) { found ->
@@ -205,7 +207,7 @@ class MainActivity : ComponentActivity() {
                                         "✓ Standort aktuell" else "Standort veraltet – bitte aktualisieren"
                                 } else {
                                     location = null
-                                    locationStatus = "Standort nicht verfügbar. Standortdienste prüfen."
+                                    locationStatus = "Standort derzeit nicht verfügbar. Bitte Android-Standortdienste prüfen."
                                 }
                             }
                             onDispose { stop() }
@@ -445,20 +447,7 @@ class MainActivity : ComponentActivity() {
                             ) { Text(suggestion) }
                         }
                         Text("Von wo?", style = MaterialTheme.typography.titleMedium)
-                        Text(effectiveLocationStatus, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("setup_location_status"))
-                        if (usableLocation == null && !fixture) {
-                            TextButton(onClick = {
-                                if (!CurrentLocationRepository.hasPermission(this@MainActivity)) {
-                                    locationPermissionLauncher.launch(arrayOf(
-                                        Manifest.permission.ACCESS_FINE_LOCATION,
-                                        Manifest.permission.ACCESS_COARSE_LOCATION
-                                    ))
-                                } else {
-                                    // Re-register the foreground subscription after a location-services change.
-                                    locationRetry++
-                                }
-                            }, modifier = Modifier.testTag("setup_location_retry")) { Text("Standort erneut versuchen") }
-                        }
+                        Text(if (usableLocation != null) "✓ Aktueller Standort verfügbar · wird für die Route verwendet" else effectiveLocationStatus, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("setup_location_status"))
                         Text("Standort wird bei geöffneter App ungefähr alle 5 Sekunden aktualisiert; keine Hintergrundverfolgung.", style = MaterialTheme.typography.bodySmall)
                         if (!(fixture && !visualFixture)) Button(onClick = { activeSetupStep = 2 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_preferences")) { Text("Weiter · Fahrtwunsch →") }
                         }
@@ -635,11 +624,7 @@ class MainActivity : ComponentActivity() {
                                         Text("MEINE FAHRT  ·  FAHRPLAN", color = Color(0xFF49309B), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                         Text(if (usableLocation != null) "Weg zur Haltestelle" else "Standort aktualisieren", color = Color(0xFF263B2E), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall)
                                         Text(if (usableLocation != null) "✓ GPS-Standort aktuell" else "GPS-Standort fehlt oder ist veraltet. Bitte Standort aktualisieren.", style = MaterialTheme.typography.bodySmall)
-                                        if (usableLocation == null && !fixture) {
-                                            TextButton(onClick = { locationRetry++ }, modifier = Modifier.testTag("journey_location_retry")) {
-                                                Text("GPS erneut ermitteln")
-                                            }
-                                        }
+
                                         Text(boarding?.from?.ifBlank { "Haltestelle noch nicht übermittelt" } ?: "Kein Verkehrsmittel in dieser Verbindung")
                                         if (boarding != null) {
                                             Text("Linie ${boarding.line} · Abfahrt ${boarding.departure}", style = MaterialTheme.typography.titleLarge)
