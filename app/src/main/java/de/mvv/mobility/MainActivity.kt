@@ -147,6 +147,24 @@ class MainActivity : ComponentActivity() {
                             }
                         } else locationStatus = "Standortberechtigung nicht erteilt"
                     }
+                    // One foreground location request per screen entry. No background tracking.
+                    LaunchedEffect(Unit) {
+                        if (!fixture) {
+                            if (CurrentLocationRepository.hasPermission(this@MainActivity)) {
+                                locationStatus = "Standort wird automatisch ermittelt …"
+                                CurrentLocationRepository.request(this@MainActivity) { found ->
+                                    location = found
+                                    locationStatus = if (found == null) "Standort nicht verfügbar. Standortdienste prüfen." else "✓ Aktueller Startpunkt ermittelt"
+                                }
+                            } else {
+                                locationStatus = "Standortfreigabe wird angefragt …"
+                                locationPermissionLauncher.launch(arrayOf(
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                ))
+                            }
+                        }
+                    }
                     val appointmentAnchor = remember { BringIntoViewRequester() }
                     val connectionsAnchor = remember { BringIntoViewRequester() }
                     val journeyAnchor = remember { BringIntoViewRequester() }
@@ -353,23 +371,24 @@ class MainActivity : ComponentActivity() {
                             ) { Text(suggestion) }
                         }
                         Text("Von wo?", style = MaterialTheme.typography.titleMedium)
-                        Button(onClick = {
-                            if (CurrentLocationRepository.hasPermission(this@MainActivity)) {
-                                locationStatus = "Standort wird ermittelt …"
-                                CurrentLocationRepository.request(this@MainActivity) { found ->
-                                    location = found
-                                    locationStatus = if (found == null) "Standort nicht verfügbar. Standortdienste prüfen." else "Aktueller Startpunkt ermittelt"
+                        Text(locationStatus, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("setup_location_status"))
+                        if (location == null && !fixture) {
+                            TextButton(onClick = {
+                                if (CurrentLocationRepository.hasPermission(this@MainActivity)) {
+                                    locationStatus = "Standort wird erneut ermittelt …"
+                                    CurrentLocationRepository.request(this@MainActivity) { found ->
+                                        location = found
+                                        locationStatus = if (found == null) "Standort nicht verfügbar. Standortdienste prüfen." else "✓ Aktueller Startpunkt ermittelt"
+                                    }
+                                } else {
+                                    locationPermissionLauncher.launch(arrayOf(
+                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                        Manifest.permission.ACCESS_COARSE_LOCATION
+                                    ))
                                 }
-                            } else {
-                                locationPermissionLauncher.launch(arrayOf(
-                                    Manifest.permission.ACCESS_FINE_LOCATION,
-                                    Manifest.permission.ACCESS_COARSE_LOCATION
-                                ))
-                            }
-                        }) { Text("Aktuellen Standort verwenden") }
-                        Text(locationStatus)
-                        if (location != null) Text("✓ Startpunkt bereit", style = MaterialTheme.typography.bodySmall)
-                        Text("Die Position wird nur auf Anfrage ermittelt, nicht gespeichert und nicht im Hintergrund verfolgt.")
+                            }, modifier = Modifier.testTag("setup_location_retry")) { Text("Standort erneut versuchen") }
+                        }
+                        Text("Standort nur während der App-Nutzung ermittelt; keine Hintergrundverfolgung.", style = MaterialTheme.typography.bodySmall)
                         if (!(fixture && !visualFixture)) Button(onClick = { activeSetupStep = 2 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_preferences")) { Text("Weiter · Fahrtwunsch →") }
                         }
                         SetupStepHeader(3, "Fahrtwunsch", "Verkehrsmittel & Ankunft", activeSetupStep == 2, "setup_step_preferences") { activeSetupStep = 2 }
