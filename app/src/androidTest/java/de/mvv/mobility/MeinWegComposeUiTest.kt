@@ -60,6 +60,11 @@ class MeinWegComposeUiTest {
         ActivityScenario.launch<MainActivity>(intent).use { block() }
     }
 
+    @Test fun locationStatusIsAccessibleAndFixtureRouteRemainsUsable() = launchFixture {
+        compose.onNodeWithTag("setup_location_status").performScrollTo().assertExists()
+        compose.onNodeWithTag("mvv_search_button").performScrollTo().assertIsEnabled()
+    }
+
     @Test fun bottomNavigationKeepsThreeDestinationsAccessible() = launchFixture {
         compose.onNodeWithTag("cockpit_bottom_navigation").assertExists()
         compose.onNodeWithTag("tab_connections").performClick()
