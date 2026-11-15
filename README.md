@@ -1,6 +1,6 @@
 # Mein Weg – Android MVV-Begleiter
 
-Android-App mit Kalenderterminen, aktueller Standortabfrage auf Anfrage, MVV-Tür-zu-Tür-Verbindungen, Linienfilter, Ankunftspuffer und Geh-Dashboard.
+Android-App mit Kalenderterminen, automatischer Standortermittlung und Vordergrund-Aktualisierung, MVV-Tür-zu-Tür-Verbindungen, Linienfilter, Ankunftspuffer und Geh-Dashboard.
 
 ## Produktentscheidungen und Designziel
 
@@ -11,6 +11,10 @@ Die begründeten Architektur-, UX- und Funktionsentscheidungen inklusive Umsetzu
 Die verbindlichen Anforderungen aus dem Praxistest mit fünf Android-Screenshots, einschließlich automatischer Kalender-/Ziel-/Standortvorbereitung, kompakter Verbindungskarten, Settings und ehrlicher Live-Anzeigen, stehen in **[docs/COCKPIT-V2-PLAN.md](docs/COCKPIT-V2-PLAN.md)**. Dort sind Umsetzungsstand, Reihenfolge und Abnahmekriterien getrennt dokumentiert. Geplant bedeutet nicht implementiert.
 
 Der **[systematische Entwicklungs- und Freigabeplan](docs/IMPLEMENTATION-ROADMAP.md)** definiert sechs Phasen, konkrete Arbeitspakete, Test-Gates und den aktuellen Fortschritt.
+
+## Aktueller Projektstand und drei Wireframes
+
+**[Projektstatus vom 15.11.2026: Was umgesetzt ist, was noch geprüft werden muss und die nächsten Phasen](docs/PROJECT-STATUS-2026-11-15.md)**. Enthält drei schematische Bildschirmansichten für Start, Verbindungen und Meine Fahrt. Die Skizzen sind keine echten Emulator-Screenshots. Die [Roadmap](docs/IMPLEMENTATION-ROADMAP.md) enthält das aktualisierte Fortschrittsprotokoll.
 
 ## Entwickeln und testen
 JDK 17, Android SDK 35 und Gradle 8.13. `gradle :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest`.
