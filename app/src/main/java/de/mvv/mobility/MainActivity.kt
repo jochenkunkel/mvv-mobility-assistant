@@ -687,20 +687,29 @@ class MainActivity : ComponentActivity() {
                                     elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                                 ) {
                                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        Text("MEINE FAHRT  ·  FAHRPLAN", color = Color(0xFF49309B),
-                                            fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                        Surface(shape = RoundedCornerShape(12.dp),
-                                            color = if (usableLocation != null) Color.White else Color(0xFFFFF0E5)) {
-                                            Row(Modifier.fillMaxWidth().padding(12.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                Text("⌖", style = MaterialTheme.typography.titleLarge)
-                                                Column {
-                                                    Text(if (usableLocation != null) "GPS AKTIV" else "GPS NICHT VERFÜGBAR",
-                                                        fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
-                                                    Text(if (usableLocation != null) "Standort aktuell" else "Android-Standort prüfen",
-                                                        style = MaterialTheme.typography.bodySmall)
-                                                }
+                                        // GPS describes location freshness only, never MVV real-time departures.
+                                        val gpsLabel = when {
+                                            usableLocation != null -> "GPS"
+                                            locationPermissionGranted -> "GPS …"
+                                            else -> "GPS AUS"
+                                        }
+                                        val gpsColor = when {
+                                            usableLocation != null -> Color(0xFF247A43)
+                                            locationPermissionGranted -> Color(0xFF8A641B)
+                                            else -> Color(0xFFB3261E)
+                                        }
+                                        Row(Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            Text("MEINE FAHRT  ·  FAHRPLAN", color = Color(0xFF49309B),
+                                                fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium,
+                                                modifier = Modifier.weight(1f))
+                                            Surface(shape = RoundedCornerShape(50.dp),
+                                                color = gpsColor.copy(alpha = 0.12f)) {
+                                                Text("⌖ $gpsLabel", color = gpsColor,
+                                                    fontWeight = FontWeight.Bold,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp))
                                             }
                                         }
                                         val recommendedLeave = targetDay?.let { recommendedLeaveMillis(chosen, it) }
