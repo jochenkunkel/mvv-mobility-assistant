@@ -59,16 +59,18 @@ Stand: 15.11.2026. **Ausführungsplan** zum verbindlichen Anforderungskatalog [C
 **Abnahme:** Keine Blocker, alle CI-Jobs grün, Screenshots geprüft, konkrete Testanleitung für Nutzer.
 **Stand:** Offen für die nächste UX-Version.
 
-## Fortschrittsprotokoll (bei jeder Phase aktualisieren)
-| Phase | Status | Letzter Nachweis | Nächster Schritt |
+## Fortschrittsprotokoll (aktualisiert 15.11.2026)
+**Ausführlicher Stand mit drei Wireframes:** [PROJECT-STATUS-2026-11-15.md](PROJECT-STATUS-2026-11-15.md). Die historischen Stand-Sätze oben dokumentieren den Planungszeitpunkt; die Tabelle hier ist der aktuelle Status.
+
+| Phase | Status | Nachweis | Nächster Schritt |
 |---|---|---|---|
-| 0 Baseline | Prüfen | CI/Screenshot-Workflow existiert | HEAD-CI kontrollieren |
-| 1 Automatisierung | In Arbeit | Commit `6b4471e7` (Teil 1A) | 1B Zieladresse |
-| 2 Einstellungen | Offen | Teilweise Preferences vorhanden | Nach Phase 1 |
-| 3 Verbindungen | Offen | Basissuche vorhanden | Nach Phase 2 |
-| 4 Fahrt-Cockpit | Offen | Basis-Dashboard vorhanden | Nach Phase 3 |
-| 5 Live/Navigation | Offen | Schätzwerte vorhanden | Nach Phase 4 |
-| 6 Freigabe | Offen | CI-Infrastruktur vorhanden | Nach Phase 5 bzw. Zwischenfreigaben |
+| 0 Baseline | Technische CI vorhanden | 5/5 grün für `7afdfab3`, Lauf `43739947286` | Echte Screenshots mit Zielbild vergleichen |
+| 1 Automatisierung | Weit fortgeschritten, Geräte-Abnahme offen | Kalender `6b4471e7`; Ziel `b0ef8030`; GPS `f78a0266`; Vordergrund-Updates `7afdfab3` | Berechtigungen, Fehlerfälle und Primäraktion prüfen |
+| 2 Einstellungen | In Arbeit | Alle-Tabs-Settings `2a27794b`; Lauf `43744222066` bei Erfassung noch laufend | CI, Persistenz und Präferenzen |
+| 3 Verbindungen | Offen | Basissuche vorhanden | Kompakte Karten und Leerzustände |
+| 4 Fahrt-Cockpit | Offen | Basis-Dashboard vorhanden | Kacheln und Zeitstatus |
+| 5 Live/Navigation | Teilgrundlage vorhanden | Foreground-Standortupdates `7afdfab3` | MVV-Refresh, echte Fußweg-Geometrie |
+| 6 Freigabe | Offen | CI-Infrastruktur vorhanden | Visuelle Prüfung und echter Gerätetest |
 
 ## Kommunikationsstandard
 - **WEITERMACHEN:** Paket abgeschlossen, Tests grün und nächstes Paket sinnvoll.
