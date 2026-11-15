@@ -388,20 +388,14 @@ class MainActivity : ComponentActivity() {
                             arrivalFormat.timeZone = java.util.TimeZone.getTimeZone("Europe/Berlin")
                             Text("MVV-Suche: Ankunft spätestens ${arrivalFormat.format(arrivalTarget)}")
                         }
-                        if (!(fixture && !visualFixture)) Button(onClick = { selectedTab = CockpitTab.CONNECTIONS }, modifier = Modifier.fillMaxWidth().testTag("setup_find_connections")) { Text("Verbindungen finden →") }
+                        if (!(fixture && !visualFixture)) Button(onClick = { selectedTab = CockpitTab.CONNECTIONS }, modifier = Modifier.fillMaxWidth().testTag("setup_find_connections")) { Text("Weiter zu Verbindungen →") }
                         }
                         Spacer(Modifier.height(1.dp).bringIntoViewRequester(connectionsAnchor))
                         }
                         val destination = confirmedDestination.trim().ifBlank { appointment?.location?.trim().orEmpty() }
-                        if (selectedTab == CockpitTab.CONNECTIONS || (fixture && !visualFixture)) {
-                        Text("Verbindungen", style = MaterialTheme.typography.titleLarge)
-                        Button(
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("mvv_search_button"),
-                            shape = RoundedCornerShape(18.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5635B1)),
-                            enabled = location != null && destination.isNotBlank() && !journeyLoading && (routeFilterMode == RouteFilterMode.ANY || routeFilterQuery.isNotBlank()),
-                            onClick = {
-                                val start = location ?: return@Button
+                        val searchConnections: () -> Unit = {
+                                val start = location
+                                if (start != null) {
                                 val arrivalBy = appointment?.startMillis?.minus(arrivalBufferMinutes * 60000L)
                                 journeyLoading = true
                                 journeys = emptyList()
@@ -428,7 +422,17 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                 }, preference = RoutePreference(routeFilterMode, routeFilterQuery), arrivalByMillis = arrivalBy)
-                            }
+                                }
+                        }
+
+                        if (selectedTab == CockpitTab.CONNECTIONS || (fixture && !visualFixture)) {
+                        Text("Verbindungen", style = MaterialTheme.typography.titleLarge)
+                        Button(
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("mvv_search_button"),
+                            shape = RoundedCornerShape(18.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5635B1)),
+                            enabled = location != null && destination.isNotBlank() && !journeyLoading && (routeFilterMode == RouteFilterMode.ANY || routeFilterQuery.isNotBlank()),
+                            onClick = searchConnections
                         ) { Text(if (journeyLoading) "Suche läuft …" else "Verbindung finden") }
                         mvvCandidates.forEach { candidate ->
                             OutlinedButton(
