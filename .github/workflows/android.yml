@@ -84,11 +84,16 @@ jobs:
           disable-animations: true
           script: |
             gradle --no-daemon :app:connectedDebugAndroidTest
+            mkdir -p test-results/ui-screenshots
+            adb pull /sdcard/Android/data/de.mvv.mobility/files/ui-screenshots/ test-results/ui-screenshots/ || true
       - name: Upload emulator logs and screenshot
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: emulator-test-results
-          path: test-results/
+          path: |
+            test-results/
+            app/build/outputs/androidTest-results/
+            app/build/reports/androidTests/
           if-no-files-found: warn
           retention-days: 14
