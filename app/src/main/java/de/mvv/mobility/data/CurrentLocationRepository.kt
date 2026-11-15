@@ -75,7 +75,8 @@ object CurrentLocationRepository {
             // Show a recent cached fix while awaiting the first fresh update.
             @Suppress("DEPRECATION")
             val cached = manager.getLastKnownLocation(provider)
-            if (cached != null && System.currentTimeMillis() - cached.time < 30_000L) {
+            if (cached != null && cached.time <= System.currentTimeMillis() &&
+                System.currentTimeMillis() - cached.time < 30_000L) {
                 onResult(cached)
             }
             val stop: () -> Unit = { manager.removeUpdates(listener) }
