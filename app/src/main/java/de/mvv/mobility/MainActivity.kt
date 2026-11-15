@@ -123,24 +123,26 @@ class MainActivity : ComponentActivity() {
                     var selectedTab by remember { mutableStateOf(CockpitTab.START) }
                     Column(Modifier.fillMaxSize().background(Color(0xFFF7F6FB))) {
                     Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().background(Color(0xFF49309B), RoundedCornerShape(24.dp))
-                                .padding(horizontal = 20.dp, vertical = 18.dp),
-                            verticalArrangement = Arrangement.spacedBy(7.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                                .background(Color(0xFF49309B), RoundedCornerShape(18.dp))
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("MEIN WEG 2.0  ·  MÜNCHEN", color = Color(0xFFD9D1FF), style = MaterialTheme.typography.labelMedium)
-                            Text("Mein Weg", modifier = Modifier.testTag("app_title"), color = Color.White,
-                                fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineLarge)
-                            Text("Dein MVV-Wegbegleiter für München", color = Color(0xFFF0EBFF),
-                                style = MaterialTheme.typography.bodyMedium)
-                        }
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                            OutlinedButton(onClick = { settingsExpanded = !settingsExpanded },
+                            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                                Text("MEIN WEG 2.0 · MÜNCHEN", color = Color(0xFFD9D1FF),
+                                    style = MaterialTheme.typography.labelSmall)
+                                Text("Mein Weg", modifier = Modifier.testTag("app_title"), color = Color.White,
+                                    fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+                            }
+                            TextButton(onClick = { settingsExpanded = !settingsExpanded },
                                 modifier = Modifier.testTag("settings_toggle")) {
-                                Text(if (settingsExpanded) "✕ Schließen" else "⚙ Einstellungen")
+                                Text(if (settingsExpanded) "✕" else "⚙", color = Color.White,
+                                    style = MaterialTheme.typography.titleLarge)
                             }
                         }
-                        CockpitOverview(
+                        if (selectedTab == CockpitTab.START || (fixture && !visualFixture)) CockpitOverview(
                             appointment = appointment?.title,
                             destination = confirmedDestination.ifBlank { appointment?.location.orEmpty() },
                             journeyCount = journeys.size,
