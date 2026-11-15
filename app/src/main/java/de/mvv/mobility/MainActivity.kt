@@ -88,7 +88,12 @@ class MainActivity : ComponentActivity() {
                     var journeyLoading by remember { mutableStateOf(false) }
                     var routeFilterMode by remember { mutableStateOf(RouteFilterMode.ANY) }
                     var routeFilterQuery by remember { mutableStateOf("") }
-                    var arrivalBufferMinutes by remember { mutableIntStateOf(10) }
+                    val settings = remember { getPreferences(MODE_PRIVATE) }
+                    var settingsExpanded by remember { mutableStateOf(false) }
+                    var homeAddress by remember { mutableStateOf(settings.getString("home_address", "") ?: "") }
+                    var homeSaved by remember { mutableStateOf(homeAddress.isNotBlank()) }
+                    var languageChoice by remember { mutableStateOf(settings.getString("language_choice", "system") ?: "system") }
+                    var arrivalBufferMinutes by remember { mutableIntStateOf(settings.getInt("arrival_buffer_minutes", 10).coerceIn(5, 60)) }
                     var mvvCandidates by remember { mutableStateOf<List<MvvJourneyRepository.StopCandidate>>(emptyList()) }
                     var location by remember { mutableStateOf<Location?>(if (fixture) Location("test").apply {
                         latitude = 48.137154
@@ -117,6 +122,87 @@ class MainActivity : ComponentActivity() {
                                 fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineLarge)
                             Text("Entspannt und pünktlich ans Ziel", color = Color(0xFFF0EBFF),
                                 style = MaterialTheme.typography.bodyMedium)
+                        }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            OutlinedButton(onClick = { settingsExpanded = !settingsExpanded },
+                                modifier = Modifier.testTag("settings_toggle")) {
+                                Text(if (settingsExpanded) "✕ Einstellungen schließen" else "⚙ Einstellungen")
+                            }
+                        }
+                        if (settingsExpanded) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth().testTag("settings_panel"),
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                            ) {
+                                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    Text("Deine Einstellungen", style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold)
+                                    Text("Zuhause", style = MaterialTheme.typography.titleMedium)
+                                    OutlinedTextField(
+                                        value = homeAddress,
+                                        onValueChange = { homeAddress = it; homeSaved = false },
+                                        label = { Text("Adresse oder Ort eingeben") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true
+                                    )
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Button(onClick = {
+                                            settings.edit().putString("home_address", homeAddress.trim()).apply()
+                                            homeSaved = homeAddress.isNotBlank()
+                                        }, enabled = homeAddress.isNotBlank()) { Text("Zuhause speichern") }
+                                        TextButton(onClick = {
+                                            homeAddress = ""
+                                            homeSaved = false
+                                            settings.edit().remove("home_address").apply()
+                                        }) { Text("Löschen") }
+                                    }
+                                    if (homeSaved) Text("Zuhause ist auf diesem Gerät gespeichert.")
+                                    Text("Ankunftspuffer", style = MaterialTheme.typography.titleMedium)
+                                    Text("$arrivalBufferMinutes Minuten vor dem Termin")
+                                    Slider(
+                                        value = arrivalBufferMinutes.toFloat(),
+                                        onValueChange = {
+                                            arrivalBufferMinutes = it.toInt().coerceIn(5, 60)
+                                            settings.edit().putInt("arrival_buffer_minutes", arrivalBufferMinutes).apply()
+                                            journeys = emptyList()
+                                        },
+                                        valueRange = 5f..60f, steps = 10
+                                    )
+                                    Text("Gehgeschwindigkeit", style = MaterialTheme.typography.titleMedium)
+                                    Text("%.1f km/h".format(java.util.Locale.GERMANY, walkingSpeed))
+                                    Slider(value = walkingSpeed, onValueChange = {
+                                        walkingSpeed = it
+                                        settings.edit().putFloat("walking_speed_kmh", it).apply()
+                                        journeys = emptyList()
+                                    }, valueRange = 2f..5f, steps = 5)
+                                    Text("Sprache (Vorbereitung für Übersetzungen)",
+                                        style = MaterialTheme.typography.titleMedium)
+                                    listOf("system" to "Systemsprache", "de" to "Deutsch",
+                                        "en" to "English", "fr" to "Français", "it" to "Italiano").forEach { (code, label) ->
+                                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                            RadioButton(selected = languageChoice == code, onClick = {
+                                                languageChoice = code
+                                                settings.edit().putString("language_choice", code).apply()
+                                            })
+                                            Text(label)
+                                        }
+                                    }
+                                    Text("Die Sprachauswahl wird gespeichert. Weitere Übersetzungen der Oberfläche folgen.",
+                                        style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                        }
+                        if (homeSaved) {
+                            Button(
+                                onClick = {
+                                    val uri = Uri.parse("https://www.google.com/maps/dir/?api=1").buildUpon()
+                                        .appendQueryParameter("destination", homeAddress.trim())
+                                        .appendQueryParameter("travelmode", "transit").build()
+                                    startActivity(Intent(Intent.ACTION_VIEW, uri))
+                                },
+                                modifier = Modifier.fillMaxWidth().testTag("navigate_home")
+                            ) { Text("⌂ Nach Hause navigieren") }
                         }
                         if (fixture) Text("TESTMODUS: simulierte Kalender-, GPS- und MVV-Daten", color = MaterialTheme.colorScheme.error)
                         if (!allowed && !fixture) {
@@ -261,6 +347,7 @@ class MainActivity : ComponentActivity() {
                             Text("Terminbeginn: ${appointment.timeLabel()}")
                             ArrivalBufferControl(arrivalBufferMinutes) {
                                 arrivalBufferMinutes = it
+                                settings.edit().putInt("arrival_buffer_minutes", it).apply()
                                 journeys = emptyList()
                             }
                             val arrivalTarget = java.util.Date(appointment.startMillis - arrivalBufferMinutes * 60000L)
