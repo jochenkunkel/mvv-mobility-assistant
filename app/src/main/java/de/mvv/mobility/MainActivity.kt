@@ -388,7 +388,7 @@ class MainActivity : ComponentActivity() {
                             arrivalFormat.timeZone = java.util.TimeZone.getTimeZone("Europe/Berlin")
                             Text("MVV-Suche: Ankunft spätestens ${arrivalFormat.format(arrivalTarget)}")
                         }
-                        if (!(fixture && !visualFixture)) Button(onClick = { selectedTab = CockpitTab.CONNECTIONS }, modifier = Modifier.fillMaxWidth().testTag("setup_find_connections")) { Text("Weiter zu Verbindungen →") }
+
                         }
                         Spacer(Modifier.height(1.dp).bringIntoViewRequester(connectionsAnchor))
                         }
@@ -425,6 +425,19 @@ class MainActivity : ComponentActivity() {
                                 }
                         }
 
+                        if (selectedTab == CockpitTab.START && activeSetupStep == 2 && !(fixture && !visualFixture)) {
+                            Button(
+                                onClick = {
+                                    selectedTab = CockpitTab.CONNECTIONS
+                                    searchConnections()
+                                },
+                                enabled = location != null && destination.isNotBlank() && !journeyLoading &&
+                                    (routeFilterMode == RouteFilterMode.ANY || routeFilterQuery.isNotBlank()),
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("setup_find_connections"),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5635B1)),
+                                shape = RoundedCornerShape(18.dp)
+                            ) { Text(if (journeyLoading) "Suche läuft …" else "Verbindung finden →") }
+                        }
                         if (selectedTab == CockpitTab.CONNECTIONS || (fixture && !visualFixture)) {
                         Text("Verbindungen", style = MaterialTheme.typography.titleLarge)
                         Button(
