@@ -16,6 +16,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import de.mvv.mobility.ui.components.CockpitOverview
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -111,6 +114,9 @@ class MainActivity : ComponentActivity() {
                             }
                         } else locationStatus = "Standortberechtigung nicht erteilt"
                     }
+                    val appointmentAnchor = remember { BringIntoViewRequester() }
+                    val connectionsAnchor = remember { BringIntoViewRequester() }
+                    val journeyAnchor = remember { BringIntoViewRequester() }
                     Column(Modifier.fillMaxSize().background(Color(0xFFF7F6FB)).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Column(
                             modifier = Modifier.fillMaxWidth().background(Color(0xFF49309B), RoundedCornerShape(24.dp))
@@ -129,18 +135,18 @@ class MainActivity : ComponentActivity() {
                                 Text(if (settingsExpanded) "✕ Schließen" else "⚙ Einstellungen")
                             }
                         }
-                        Row(
-                            modifier = Modifier.fillMaxWidth().background(Color(0xFFECE7FF), RoundedCornerShape(14.dp))
-                                .padding(horizontal = 14.dp, vertical = 10.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text("1  Termin", color = Color(0xFF49309B), modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                            Text("2  Verbindung", color = Color(0xFF49309B), modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                            Text("3  Meine Fahrt", color = Color(0xFF49309B), modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                        }
+                        CockpitOverview(
+                            appointment = appointment?.title,
+                            destination = confirmedDestination.ifBlank { appointment?.location.orEmpty() },
+                            journeyCount = journeys.size,
+                            hasActiveJourney = dashboardJourney != null,
+                            onAppointment = { scope.launch { appointmentAnchor.bringIntoView() } },
+                            onConnections = { scope.launch { connectionsAnchor.bringIntoView() } },
+                            onJourney = { scope.launch {
+                                if (dashboardJourney != null) journeyAnchor.bringIntoView()
+                                else connectionsAnchor.bringIntoView()
+                            } }
+                        )
                         if (settingsExpanded) {
                             Card(
                                 modifier = Modifier.fillMaxWidth().testTag("settings_panel"),
@@ -216,6 +222,7 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.fillMaxWidth().testTag("navigate_home")
                             ) { Text("⌂ Nach Hause navigieren") }
                         }
+                        Spacer(Modifier.height(1.dp).bringIntoViewRequester(appointmentAnchor))
                         if (fixture) Text("TESTMODUS: simulierte Kalender-, GPS- und MVV-Daten", color = MaterialTheme.colorScheme.error)
                         if (!allowed && !fixture) {
                             Text("Damit Mein Weg deine Termine anzeigen kann, erlaube den Kalenderzugriff. Die Daten bleiben auf deinem Gerät.")
@@ -367,6 +374,7 @@ class MainActivity : ComponentActivity() {
                             arrivalFormat.timeZone = java.util.TimeZone.getTimeZone("Europe/Berlin")
                             Text("MVV-Suche: Ankunft spätestens ${arrivalFormat.format(arrivalTarget)}")
                         }
+                        Spacer(Modifier.height(1.dp).bringIntoViewRequester(connectionsAnchor))
                         val destination = confirmedDestination.trim().ifBlank { appointment?.location?.trim().orEmpty() }
                         Button(
                             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("mvv_search_button"),
@@ -427,6 +435,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             ) { Text(candidate.name) }
                         }
+                        Spacer(Modifier.height(1.dp).bringIntoViewRequester(journeyAnchor))
                         if (dashboardJourney != null) {
                             val chosen = journeys.getOrNull(dashboardJourney!!)
                             if (chosen != null) {
