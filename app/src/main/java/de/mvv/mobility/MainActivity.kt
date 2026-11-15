@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import de.mvv.mobility.data.CurrentLocationRepository
 import de.mvv.mobility.data.LocationFreshness
 import de.mvv.mobility.data.routeFailureMessage
+import de.mvv.mobility.data.recommendedLeaveMillis
 import de.mvv.mobility.data.DeviceCalendarRepository
 import de.mvv.mobility.data.DestinationLookup
 import de.mvv.mobility.data.MvvJourneyRepository
@@ -640,8 +641,16 @@ class MainActivity : ComponentActivity() {
                                             if (untilBus != null) Text(if (untilBus >= 0) "Bus/Bahn fährt in ca. $untilBus Min." else "Geplante Abfahrt ist vorbei.",
                                                 style = MaterialTheme.typography.headlineSmall)
                                         }
-                                        val untilLeave = countdown(chosen.departure)
-                                        if (untilLeave != null) Text(if (untilLeave > 0) "Losgehen in ca. $untilLeave Min." else "Abfahrtszeit für den Fußweg erreicht")
+                                        val recommendedLeave = targetDay?.let { recommendedLeaveMillis(chosen, it) }
+                                        val untilLeave = recommendedLeave?.let { (it - clockMillis) / 60000L }
+                                        if (untilLeave != null) {
+                                            val leaveClock = java.text.SimpleDateFormat("HH:mm", java.util.Locale.GERMANY).apply {
+                                                timeZone = java.util.TimeZone.getTimeZone("Europe/Berlin")
+                                            }.format(java.util.Date(recommendedLeave))
+                                            Text(if (untilLeave > 0) "Losgehen um $leaveClock Uhr · in ca. $untilLeave Min."
+                                                else "Losgehzeit $leaveClock Uhr erreicht – Verbindung prüfen")
+                                            Text("Enthält 3 Min. Sicherheitspuffer.", style = MaterialTheme.typography.bodySmall)
+                                        }
                                         if (walkMinutes > 0) {
                                             Text("Fußweg zum Einstieg: ca. $walkMinutes Min. · grob $approximateMeters m (aus Gehzeit geschätzt)")
                                         }
@@ -679,7 +688,13 @@ class MainActivity : ComponentActivity() {
                                 if (cal.timeInMillis > targetDay + 30 * 60000L) cal.add(java.util.Calendar.DAY_OF_MONTH, -1)
                                 return (cal.timeInMillis - clockMillis) / 60000L
                             }
-                            val leaveIn = minutesUntil(trip.departure)
+                            val recommendedLeave = targetDay?.let { recommendedLeaveMillis(trip, it) }
+                            val leaveIn = recommendedLeave?.let { (it - clockMillis) / 60000L }
+                            val leaveClock = recommendedLeave?.let {
+                                java.text.SimpleDateFormat("HH:mm", java.util.Locale.GERMANY).apply {
+                                    timeZone = java.util.TimeZone.getTimeZone("Europe/Berlin")
+                                }.format(java.util.Date(it))
+                            }
                             val busIn = firstBus?.let { minutesUntil(it.departure) }
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
@@ -745,8 +760,8 @@ class MainActivity : ComponentActivity() {
                                         modifier = Modifier.fillMaxWidth().testTag("open_walking_dashboard")
                                     ) { Text("Meine Fahrt öffnen") }
                                     if (leaveIn != null) {
-                                        Text(if (leaveIn > 0) "Losgehen in ca. $leaveIn Minuten · ${trip.departure}"
-                                            else if (leaveIn >= -5) "Jetzt losgehen · ${trip.departure}"
+                                        Text(if (leaveIn > 0) "Losgehen um $leaveClock Uhr · in ca. $leaveIn Min. (inkl. 3 Min. Puffer)"
+                                            else if (leaveIn >= -5) "Jetzt losgehen · $leaveClock Uhr"
                                             else "Diese Verbindung liegt bereits in der Vergangenheit.",
                                             color = MaterialTheme.colorScheme.primary)
                                     }
