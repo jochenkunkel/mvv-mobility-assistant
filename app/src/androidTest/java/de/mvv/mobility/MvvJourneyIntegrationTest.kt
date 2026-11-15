@@ -92,4 +92,20 @@ class MvvJourneyIntegrationTest {
         assertEquals(3, filterJourneys(trips, RoutePreference()).size)
     }
 
+    @Test fun boardingStopAndWalkingStepsAreParsed() {
+        val json = """{"trips":[{"legs":[
+          {"mode":{"product":"Fussweg"},"timeMinute":"7","points":[{"name":"Start","dateTime":{"time":"07:00"}},{"name":"Haltestelle A","dateTime":{"time":"07:07"}}]},
+          {"mode":{"product":"Bus","number":"134"},"points":[{"name":"Haltestelle A","dateTime":{"time":"07:10"}},{"name":"Haltestelle B","dateTime":{"time":"07:25"}}]},
+          {"mode":{"product":"Fussweg"},"timeMinute":"5","points":[{"name":"Haltestelle B","dateTime":{"time":"07:25"}},{"name":"Ziel","dateTime":{"time":"07:30"}}]}
+        ]}]}"""
+        val trip = MvvJourneyRepository.parseTrips(json, 3f).single()
+        assertEquals(3, trip.steps.size)
+        assertTrue(trip.steps.first().walking)
+        assertEquals("134", trip.steps[1].line)
+        assertEquals("Haltestelle A", trip.steps[1].from)
+        assertEquals("Haltestelle B", trip.steps[1].to)
+        assertEquals("07:10", trip.steps[1].departure)
+        assertTrue(trip.steps.last().walking)
+    }
+
 }
