@@ -60,6 +60,14 @@ class MeinWegComposeUiTest {
         ActivityScenario.launch<MainActivity>(intent).use { block() }
     }
 
+    @Test fun bottomNavigationKeepsThreeDestinationsAccessible() = launchFixture {
+        compose.onNodeWithTag("cockpit_bottom_navigation").assertExists()
+        compose.onNodeWithTag("tab_connections").performClick()
+        compose.onNodeWithTag("tab_journey").performClick()
+        compose.onNodeWithTag("tab_start").performClick()
+        compose.onNodeWithTag("app_title").assertExists()
+    }
+
     @Test fun cockpitProvidesThreeInteractiveEntryPoints() = launchFixture {
         compose.onNodeWithTag("cockpit_overview").assertExists()
         compose.onNodeWithTag("cockpit_appointment").assertExists().performClick()
