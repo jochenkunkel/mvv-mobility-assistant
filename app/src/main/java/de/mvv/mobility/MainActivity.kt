@@ -145,7 +145,7 @@ class MainActivity : ComponentActivity() {
                                     style = MaterialTheme.typography.titleLarge)
                             }
                         }
-                        if (selectedTab == CockpitTab.START || (fixture && !visualFixture)) CockpitOverview(
+                        if (fixture && !visualFixture) CockpitOverview(
                             appointment = appointment?.title,
                             destination = confirmedDestination.ifBlank { appointment?.location.orEmpty() },
                             journeyCount = journeys.size,
@@ -250,21 +250,20 @@ class MainActivity : ComponentActivity() {
                             if (appointment == null) {
                                 Text("Keine bevorstehenden Termine mit Uhrzeit gefunden.")
                             } else {
-                                Card(
+                                Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(20.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        Text(appointment.title, style = MaterialTheme.typography.titleLarge)
-                                        Text(appointment.timeLabel())
-                                        Text(appointment.location ?: "Zieladresse bitte ergänzen")
-                                        TextButton(onClick = { appointmentPickerExpanded = !appointmentPickerExpanded },
-                                            modifier = Modifier.testTag("calendar_appointment")) {
-                                            Text(if (appointmentPickerExpanded) "Terminauswahl schließen" else "Anderen Termin wählen")
-                                        }
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(appointment.title, style = MaterialTheme.typography.titleMedium, maxLines = 1)
+                                        Text(appointment.timeLabel(), style = MaterialTheme.typography.bodySmall)
+                                        Text(appointment.location ?: "Zieladresse ergänzen", style = MaterialTheme.typography.bodySmall, maxLines = 1)
                                     }
+                                    TextButton(
+                                        onClick = { appointmentPickerExpanded = !appointmentPickerExpanded },
+                                        modifier = Modifier.testTag("calendar_appointment")
+                                    ) { Text(if (appointmentPickerExpanded) "Schließen" else "Ändern") }
                                 }
                                 if (appointmentPickerExpanded) {
                                     appointments.forEach { item ->
