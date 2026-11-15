@@ -240,8 +240,8 @@ class MainActivity : ComponentActivity() {
                     Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth()
-                                .background(Color(0xFF49309B), RoundedCornerShape(18.dp))
-                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                                .background(Color(0xFF49309B), RoundedCornerShape(14.dp))
+                                .padding(horizontal = 12.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -249,12 +249,12 @@ class MainActivity : ComponentActivity() {
                                 Text("MEIN WEG 2.0 · MÜNCHEN", color = Color(0xFFD9D1FF),
                                     style = MaterialTheme.typography.labelSmall)
                                 Text("Mein Weg", modifier = Modifier.testTag("app_title"), color = Color.White,
-                                    fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+                                    fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                             }
                             TextButton(onClick = { settingsExpanded = !settingsExpanded },
                                 modifier = Modifier.testTag("settings_toggle")) {
                                 Text(if (settingsExpanded) "✕" else "⚙", color = Color.White,
-                                    style = MaterialTheme.typography.titleLarge)
+                                    style = MaterialTheme.typography.titleMedium)
                             }
                         }
                         if (!fixture && !settingsExpanded) {
