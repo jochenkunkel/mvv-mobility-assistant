@@ -632,32 +632,88 @@ class MainActivity : ComponentActivity() {
                                     elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                                 ) {
                                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        Text("MEINE FAHRT  ·  FAHRPLAN", color = Color(0xFF49309B), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                        Text(if (usableLocation != null) "Weg zur Haltestelle" else "Standort aktualisieren", color = Color(0xFF263B2E), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall)
-                                        Text(if (usableLocation != null) "✓ GPS-Standort aktuell" else "GPS-Standort fehlt oder ist veraltet. Bitte Standort aktualisieren.", style = MaterialTheme.typography.bodySmall)
-
-                                        Text(boarding?.from?.ifBlank { "Haltestelle noch nicht übermittelt" } ?: "Kein Verkehrsmittel in dieser Verbindung")
-                                        if (boarding != null) {
-                                            Text("Linie ${boarding.line} · Abfahrt ${boarding.departure}", style = MaterialTheme.typography.titleLarge)
-                                            val untilBus = countdown(boarding.departure)
-                                            if (untilBus != null) Text(if (untilBus >= 0) "Bus/Bahn fährt in ca. $untilBus Min." else "Geplante Abfahrt ist vorbei.",
-                                                style = MaterialTheme.typography.headlineSmall)
+                                        Text("MEINE FAHRT  ·  FAHRPLAN", color = Color(0xFF49309B),
+                                            fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Surface(shape = RoundedCornerShape(12.dp),
+                                            color = if (usableLocation != null) Color.White else Color(0xFFFFF0E5)) {
+                                            Row(Modifier.fillMaxWidth().padding(12.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                Text("⌖", style = MaterialTheme.typography.titleLarge)
+                                                Column {
+                                                    Text(if (usableLocation != null) "GPS AKTIV" else "GPS NICHT VERFÜGBAR",
+                                                        fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
+                                                    Text(if (usableLocation != null) "Standort aktuell" else "Android-Standort prüfen",
+                                                        style = MaterialTheme.typography.bodySmall)
+                                                }
+                                            }
                                         }
                                         val recommendedLeave = targetDay?.let { recommendedLeaveMillis(chosen, it) }
                                         val untilLeave = recommendedLeave?.let { (it - clockMillis) / 60000L }
-                                        if (untilLeave != null && recommendedLeave != null) {
-                                            val leaveClock = java.text.SimpleDateFormat("HH:mm", java.util.Locale.GERMANY).apply {
+                                        val leaveClock = recommendedLeave?.let {
+                                            java.text.SimpleDateFormat("HH:mm", java.util.Locale.GERMANY).apply {
                                                 timeZone = java.util.TimeZone.getTimeZone("Europe/Berlin")
-                                            }.format(java.util.Date(recommendedLeave))
-                                            Text(if (untilLeave > 0) "Losgehen um $leaveClock Uhr · in ca. $untilLeave Min."
-                                                else "Losgehzeit $leaveClock Uhr erreicht – Verbindung prüfen")
-                                            Text("Enthält 3 Min. Sicherheitspuffer.", style = MaterialTheme.typography.bodySmall)
+                                            }.format(java.util.Date(it))
                                         }
-                                        if (walkMinutes > 0) {
-                                            Text("Fußweg zum Einstieg: ca. $walkMinutes Min. · grob $approximateMeters m (aus Gehzeit geschätzt)")
+                                        val untilBus = boarding?.let { countdown(it.departure) }
+                                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Surface(Modifier.weight(1f), shape = RoundedCornerShape(14.dp), color = Color.White) {
+                                                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                    Text("🚶 LOSGEHEN", style = MaterialTheme.typography.labelSmall)
+                                                    Text(leaveClock ?: "–", style = MaterialTheme.typography.headlineMedium,
+                                                        fontWeight = FontWeight.Bold)
+                                                    Text(when {
+                                                        untilLeave == null -> "Zeit unbekannt"
+                                                        untilLeave > 0 -> "in ca. $untilLeave Min."
+                                                        untilLeave >= -5 -> "Jetzt losgehen"
+                                                        else -> "Zeit vorbei"
+                                                    }, style = MaterialTheme.typography.labelMedium)
+                                                }
+                                            }
+                                            Surface(Modifier.weight(1f), shape = RoundedCornerShape(14.dp), color = Color.White) {
+                                                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                    Text("🚌 BUS ${boarding?.line.orEmpty()}", style = MaterialTheme.typography.labelSmall)
+                                                    Text(boarding?.departure ?: "–", style = MaterialTheme.typography.headlineMedium,
+                                                        fontWeight = FontWeight.Bold)
+                                                    Text(when {
+                                                        untilBus == null -> "Zeit unbekannt"
+                                                        untilBus >= 0 -> "in ca. $untilBus Min."
+                                                        else -> "Abfahrt vorbei"
+                                                    }, style = MaterialTheme.typography.labelMedium)
+                                                }
+                                            }
                                         }
-                                        Text("Nächste Etappe: ${firstWalk.firstOrNull()?.from?.ifBlank { "Startpunkt" } ?: "Startpunkt"} → ${boarding?.from?.ifBlank { "Einstieg" } ?: "Ziel"}")
-                                        Text("Die Zeiten basieren auf der letzten MVV-Verbindung. Die App berechnet keine GPS-basierte Restgehzeit und aktualisiert den Fahrplan nicht automatisch.")
+                                        Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
+                                            Column(Modifier.fillMaxWidth().padding(12.dp),
+                                                verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Text("🚏 EINSTIEG", style = MaterialTheme.typography.labelSmall)
+                                                Text(boarding?.from?.ifBlank { "Haltestelle unbekannt" }
+                                                    ?: "Kein Verkehrsmittel", fontWeight = FontWeight.Bold,
+                                                    style = MaterialTheme.typography.titleMedium)
+                                            }
+                                        }
+                                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Surface(Modifier.weight(1f), shape = RoundedCornerShape(14.dp), color = Color.White) {
+                                                Column(Modifier.padding(12.dp)) {
+                                                    Text("👟 FUSSWEG", style = MaterialTheme.typography.labelSmall)
+                                                    Text(if (walkMinutes > 0) "ca. $walkMinutes Min." else "–",
+                                                        fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                                    Text(if (walkMinutes > 0) "ca. $approximateMeters m" else "Keine Angabe",
+                                                        style = MaterialTheme.typography.labelSmall)
+                                                }
+                                            }
+                                            Surface(Modifier.weight(1f), shape = RoundedCornerShape(14.dp), color = Color.White) {
+                                                Column(Modifier.padding(12.dp)) {
+                                                    Text("⏱ PUFFER", style = MaterialTheme.typography.labelSmall)
+                                                    Text("3 Min.", fontWeight = FontWeight.Bold,
+                                                        style = MaterialTheme.typography.titleMedium)
+                                                    Text("Vor dem Losgehen", style = MaterialTheme.typography.labelSmall)
+                                                }
+                                            }
+                                        }
+                                        Text("Fahrplanzeiten · keine GPS-Restgehzeit oder automatische Live-Verspätungsabfrage",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         if (boarding != null && countdown(boarding.departure)?.let { it < 0 } == true) {
                                             Text("Die geplante Abfahrt ist vorbei. Bitte unter Verbindungen eine neue Route suchen.", color = MaterialTheme.colorScheme.error)
                                             TextButton(onClick = { dashboardJourney = null; selectedTab = CockpitTab.CONNECTIONS }) {
