@@ -81,10 +81,34 @@ class MainActivity : ComponentActivity() {
                         } else if (allowed) DeviceCalendarRepository.appointments(this, visibleAppointments) else emptyList()
                     }
                     val appointment = appointments.firstOrNull { it.startMillis == selectedAppointmentStart } ?: appointments.firstOrNull()
-                    var confirmedDestination by remember(appointment?.startMillis) { mutableStateOf("") }
+                    var confirmedDestination by remember(appointment?.startMillis) { mutableStateOf(appointment?.location.orEmpty()) }
                     var addressSuggestions by remember(appointment?.startMillis) { mutableStateOf<List<String>>(emptyList()) }
                     var lookupStatus by remember(appointment?.startMillis) { mutableStateOf("") }
                     var lookupRequest by remember(appointment?.startMillis) { mutableIntStateOf(0) }
+                    LaunchedEffect(appointment?.startMillis, appointment?.location) {
+                        val calendarDestination = appointment?.location?.trim().orEmpty()
+                        if (!fixture && calendarDestination.isNotBlank()) {
+                            lookupRequest++
+                            val requestId = lookupRequest
+                            lookupStatus = "Adresse wird automatisch geprüft …"
+                            addressSuggestions = emptyList()
+                            DestinationLookup.search(this@MainActivity, calendarDestination) { results ->
+                                if (lookupRequest == requestId) {
+                                    when (results.size) {
+                                        0 -> lookupStatus = "Adresse nicht eindeutig prüfbar – Kalenderziel bleibt erhalten."
+                                        1 -> {
+                                            confirmedDestination = results.first()
+                                            lookupStatus = "✓ Adresse geprüft"
+                                        }
+                                        else -> {
+                                            addressSuggestions = results
+                                            lookupStatus = "Mehrere Adressen gefunden – bitte passenden Ort wählen."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     var walkingSpeed by remember { mutableFloatStateOf(getPreferences(MODE_PRIVATE).getFloat("walking_speed_kmh", 3.0f)) }
                     var routeStatus by remember { mutableStateOf("") }
                     var journeys by remember { mutableStateOf<List<JourneyOption>>(emptyList()) }
@@ -293,15 +317,12 @@ class MainActivity : ComponentActivity() {
                         Text("Wohin?", style = MaterialTheme.typography.titleMedium)
                         OutlinedTextField(
                             value = confirmedDestination,
-                            onValueChange = { confirmedDestination = it; addressSuggestions = emptyList(); lookupStatus = "" },
+                            onValueChange = { lookupRequest++; confirmedDestination = it; addressSuggestions = emptyList(); lookupStatus = "" },
                             label = { Text("Zieladresse") },
-                            placeholder = { Text(appointment?.location ?: "Ort oder Adresse eingeben") },
+                            placeholder = { Text("Ort oder Adresse eingeben") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth().testTag("setup_destination_input")
                         )
-                        if (confirmedDestination.isBlank() && !appointment?.location.isNullOrBlank()) {
-                            Text("✓ Ziel aus dem Kalender: ${appointment?.location}", style = MaterialTheme.typography.bodySmall)
-                        }
                         TextButton(
                             onClick = {
                                 val query = confirmedDestination.trim().ifBlank { appointment?.location.orEmpty() }
@@ -318,11 +339,12 @@ class MainActivity : ComponentActivity() {
                             },
                             enabled = confirmedDestination.isNotBlank() || !appointment?.location.isNullOrBlank(),
                             modifier = Modifier.testTag("setup_destination_lookup")
-                        ) { Text("⌕ Adresse online prüfen (optional)") }
+                        ) { Text("⌕ Adresse erneut prüfen") }
                         if (lookupStatus.isNotBlank()) Text(lookupStatus, style = MaterialTheme.typography.bodySmall)
                         addressSuggestions.take(4).forEach { suggestion ->
                             TextButton(
                                 onClick = {
+                                    lookupRequest++
                                     confirmedDestination = suggestion
                                     addressSuggestions = emptyList()
                                     lookupStatus = "✓ Ziel übernommen"
