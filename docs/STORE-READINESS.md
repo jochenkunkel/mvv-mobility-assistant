@@ -55,6 +55,10 @@ Stand: 15.11.2026. **Qualitätsanforderung für jede künftige Version; kein Nac
 - Künftig: Settings-Persistenz nach Activity-Neustart, 360/412/600-dp-Emulator-Matrix, Schrift-Skalierung, signierter Install/Upgrade/Uninstall-Test.
 - **Freigaberegel:** Kein „Store-fertig“ und keine Installations-Empfehlung allein auf Basis grüner CI. Für einen Release müssen alle genannten manuellen und automatisierten Gates belegt sein.
 
+## Phase 3B – S25-Kartenlayout (ungeprüft)
+- Commit `ba82d765` verwendet ein kompaktes Linien-Badge, einen flexibel umbrechenden Haltestellennamen und untereinander stehende Kennzahlen für Umstiege und geschätzte Gehzeit. Doppelte Einsteigeinformation wurde reduziert.
+- Commit mit `[skip ci]` erstellt, um keine weiteren Builds zu verbrauchen. **Nicht kompiliert, nicht im Emulator ausgeführt und nicht visuell freigegeben.** Vor Installation nächsten regulären CI-Lauf und echte Screenshot-Sichtkontrolle abwarten.
+
 ## Nächste Umsetzung
 1. Phase-2B-CI und neuen UI-Test prüfen, Fehler beheben.
 2. Echte visuelle Geräte-Matrix in CI einrichten und Screenshots auswerten.
