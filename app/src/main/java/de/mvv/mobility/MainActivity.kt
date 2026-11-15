@@ -39,6 +39,8 @@ import de.mvv.mobility.data.CurrentLocationRepository
 import de.mvv.mobility.data.LocationFreshness
 import de.mvv.mobility.data.routeFailureMessage
 import de.mvv.mobility.data.recommendedLeaveMillis
+import de.mvv.mobility.data.WalkingNavigation
+import de.mvv.mobility.data.WalkingRoute
 import de.mvv.mobility.data.DeviceCalendarRepository
 import de.mvv.mobility.data.DestinationLookup
 import de.mvv.mobility.data.MvvJourneyRepository
@@ -125,6 +127,10 @@ class MainActivity : ComponentActivity() {
                     var journeys by remember { mutableStateOf<List<JourneyOption>>(emptyList()) }
                     var expandedJourney by remember { mutableStateOf<Int?>(null) }
                     var dashboardJourney by remember { mutableStateOf<Int?>(null) }
+                    var walkingRoute by remember { mutableStateOf<WalkingRoute?>(null) }
+                    var walkingRouteStatus by remember { mutableStateOf("") }
+                    var walkingNavigationOpen by remember { mutableStateOf(false) }
+                    var walkingRequestId by remember { mutableIntStateOf(0) }
                     var clockMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
                     LaunchedEffect(Unit) {
                         while (true) {
@@ -772,12 +778,47 @@ class MainActivity : ComponentActivity() {
                                         if (boarding?.from?.isNotBlank() == true && usableLocation != null) {
                                             Button(onClick = {
                                                 val start = usableLocation ?: return@Button
-                                                val uri = Uri.parse("https://www.google.com/maps/dir/?api=1").buildUpon()
-                                                    .appendQueryParameter("origin", "${start.latitude},${start.longitude}")
-                                                    .appendQueryParameter("destination", boarding.from + ", München")
-                                                    .appendQueryParameter("travelmode", "walking").build()
-                                                startActivity(Intent(Intent.ACTION_VIEW, uri))
-                                            }, modifier = Modifier.fillMaxWidth()) { Text("Fußweg und nächste Abbiegung öffnen") }
+                                                walkingRequestId++
+                                                val requestId = walkingRequestId
+                                                walkingRoute = null
+                                                walkingNavigationOpen = true
+                                                walkingRouteStatus = "Fußweg wird über OpenStreetMap berechnet …"
+                                                WalkingNavigation.fetch(this@MainActivity, start, boarding.from) { result ->
+                                                    if (walkingRequestId == requestId) {
+                                                        walkingRoute = result.getOrNull()
+                                                        walkingRouteStatus = result.exceptionOrNull()?.localizedMessage
+                                                            ?: ""
+                                                    }
+                                                }
+                                            }, modifier = Modifier.fillMaxWidth()) { Text("🚶 Fußweg-Navigation starten") }
+                                        }
+                                        if (walkingNavigationOpen) {
+                                            Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
+                                                Column(Modifier.fillMaxWidth().padding(12.dp),
+                                                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                    Text("FUSSWEG-NAVIGATION · OSM", fontWeight = FontWeight.Bold)
+                                                    val fix = usableLocation
+                                                    val route = walkingRoute
+                                                    val next = if (fix != null && route != null)
+                                                        WalkingNavigation.nextTurn(route, fix) else null
+                                                    if (next != null) {
+                                                        Text(next.first.arrow, style = MaterialTheme.typography.displayLarge,
+                                                            color = Color(0xFF49309B))
+                                                        Text("${next.second} m", style = MaterialTheme.typography.headlineLarge,
+                                                            fontWeight = FontWeight.Bold)
+                                                        Text(next.first.instruction, style = MaterialTheme.typography.titleLarge)
+                                                        Text("Route: ca. ${route?.totalMeters ?: 0} m · GPS aktualisiert die Entfernung",
+                                                            style = MaterialTheme.typography.labelSmall)
+                                                    } else {
+                                                        Text(if (route != null) "GPS zu ungenau – bitte freien Himmel abwarten"
+                                                            else walkingRouteStatus.ifBlank { "Route wird geladen …" })
+                                                    }
+                                                    TextButton(onClick = {
+                                                        walkingNavigationOpen = false
+                                                        walkingRequestId++
+                                                    }) { Text("Navigation schließen") }
+                                                }
+                                            }
                                         }
                                         TextButton(onClick = { dashboardJourney = null; selectedTab = CockpitTab.CONNECTIONS }) { Text("Dashboard schließen") }
                                     }
