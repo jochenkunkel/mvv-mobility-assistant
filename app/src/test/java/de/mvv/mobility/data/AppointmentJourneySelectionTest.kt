@@ -48,4 +48,23 @@ class AppointmentJourneySelectionTest {
         )
         assertEquals(listOf("00:05", "23:55", "23:45"), result.map { it.arrival })
     }
+    @Test fun equalArrivalPrefersFewerTransfersThenShorterWalk() {
+        val options = listOf(
+            trip("09:45").copy(departure = "09:10", changes = 2, walkingMinutes = 3),
+            trip("09:45").copy(departure = "09:15", changes = 0, walkingMinutes = 12),
+            trip("09:45").copy(departure = "09:20", changes = 0, walkingMinutes = 4)
+        )
+        val result = selectAppointmentJourneys(options, at(2026, 11, 16, 10, 0))
+        assertEquals(listOf("09:20", "09:15", "09:10"), result.map { it.departure })
+    }
+
+    @Test fun differentDeparturesWithSameLineAndArrivalRemainAvailable() {
+        val options = listOf(
+            trip("09:45").copy(departure = "09:10"),
+            trip("09:45").copy(departure = "09:20")
+        )
+        val result = selectAppointmentJourneys(options, at(2026, 11, 16, 10, 0))
+        assertEquals(2, result.size)
+    }
+
 }
