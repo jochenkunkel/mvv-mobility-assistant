@@ -70,3 +70,11 @@ Die App soll trotz Kalender, MVV, GPS und Routenfiltern auf einem Smartphone sch
 
 ## Datenschutz und Grenzen
 Heimadresse ist personenbezogen und wird lokal in App-Preferences gespeichert; aktuell nicht verschlüsselt. Bei Navigation wird die Adresse an den externen Kartendienst übergeben. Keine Speicherung des GPS-Verlaufs und keine Standortverfolgung im Hintergrund als Produktziel. Eine spätere Karten-/Autocomplete-Lösung muss die Weitergabe an externe Dienste sichtbar machen.
+
+
+## 2026-11-15 – UI-Politur und stabiler Dashboard-Test
+
+- Die primäre Suchaktion wurde visuell verstärkt; Verbindungskarten und das Dashboard erhielten eine violette Hierarchie.
+- Die erste Verbindung wird derzeit nur **visuell** als Empfehlung markiert. Eine echte Qualitätsbewertung und Rangfolge sind noch umzusetzen; bis dahin darf die Position nicht als fachliche Empfehlung gelten.
+- Der Emulator-Test schlug nach der Umbenennung der Dashboard-Überschrift fehl, obwohl die Ansicht existierte. Die Prüfung verwendet jetzt den stabilen Semantik-Tag `walking_dashboard` statt eines übersetzten oder veränderlichen Texts.
+- Der korrigierte Commit `2fc06a52` bestand alle fünf GitHub-Jobs einschließlich Emulator. Die Screenshots sind als Artefakt `emulator-test-results` in Lauf `43699900629` abgelegt. Eine visuelle Begutachtung bleibt von den automatischen Tests getrennt.
