@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import de.mvv.mobility.ui.components.SetupStepHeader
 import de.mvv.mobility.ui.components.CockpitOverview
 import de.mvv.mobility.ui.components.CockpitNavigation
 import de.mvv.mobility.ui.components.CockpitTab
@@ -230,9 +231,7 @@ class MainActivity : ComponentActivity() {
                             ) { Text("⌂ Nach Hause navigieren") }
                         }
                         Spacer(Modifier.height(1.dp).bringIntoViewRequester(appointmentAnchor))
-                        TextButton(onClick = { activeSetupStep = 0 }, modifier = Modifier.fillMaxWidth().testTag("setup_step_appointment")) {
-                            Text(if (activeSetupStep == 0) "① TERMIN · Auswahl" else "✓ ① Termin · Antippen zum Ändern")
-                        }
+                        SetupStepHeader(1, "Termin", appointment?.title ?: "Termin auswählen", activeSetupStep == 0, "setup_step_appointment") { activeSetupStep = 0 }
                         if (activeSetupStep == 0 || (fixture && !visualFixture)) {
                         if (fixture) Text("TESTMODUS: simulierte Kalender-, GPS- und MVV-Daten", color = MaterialTheme.colorScheme.error)
                         if (!allowed && !fixture) {
@@ -288,9 +287,7 @@ class MainActivity : ComponentActivity() {
                         }
                         if (!(fixture && !visualFixture)) Button(onClick = { activeSetupStep = 1 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_address")) { Text("Weiter · Start & Ziel →") }
                         }
-                        TextButton(onClick = { activeSetupStep = 1 }, modifier = Modifier.fillMaxWidth().testTag("setup_step_address")) {
-                            Text(if (activeSetupStep == 1) "② START & ZIEL · Auswahl" else "② Start & Ziel · Antippen zum Ändern")
-                        }
+                        SetupStepHeader(2, "Start & Ziel", confirmedDestination.ifBlank { appointment?.location ?: "Adresse festlegen" }, activeSetupStep == 1, "setup_step_address") { activeSetupStep = 1 }
                         if (activeSetupStep == 1 || (fixture && !visualFixture)) {
                         Text("Wohin?", style = MaterialTheme.typography.titleMedium)
                         if (appointment != null) {
@@ -359,9 +356,7 @@ class MainActivity : ComponentActivity() {
                         Text("Die Position wird nur auf Anfrage ermittelt, nicht gespeichert und nicht im Hintergrund verfolgt.")
                         if (!(fixture && !visualFixture)) Button(onClick = { activeSetupStep = 2 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_preferences")) { Text("Weiter · Fahrtwunsch →") }
                         }
-                        TextButton(onClick = { activeSetupStep = 2 }, modifier = Modifier.fillMaxWidth().testTag("setup_step_preferences")) {
-                            Text(if (activeSetupStep == 2) "③ FAHRTWUNSCH · Auswahl" else "③ Fahrtwunsch · Antippen zum Ändern")
-                        }
+                        SetupStepHeader(3, "Fahrtwunsch", "Verkehrsmittel & Ankunft", activeSetupStep == 2, "setup_step_preferences") { activeSetupStep = 2 }
                         if (activeSetupStep == 2 || (fixture && !visualFixture)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("Verkehrsmittel", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
