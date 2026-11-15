@@ -104,6 +104,22 @@ jobs:
             sleep 3
             adb exec-out screencap -p > test-results/ui-screenshots/03-meine-fahrt-real.png
             python3 -c 'import hashlib; from pathlib import Path; p=Path("test-results/ui-screenshots"); files=[p/n for n in ("01-start-real.png","02-verbindungen-real.png","03-meine-fahrt-real.png")]; assert all(f.stat().st_size>10000 for f in files), "Screenshot missing"; assert len({hashlib.sha256(f.read_bytes()).digest() for f in files})==3, "Cockpit tabs did not produce three distinct screenshots"; print("Three cockpit screenshots validated")'
+            # Device-class layout smoke captures. S25 is an approximate viewport, NOT real Samsung/One UI.
+            adb shell wm size 1080x2340
+            adb shell wm density 420
+            adb shell am force-stop de.mvv.mobility
+            adb shell am start -W -n de.mvv.mobility/.MainActivity --ez mein_weg_test_fixture true --ez mein_weg_visual_fixture true
+            sleep 3
+            adb exec-out screencap -p > test-results/ui-screenshots/04-galaxy-s25-viewport-approx.png
+            adb shell wm size 720x1600
+            adb shell wm density 320
+            adb shell am force-stop de.mvv.mobility
+            adb shell am start -W -n de.mvv.mobility/.MainActivity --ez mein_weg_test_fixture true --ez mein_weg_visual_fixture true
+            sleep 3
+            adb exec-out screencap -p > test-results/ui-screenshots/05-compact-360dp-viewport.png
+            adb shell wm size reset
+            adb shell wm density reset
+            python3 -c 'from pathlib import Path; p=Path("test-results/ui-screenshots"); assert all((p/n).stat().st_size>10000 for n in ("04-galaxy-s25-viewport-approx.png","05-compact-360dp-viewport.png")); print("Additional viewport captures saved for manual visual inspection")'
       - name: Upload emulator logs and screenshot
         if: always()
         uses: actions/upload-artifact@v4
