@@ -730,52 +730,94 @@ class MainActivity : ComponentActivity() {
                                                 fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall)
                                         }
                                     }
-                                    if (firstBus != null) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                            verticalAlignment = Alignment.Top
+                                    val initialWalk = trip.steps.takeWhile { it.walking }.sumOf { it.minutes.coerceAtLeast(0) }
+                                    val finalWalk = trip.steps.takeLastWhile { it.walking }.sumOf { it.minutes.coerceAtLeast(0) }
+                                    val totalWalk = trip.walkingMinutes.coerceAtLeast(0)
+                                    val knownWalk = initialWalk + finalWalk
+                                    val accessWalk = if (knownWalk > 0) initialWalk else 0
+                                    val exitWalk = if (knownWalk > 0) finalWalk else 0
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().testTag("route_legs_tiles"),
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Surface(
+                                            modifier = Modifier.weight(1f),
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = Color.White
                                         ) {
-                                            Surface(
-                                                shape = RoundedCornerShape(8.dp),
-                                                color = Color(0xFF5635B1)
-                                            ) {
-                                                Text(
-                                                    firstBus.line.ifBlank { "ÖPNV" },
-                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                                    color = Color.White,
-                                                    fontWeight = FontWeight.Bold,
-                                                    style = MaterialTheme.typography.labelLarge
-                                                )
+                                            Column(Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text("🚶 Hinweg", style = MaterialTheme.typography.labelSmall)
+                                                Text(if (knownWalk > 0) "ca. $accessWalk Min." else "–",
+                                                    fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
                                             }
-                                            Text(
-                                                firstBus.from.ifBlank { "Einstiegshaltestelle unbekannt" },
-                                                modifier = Modifier.weight(1f),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.onSurface
-                                            )
+                                        }
+                                        Surface(
+                                            modifier = Modifier.weight(1.3f),
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = Color(0xFF5635B1)
+                                        ) {
+                                            Column(Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text(firstBus?.line?.ifBlank { "ÖPNV" } ?: "Fußweg",
+                                                    color = Color.White, fontWeight = FontWeight.Bold,
+                                                    style = MaterialTheme.typography.titleMedium)
+                                                Text("${trip.changes} Umstiege", color = Color.White,
+                                                    style = MaterialTheme.typography.labelSmall)
+                                            }
+                                        }
+                                        Surface(
+                                            modifier = Modifier.weight(1f),
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = Color.White
+                                        ) {
+                                            Column(Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text("🚶 Zielweg", style = MaterialTheme.typography.labelSmall)
+                                                Text(if (knownWalk > 0) "ca. $exitWalk Min." else "–",
+                                                    fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                            }
                                         }
                                     }
-                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                        Text("${trip.changes} Umstiege", style = MaterialTheme.typography.labelMedium)
-                                        Text("Fußweg geschätzt: ca. ${trip.walkingMinutes} Min.",
-                                            style = MaterialTheme.typography.labelMedium)
+                                    if (firstBus != null) {
+                                        Text(firstBus.from.ifBlank { "Einstiegshaltestelle unbekannt" },
+                                            style = MaterialTheme.typography.bodySmall)
+                                    }
+                                    if (totalWalk > knownWalk) {
+                                        Text("Weitere Fußwege / Umstiege: ca. ${totalWalk - knownWalk} Min.",
+                                            style = MaterialTheme.typography.labelSmall)
                                     }
                                     Text(trip.summary, modifier = Modifier.testTag("journey_summary"),
-                                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     OutlinedButton(
                                         onClick = { dashboardJourney = index; selectedTab = CockpitTab.JOURNEY },
                                         modifier = Modifier.fillMaxWidth().testTag("open_walking_dashboard")
                                     ) { Text("Meine Fahrt öffnen") }
-                                    if (leaveIn != null) {
-                                        Text(if (leaveIn > 0) "Losgehen um $leaveClock Uhr · in ca. $leaveIn Min. (inkl. 3 Min. Puffer)"
-                                            else if (leaveIn >= -5) "Jetzt losgehen · $leaveClock Uhr"
-                                            else "Diese Verbindung liegt bereits in der Vergangenheit.",
-                                            color = MaterialTheme.colorScheme.primary)
-                                    }
-                                    if (firstBus != null && busIn != null && busIn > 0) {
-                                        Text("Linie ${firstBus.line}: Abfahrt in ca. $busIn Minuten",
-                                            style = MaterialTheme.typography.bodySmall)
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        if (leaveIn != null) {
+                                            Surface(modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp),
+                                                color = Color.White) {
+                                                Column(Modifier.padding(10.dp)) {
+                                                    Text("LOS GEHEN", style = MaterialTheme.typography.labelSmall)
+                                                    Text(leaveClock ?: "–", fontWeight = FontWeight.Bold,
+                                                        style = MaterialTheme.typography.titleLarge)
+                                                    Text(if (leaveIn > 0) "in ca. $leaveIn Min."
+                                                        else if (leaveIn >= -5) "Jetzt" else "Zeit vorbei",
+                                                        style = MaterialTheme.typography.labelSmall)
+                                                }
+                                            }
+                                        }
+                                        if (firstBus != null && busIn != null) {
+                                            Surface(modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp),
+                                                color = Color.White) {
+                                                Column(Modifier.padding(10.dp)) {
+                                                    Text("LINIE ${firstBus.line}", style = MaterialTheme.typography.labelSmall)
+                                                    Text(firstBus.departure, fontWeight = FontWeight.Bold,
+                                                        style = MaterialTheme.typography.titleLarge)
+                                                    Text(if (busIn > 0) "in ca. $busIn Min." else "Abfahrt prüfen",
+                                                        style = MaterialTheme.typography.labelSmall)
+                                                }
+                                            }
+                                        }
                                     }
                                     TextButton(onClick = { expandedJourney = if (expandedJourney == index) null else index },
                                         modifier = Modifier.testTag("journey_details")) {
