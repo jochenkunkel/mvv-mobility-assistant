@@ -47,6 +47,31 @@ fun filterJourneys(options: List<JourneyOption>, preference: RoutePreference): L
 }
 
 
+fun selectAppointmentJourneys(options: List<JourneyOption>, arrivalByMillis: Long,
+    maximumMinutesEarly: Int = 120, maximumResults: Int = 3): List<JourneyOption> {
+    val zone = TimeZone.getTimeZone("Europe/Berlin")
+    fun epoch(clock: String): Long? {
+        val parts = clock.split(":")
+        if (parts.size != 2) return null
+        val hour = parts[0].toIntOrNull() ?: return null
+        val minute = parts[1].toIntOrNull() ?: return null
+        if (hour !in 0..23 || minute !in 0..59) return null
+        return java.util.Calendar.getInstance(zone).apply {
+            timeInMillis = arrivalByMillis
+            set(java.util.Calendar.HOUR_OF_DAY, hour)
+            set(java.util.Calendar.MINUTE, minute)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    }
+    return options.mapNotNull { trip ->
+        val arrival = epoch(trip.arrival) ?: return@mapNotNull null
+        val early = arrivalByMillis - arrival
+        if (early < 0 || early > maximumMinutesEarly * 60000L) null else trip to arrival
+    }.distinctBy { it.second to it.first.summary }
+        .sortedByDescending { it.second }.take(maximumResults).map { it.first }
+}
+
 object MvvJourneyRepository {
     private fun param(value: String) = URLEncoder.encode(value, "UTF-8")
     private fun JSONObject.text(key: String): String = optString(key).takeUnless { it == "null" }.orEmpty()
@@ -240,6 +265,7 @@ object MvvJourneyRepository {
                     val alternate = request(origin, coordinates, "coord", arrivalByMillis, directOnly = true)
                     trips = filterJourneys(parseTrips(alternate, walkingKmh), preference)
                 }
+                trips = if (arrivalByMillis != null) selectAppointmentJourneys(trips, arrivalByMillis) else trips.take(3)
                 val destination = StopCandidate(coordinates, first.getAddressLine(0) ?: address, 0)
                 callback(Result.success(ResolvedJourney(trips, destination)))
             } catch (e: Exception) { callback(Result.failure(e)) }
