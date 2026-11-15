@@ -73,9 +73,6 @@ class MainActivity : ComponentActivity() {
                         refresh++
                         scope.launch { JourneyWidget().updateAll(this@MainActivity) }
                     }
-                    LaunchedEffect(Unit) {
-                        if (!fixture && !allowed) permissionLauncher.launch(Manifest.permission.READ_CALENDAR)
-                    }
                     var visibleAppointments by remember { mutableIntStateOf(10) }
                     var appointmentPickerExpanded by remember { mutableStateOf(false) }
                     var advancedExpanded by remember { mutableStateOf(false) }
@@ -180,10 +177,14 @@ class MainActivity : ComponentActivity() {
                         lifecycleOwner.lifecycle.addObserver(observer)
                         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
                     }
+                    var locationPromptFinished by remember {
+                        mutableStateOf(fixture || locationPermissionGranted)
+                    }
                     val locationPermissionLauncher = rememberLauncherForActivityResult(
                         ActivityResultContracts.RequestMultiplePermissions()
                     ) { grants ->
                         locationPermissionGranted = grants.values.any { it }
+                        locationPromptFinished = true
                         locationStatus = if (locationPermissionGranted) "Standort wird laufend ermittelt …"
                             else "Standortberechtigung nicht erteilt"
                     }
@@ -194,6 +195,13 @@ class MainActivity : ComponentActivity() {
                                 Manifest.permission.ACCESS_FINE_LOCATION,
                                 Manifest.permission.ACCESS_COARSE_LOCATION
                             ))
+                        }
+                    }
+                    // Android only displays one runtime permission dialog reliably at a time.
+                    // Request calendar access after the initial location decision.
+                    LaunchedEffect(locationPromptFinished, allowed) {
+                        if (!fixture && locationPromptFinished && !allowed) {
+                            permissionLauncher.launch(Manifest.permission.READ_CALENDAR)
                         }
                     }
                     DisposableEffect(appForeground, locationPermissionGranted, fixture) {
@@ -417,7 +425,7 @@ class MainActivity : ComponentActivity() {
                         }
                         if (!(fixture && !visualFixture)) Button(onClick = { activeSetupStep = 1 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_address")) { Text("Weiter · Start & Ziel →") }
                         }
-                        SetupStepHeader(2, "Start & Ziel", confirmedDestination.ifBlank { appointment?.location ?: "Adresse festlegen" }, activeSetupStep == 1, "setup_step_address") { activeSetupStep = 1 }
+                        SetupStepHeader(2, "Start & Ziel", if (usableLocation == null) "Standort fehlt · Route noch nicht bereit" else confirmedDestination.ifBlank { appointment?.location ?: "Adresse festlegen" }, activeSetupStep == 1, "setup_step_address") { activeSetupStep = 1 }
                         if (activeSetupStep == 1 || (fixture && !visualFixture)) {
                         Text("Wohin?", style = MaterialTheme.typography.titleMedium)
                         OutlinedTextField(
@@ -458,6 +466,10 @@ class MainActivity : ComponentActivity() {
                             ) { Text(suggestion) }
                         }
                         Text("Von wo?", style = MaterialTheme.typography.titleMedium)
+                        if (!locationPermissionGranted && !fixture) {
+                            Text("Standortzugriff in Android für Mein Weg erlauben. Ohne Standort ist keine Verbindungssuche möglich.",
+                                color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        }
                         Text(if (usableLocation != null) "✓ Aktueller Standort verfügbar · wird für die Route verwendet" else effectiveLocationStatus, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("setup_location_status"))
                         Text("Standort wird bei geöffneter App ungefähr alle 5 Sekunden aktualisiert; keine Hintergrundverfolgung.", style = MaterialTheme.typography.bodySmall)
                         if (!(fixture && !visualFixture)) Button(onClick = { activeSetupStep = 2 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_preferences")) { Text("Weiter · Fahrtwunsch →") }
