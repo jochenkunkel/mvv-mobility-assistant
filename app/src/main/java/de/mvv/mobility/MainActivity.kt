@@ -283,6 +283,17 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 }
+
+                            }
+                        }
+                        if (!(fixture && !visualFixture)) Button(onClick = { activeSetupStep = 1 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_address")) { Text("Weiter · Start & Ziel →") }
+                        }
+                        TextButton(onClick = { activeSetupStep = 1 }, modifier = Modifier.fillMaxWidth().testTag("setup_step_address")) {
+                            Text(if (activeSetupStep == 1) "② START & ZIEL · Auswahl" else "② Start & Ziel · Antippen zum Ändern")
+                        }
+                        if (activeSetupStep == 1 || (fixture && !visualFixture)) {
+                        Text("Wohin?", style = MaterialTheme.typography.titleMedium)
+                        if (appointment != null) {
                                 if (appointment.location == null) {
                                     Text("Für diesen Termin fehlt ein Zielort. Bitte bestätigen oder ergänzen.")
                                 } else {
@@ -324,14 +335,8 @@ class MainActivity : ComponentActivity() {
                                 if (confirmedDestination.isNotBlank()) {
                                     Text("Bestätigtes Ziel (nur für diese Ansicht): $confirmedDestination")
                                 }
-                            }
                         }
-                        if (!(fixture && !visualFixture)) Button(onClick = { activeSetupStep = 1 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_address")) { Text("Weiter · Start & Ziel →") }
-                        }
-                        TextButton(onClick = { activeSetupStep = 1 }, modifier = Modifier.fillMaxWidth().testTag("setup_step_address")) {
-                            Text(if (activeSetupStep == 1) "② START & ZIEL · Auswahl" else "② Start & Ziel · Antippen zum Ändern")
-                        }
-                        if (activeSetupStep == 1 || (fixture && !visualFixture)) {
+                        Text("Von wo?", style = MaterialTheme.typography.titleMedium)
                         Text("Startpunkt", style = MaterialTheme.typography.titleMedium)
                         Button(onClick = {
                             if (CurrentLocationRepository.hasPermission(this@MainActivity)) {
