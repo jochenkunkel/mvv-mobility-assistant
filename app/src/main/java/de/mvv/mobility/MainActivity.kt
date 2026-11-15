@@ -2,6 +2,8 @@ package de.mvv.mobility
 
 import android.Manifest
 import android.os.Bundle
+import android.os.Build
+import android.view.View
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.net.Uri
@@ -56,13 +58,19 @@ import kotlinx.coroutines.delay
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Keep the system status bar separate from the app header on edge-to-edge Android.
+        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        if (Build.VERSION.SDK_INT < 35) {
+            @Suppress("DEPRECATION")
+            window.statusBarColor = android.graphics.Color.rgb(248, 247, 252)
+        }
         // Fixture mode is strictly limited to debuggable APKs and is visibly labelled.
         val fixture = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0 &&
             intent.getBooleanExtra("mein_weg_test_fixture", false)
         val visualFixture = fixture && intent.getBooleanExtra("mein_weg_visual_fixture", false)
         setContent {
             MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
+                Surface(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
                     var allowed by remember { mutableStateOf(DeviceCalendarRepository.hasPermission(this)) }
                     var refresh by remember { mutableIntStateOf(0) }
                     val scope = rememberCoroutineScope()
