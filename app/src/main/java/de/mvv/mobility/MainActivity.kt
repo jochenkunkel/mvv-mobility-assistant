@@ -328,6 +328,7 @@ class MainActivity : ComponentActivity() {
                                 },
                                 modifier = Modifier.fillMaxWidth().testTag("setup_destination_suggestion")
                             ) { Text(suggestion) }
+                        }
                         Text("Von wo?", style = MaterialTheme.typography.titleMedium)
                         Button(onClick = {
                             if (CurrentLocationRepository.hasPermission(this@MainActivity)) {
