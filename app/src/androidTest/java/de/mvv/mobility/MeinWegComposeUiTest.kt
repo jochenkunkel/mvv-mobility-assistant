@@ -130,6 +130,13 @@ class MeinWegComposeUiTest {
             File(folder, name).outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
         }
         compose.onNodeWithTag("cockpit_overview").assertExists()
+        compose.onNodeWithTag("setup_step_appointment").assertExists()
+        compose.onNodeWithTag("setup_step_address").assertExists()
+        compose.onNodeWithTag("setup_step_preferences").assertExists()
+        compose.onNodeWithTag("setup_next_address").performScrollTo().performClick()
+        compose.onNodeWithTag("setup_next_preferences").performScrollTo().performClick()
+        compose.onNodeWithTag("setup_find_connections").performScrollTo().assertExists()
+        compose.onNodeWithTag("tab_start").performClick()
         save("01-start.png")
         compose.onNodeWithTag("tab_connections").performClick()
         compose.onNodeWithTag("cockpit_overview").assertDoesNotExist()
