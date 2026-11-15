@@ -85,7 +85,17 @@ jobs:
           script: |
             gradle --no-daemon :app:connectedDebugAndroidTest
             mkdir -p test-results/ui-screenshots
-            adb pull /sdcard/Android/data/de.mvv.mobility/files/ui-screenshots/ test-results/ui-screenshots/ || true
+            # Instrumentation may uninstall the target app and delete its external files.
+            # Reinstall and capture the *actual rendered* UI before uploading artifacts.
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb shell am start -W -n de.mvv.mobility/.MainActivity --ez mein_weg_test_fixture true
+            sleep 4
+            adb exec-out screencap -p > test-results/ui-screenshots/01-start-real.png
+            adb shell input swipe 500 1400 500 450 450
+            sleep 2
+            adb exec-out screencap -p > test-results/ui-screenshots/02-start-scrolled-real.png
+            test -s test-results/ui-screenshots/01-start-real.png
+            test -s test-results/ui-screenshots/02-start-scrolled-real.png
       - name: Upload emulator logs and screenshot
         if: always()
         uses: actions/upload-artifact@v4
