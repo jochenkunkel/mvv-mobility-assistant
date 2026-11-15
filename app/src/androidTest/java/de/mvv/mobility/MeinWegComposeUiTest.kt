@@ -79,7 +79,7 @@ class MeinWegComposeUiTest {
     @Test fun modernStartShowsCompactAppointmentAndExpandablePicker() = launchFixture {
         compose.onNodeWithTag("app_title").assertExists()
         compose.onNodeWithText("Nächster Termin").assertExists()
-        compose.onNodeWithText("Anderen Termin wählen").performScrollTo().performClick()
+        compose.onNodeWithTag("calendar_appointment").performScrollTo().performClick()
         compose.onNodeWithTag("calendar_more").performScrollTo().assertExists()
         compose.onNodeWithTag("calendar_more").performClick()
         compose.onNodeWithText("Testtermin 11", substring = true).performScrollTo().assertExists()
@@ -129,7 +129,7 @@ class MeinWegComposeUiTest {
             val image = compose.onRoot().captureToImage().asAndroidBitmap()
             File(folder, name).outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
         }
-        compose.onNodeWithTag("cockpit_overview").assertExists()
+        compose.onNodeWithTag("cockpit_overview").assertDoesNotExist()
         compose.onNodeWithTag("setup_step_appointment").assertExists()
         compose.onNodeWithTag("setup_step_address").assertExists()
         compose.onNodeWithTag("setup_step_preferences").assertExists()
