@@ -649,7 +649,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                         val recommendedLeave = targetDay?.let { recommendedLeaveMillis(chosen, it) }
                                         val untilLeave = recommendedLeave?.let { (it - clockMillis) / 60000L }
-                                        if (untilLeave != null) {
+                                        if (untilLeave != null && recommendedLeave != null) {
                                             val leaveClock = java.text.SimpleDateFormat("HH:mm", java.util.Locale.GERMANY).apply {
                                                 timeZone = java.util.TimeZone.getTimeZone("Europe/Berlin")
                                             }.format(java.util.Date(recommendedLeave))
