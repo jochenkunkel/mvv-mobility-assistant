@@ -20,6 +20,8 @@ Stand: 15.11.2026. **Qualitätsanforderung für jede künftige Version; kein Nac
 
 **Ist-Zustand:** Emulator-UI-Test und drei Screenshot-Artefakte existieren, aber kein belegter Matrixlauf über alle Geräteklassen, kein automatischer Golden-Master-Vergleich. Daher keine visuelle Freigabe. Nach jeder wesentlichen UI-Änderung Screenshots je Größe erstellen und **wirklich ansehen**.
 
+**CI-Erweiterung:** Commit `032ff546` erzeugt zusätzlich Emulator-Screenshots für ein **nur angenähertes** Galaxy-S25-Viewport (1080×2340, 420 dpi) und ein kompaktes 360-dp-Viewport. Diese Bildschirmkonfiguration ist kein Samsung-Gerät, kein One-UI-Test und kein Beweis für visuelle Fehlerfreiheit; Artefakte müssen manuell geprüft werden. Der reale S25-Test bleibt verpflichtend.
+
 ## 2. Installation und Deinstallation
 1. Frisches Testgerät/Emulator ohne `de.mvv.mobility`: Release-APK installieren; Launcher, Berechtigungen, Start und MVV-Suche prüfen.
 2. App-Daten in Einstellungen ändern (Zuhause, Gehgeschwindigkeit, Ankunftspuffer, Linienfilter).
