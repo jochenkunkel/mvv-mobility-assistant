@@ -60,6 +60,14 @@ class MeinWegComposeUiTest {
         ActivityScenario.launch<MainActivity>(intent).use { block() }
     }
 
+    @Test fun cockpitProvidesThreeInteractiveEntryPoints() = launchFixture {
+        compose.onNodeWithTag("cockpit_overview").assertExists()
+        compose.onNodeWithTag("cockpit_appointment").assertExists().performClick()
+        compose.onNodeWithTag("cockpit_connections").assertExists().performClick()
+        compose.onNodeWithTag("cockpit_journey").assertExists().performClick()
+        compose.onNodeWithTag("mvv_search_button").performScrollTo().assertExists()
+    }
+
     @Test fun modernStartShowsCompactAppointmentAndExpandablePicker() = launchFixture {
         compose.onNodeWithTag("app_title").assertExists()
         compose.onNodeWithText("Nächster Termin").assertExists()
