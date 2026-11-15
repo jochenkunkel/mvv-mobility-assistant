@@ -6,6 +6,10 @@ Android-App mit Kalenderterminen, aktueller Standortabfrage auf Anfrage, MVV-Tü
 
 Die begründeten Architektur-, UX- und Funktionsentscheidungen inklusive Umsetzungsstatus, Risiken und nächster Schritte stehen in [docs/DECISIONS.md](docs/DECISIONS.md). Maßstab ist die abgestimmte Drei-Screen-Designvorlage (Start, Verbindungen, Meine Fahrt) mit zusätzlichem Einstellungszugang. Ein erfolgreicher CI-Lauf belegt nicht automatisch visuelle Übereinstimmung. Die Sprachwahl ist derzeit nur vorbereitet; echte Übersetzungen folgen.
 
+## Abgestimmter Cockpit-Umbau (15.11.2026)
+
+Die verbindlichen Anforderungen aus dem Praxistest mit fünf Android-Screenshots, einschließlich automatischer Kalender-/Ziel-/Standortvorbereitung, kompakter Verbindungskarten, Settings und ehrlicher Live-Anzeigen, stehen in **[docs/COCKPIT-V2-PLAN.md](docs/COCKPIT-V2-PLAN.md)**. Dort sind Umsetzungsstand, Reihenfolge und Abnahmekriterien getrennt dokumentiert. Geplant bedeutet nicht implementiert.
+
 ## Entwickeln und testen
 JDK 17, Android SDK 35 und Gradle 8.13. `gradle :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest`.
 
