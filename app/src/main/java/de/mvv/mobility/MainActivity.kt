@@ -441,8 +441,8 @@ class MainActivity : ComponentActivity() {
                             horizontalArrangement = Arrangement.SpaceBetween) {
                             Row(verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(if (lookupStatus.startsWith("✓") || confirmedDestination.isNotBlank()) "✓" else "?",
-                                    color = if (confirmedDestination.isNotBlank()) Color(0xFF237A45)
+                                Text(if (lookupStatus.startsWith("✓")) "✓" else "?",
+                                    color = if (lookupStatus.startsWith("✓")) Color(0xFF237A45)
                                         else MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontWeight = FontWeight.Bold)
                                 Text(if (lookupStatus.startsWith("✓")) "Ziel geprüft"
