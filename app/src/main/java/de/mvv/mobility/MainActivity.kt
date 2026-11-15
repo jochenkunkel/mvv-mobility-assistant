@@ -290,51 +290,45 @@ class MainActivity : ComponentActivity() {
                         SetupStepHeader(2, "Start & Ziel", confirmedDestination.ifBlank { appointment?.location ?: "Adresse festlegen" }, activeSetupStep == 1, "setup_step_address") { activeSetupStep = 1 }
                         if (activeSetupStep == 1 || (fixture && !visualFixture)) {
                         Text("Wohin?", style = MaterialTheme.typography.titleMedium)
-                        if (appointment != null) {
-                                if (appointment.location == null) {
-                                    Text("Für diesen Termin fehlt ein Zielort. Bitte bestätigen oder ergänzen.")
-                                } else {
-                                    Text("Kalender-Ziel: ${appointment.location}")
-                                    Text("Du kannst den Ort automatisch suchen lassen und einen passenden Treffer auswählen.")
-                                }
-                                OutlinedTextField(
-                                    value = confirmedDestination,
-                                    onValueChange = { confirmedDestination = it; addressSuggestions = emptyList() },
-                                    label = { Text("Zielort bestätigen oder korrigieren") },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Button(onClick = {
-                                    val query = confirmedDestination.trim().ifBlank { appointment.location.orEmpty() }
-                                    lookupRequest++
-                                    val requestId = lookupRequest
-                                    addressSuggestions = emptyList()
-                                    lookupStatus = "Suche passende Orte und Adressen …"
-                                    DestinationLookup.search(this@MainActivity, query) { results ->
-                                        if (requestId == lookupRequest) {
-                                            addressSuggestions = results
-                                            lookupStatus = if (results.isEmpty()) "Keine eindeutigen Treffer. Bitte den Suchtext ergänzen oder die Adresse selbst eingeben." else "Bitte den passenden Ort auswählen:"
-                                        }
-                                    }
-                                }, enabled = confirmedDestination.isNotBlank() || !appointment.location.isNullOrBlank()) {
-                                    Text("Adresse online suchen")
-                                }
-                                if (lookupStatus.isNotBlank()) Text(lookupStatus)
-                                addressSuggestions.forEach { suggestion ->
-                                    OutlinedButton(
-                                        onClick = {
-                                            confirmedDestination = suggestion
-                                            addressSuggestions = emptyList()
-                                            lookupStatus = "Ausgewähltes Ziel: $suggestion"
-                                        },
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) { Text(suggestion) }
-                                }
-                                if (confirmedDestination.isNotBlank()) {
-                                    Text("Bestätigtes Ziel (nur für diese Ansicht): $confirmedDestination")
-                                }
+                        OutlinedTextField(
+                            value = confirmedDestination,
+                            onValueChange = { confirmedDestination = it; addressSuggestions = emptyList(); lookupStatus = "" },
+                            label = { Text("Zieladresse") },
+                            placeholder = { Text(appointment?.location ?: "Ort oder Adresse eingeben") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth().testTag("setup_destination_input")
+                        )
+                        if (confirmedDestination.isBlank() && !appointment?.location.isNullOrBlank()) {
+                            Text("✓ Ziel aus dem Kalender: ${appointment?.location}", style = MaterialTheme.typography.bodySmall)
                         }
+                        TextButton(
+                            onClick = {
+                                val query = confirmedDestination.trim().ifBlank { appointment?.location.orEmpty() }
+                                lookupRequest++
+                                val requestId = lookupRequest
+                                addressSuggestions = emptyList()
+                                lookupStatus = "Suche passende Adressen …"
+                                DestinationLookup.search(this@MainActivity, query) { results ->
+                                    if (requestId == lookupRequest) {
+                                        addressSuggestions = results
+                                        lookupStatus = if (results.isEmpty()) "Kein eindeutiger Treffer. Adresse direkt verwenden oder präzisieren." else "Passenden Treffer antippen:"
+                                    }
+                                }
+                            },
+                            enabled = confirmedDestination.isNotBlank() || !appointment?.location.isNullOrBlank(),
+                            modifier = Modifier.testTag("setup_destination_lookup")
+                        ) { Text("⌕ Adresse online prüfen (optional)") }
+                        if (lookupStatus.isNotBlank()) Text(lookupStatus, style = MaterialTheme.typography.bodySmall)
+                        addressSuggestions.take(4).forEach { suggestion ->
+                            TextButton(
+                                onClick = {
+                                    confirmedDestination = suggestion
+                                    addressSuggestions = emptyList()
+                                    lookupStatus = "✓ Ziel übernommen"
+                                },
+                                modifier = Modifier.fillMaxWidth().testTag("setup_destination_suggestion")
+                            ) { Text(suggestion) }
                         Text("Von wo?", style = MaterialTheme.typography.titleMedium)
-                        Text("Startpunkt", style = MaterialTheme.typography.titleMedium)
                         Button(onClick = {
                             if (CurrentLocationRepository.hasPermission(this@MainActivity)) {
                                 locationStatus = "Standort wird ermittelt …"
@@ -350,9 +344,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }) { Text("Aktuellen Standort verwenden") }
                         Text(locationStatus)
-                        location?.let {
-                            Text("Breite: %.5f · Länge: %.5f".format(java.util.Locale.GERMANY, it.latitude, it.longitude))
-                        }
+                        if (location != null) Text("✓ Startpunkt bereit", style = MaterialTheme.typography.bodySmall)
                         Text("Die Position wird nur auf Anfrage ermittelt, nicht gespeichert und nicht im Hintergrund verfolgt.")
                         if (!(fixture && !visualFixture)) Button(onClick = { activeSetupStep = 2 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_preferences")) { Text("Weiter · Fahrtwunsch →") }
                         }
