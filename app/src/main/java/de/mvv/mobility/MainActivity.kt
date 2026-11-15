@@ -497,7 +497,7 @@ class MainActivity : ComponentActivity() {
                                 elevation = CardDefaults.cardElevation(defaultElevation = if (index == 0) 4.dp else 2.dp)
                             ) {
                                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    if (index == 0) Text("★ EMPFOHLENE VERBINDUNG", color = Color(0xFF5635B1),
+                                    if (index == 0) Text("★ ERSTE VERBINDUNG", color = Color(0xFF5635B1),
                                         fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
                                     Text("${trip.departure} – ${trip.arrival}", color = Color(0xFF35236D),
                                         fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall)
