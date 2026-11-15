@@ -19,6 +19,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import de.mvv.mobility.ui.components.CockpitOverview
+import de.mvv.mobility.ui.components.CockpitNavigation
+import de.mvv.mobility.ui.components.CockpitTab
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -117,7 +119,9 @@ class MainActivity : ComponentActivity() {
                     val appointmentAnchor = remember { BringIntoViewRequester() }
                     val connectionsAnchor = remember { BringIntoViewRequester() }
                     val journeyAnchor = remember { BringIntoViewRequester() }
-                    Column(Modifier.fillMaxSize().background(Color(0xFFF7F6FB)).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    var selectedTab by remember { mutableStateOf(CockpitTab.START) }
+                    Column(Modifier.fillMaxSize().background(Color(0xFFF7F6FB))) {
+                    Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Column(
                             modifier = Modifier.fillMaxWidth().background(Color(0xFF49309B), RoundedCornerShape(24.dp))
                                 .padding(horizontal = 20.dp, vertical = 18.dp),
@@ -584,6 +588,20 @@ class MainActivity : ComponentActivity() {
                         if (routeStatus.isNotBlank()) Text(routeStatus, modifier = Modifier.testTag("route_status"))
                         Text("Die Route öffnet sich zunächst in Google Maps mit ÖPNV-Auswahl. Die Einstellung für 3,0 km/h wird in Mein Weg gespeichert, aber vom externen Routenplaner noch nicht berücksichtigt. Eine eigene MVV-Routenbewertung folgt.")
                     }
+                    CockpitNavigation(selectedTab) { tab ->
+                        selectedTab = tab
+                        scope.launch {
+                            when (tab) {
+                                CockpitTab.START -> appointmentAnchor.bringIntoView()
+                                CockpitTab.CONNECTIONS -> connectionsAnchor.bringIntoView()
+                                CockpitTab.JOURNEY -> {
+                                    if (dashboardJourney != null) journeyAnchor.bringIntoView()
+                                    else connectionsAnchor.bringIntoView()
+                                }
+                            }
+                        }
+                    }
+                }
                 }
             }
         }
