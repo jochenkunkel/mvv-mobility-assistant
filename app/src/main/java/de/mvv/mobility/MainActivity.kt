@@ -212,7 +212,7 @@ class MainActivity : ComponentActivity() {
                                     style = MaterialTheme.typography.titleLarge)
                             }
                         }
-                        if (fixture && !visualFixture) CockpitOverview(
+                        if (fixture && !visualFixture && !settingsExpanded) CockpitOverview(
                             appointment = appointment?.title,
                             destination = confirmedDestination.ifBlank { appointment?.location.orEmpty() },
                             journeyCount = journeys.size,
@@ -221,16 +221,20 @@ class MainActivity : ComponentActivity() {
                             onConnections = { selectedTab = CockpitTab.CONNECTIONS },
                             onJourney = { selectedTab = CockpitTab.JOURNEY }
                         )
-                        if ((selectedTab == CockpitTab.START || (fixture && !visualFixture)) && settingsExpanded) {
+                        if (settingsExpanded) {
                             Card(
                                 modifier = Modifier.fillMaxWidth().testTag("settings_panel"),
                                 shape = RoundedCornerShape(20.dp),
                                 colors = CardDefaults.cardColors(containerColor = Color.White)
                             ) {
                                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    Text("Deine Einstellungen", style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Bold)
-                                    Text("Zuhause", style = MaterialTheme.typography.titleMedium)
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("Einstellungen", style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                        TextButton(onClick = { settingsExpanded = false }) { Text("Schließen") }
+                                    }
+                                    Text("Persönliche Ziele", style = MaterialTheme.typography.titleMedium)
+                                    Text("Zuhause", style = MaterialTheme.typography.labelLarge)
                                     OutlinedTextField(
                                         value = homeAddress,
                                         onValueChange = { homeAddress = it; homeSaved = false },
@@ -268,6 +272,7 @@ class MainActivity : ComponentActivity() {
                                         settings.edit().putFloat("walking_speed_kmh", it).apply()
                                         journeys = emptyList()
                                     }, valueRange = 2f..5f, steps = 5)
+                                    HorizontalDivider()
                                     Text("Sprache (Vorbereitung für Übersetzungen)",
                                         style = MaterialTheme.typography.titleMedium)
                                     listOf("system" to "Systemsprache", "de" to "Deutsch",
@@ -282,10 +287,15 @@ class MainActivity : ComponentActivity() {
                                     }
                                     Text("Die Sprachauswahl wird gespeichert. Weitere Übersetzungen der Oberfläche folgen.",
                                         style = MaterialTheme.typography.bodySmall)
+                                    HorizontalDivider()
+                                    Text("Standort und Kalender", style = MaterialTheme.typography.titleMedium)
+                                    Text(if (locationPermissionGranted) "✓ Standortberechtigung erteilt" else "Standortberechtigung fehlt", style = MaterialTheme.typography.bodySmall)
+                                    Text(if (allowed) "✓ Kalenderberechtigung erteilt" else "Kalenderberechtigung fehlt", style = MaterialTheme.typography.bodySmall)
+                                    Text("Standortdaten werden nur bei geöffneter App aktualisiert und nicht dauerhaft gespeichert.", style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         }
-                        if (selectedTab == CockpitTab.START || (fixture && !visualFixture)) {
+                        if (!settingsExpanded && (selectedTab == CockpitTab.START || (fixture && !visualFixture))) {
                         if (homeSaved) {
                             Button(
                                 onClick = {
@@ -485,7 +495,7 @@ class MainActivity : ComponentActivity() {
                                 }
                         }
 
-                        if (selectedTab == CockpitTab.START && activeSetupStep == 2 && !(fixture && !visualFixture)) {
+                        if (!settingsExpanded && selectedTab == CockpitTab.START && activeSetupStep == 2 && !(fixture && !visualFixture)) {
                             Button(
                                 onClick = {
                                     selectedTab = CockpitTab.CONNECTIONS
@@ -498,7 +508,7 @@ class MainActivity : ComponentActivity() {
                                 shape = RoundedCornerShape(18.dp)
                             ) { Text(if (journeyLoading) "Suche läuft …" else "Verbindung finden →") }
                         }
-                        if (selectedTab == CockpitTab.CONNECTIONS || (fixture && !visualFixture)) {
+                        if (!settingsExpanded && (selectedTab == CockpitTab.CONNECTIONS || (fixture && !visualFixture))) {
                         Text("Verbindungen", style = MaterialTheme.typography.titleLarge)
                         Button(
                             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("mvv_search_button"),
@@ -533,7 +543,7 @@ class MainActivity : ComponentActivity() {
                         }
                         Spacer(Modifier.height(1.dp).bringIntoViewRequester(journeyAnchor))
                         }
-                        if (selectedTab == CockpitTab.JOURNEY || (fixture && !visualFixture)) {
+                        if (!settingsExpanded && (selectedTab == CockpitTab.JOURNEY || (fixture && !visualFixture))) {
                         Text("Meine Fahrt", style = MaterialTheme.typography.titleLarge)
                         if (dashboardJourney == null) TextButton(onClick = { selectedTab = CockpitTab.CONNECTIONS }) { Text("Verbindungen ansehen") }
                         if (dashboardJourney != null) {
