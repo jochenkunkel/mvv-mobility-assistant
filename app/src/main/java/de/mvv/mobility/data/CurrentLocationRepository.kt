@@ -39,7 +39,7 @@ object CurrentLocationRepository {
             } else {
                 @Suppress("DEPRECATION")
                 onResult(manager.getLastKnownLocation(provider)?.takeIf {
-                    System.currentTimeMillis() - it.time < 2 * 60 * 1000
+                    LocationFreshness.isFresh(it.time, System.currentTimeMillis())
                 })
             }
         } catch (_: SecurityException) {
@@ -75,7 +75,7 @@ object CurrentLocationRepository {
             // Show a recent cached fix while awaiting the first fresh update.
             @Suppress("DEPRECATION")
             val cached = manager.getLastKnownLocation(provider)
-            if (cached != null && cached.time <= System.currentTimeMillis() &&
+            if (cached != null && LocationFreshness.isFresh(cached.time, System.currentTimeMillis()) &&
                 System.currentTimeMillis() - cached.time < 30_000L) {
                 onResult(cached)
             }
