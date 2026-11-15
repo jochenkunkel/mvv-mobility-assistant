@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import de.mvv.mobility.data.CurrentLocationRepository
 import de.mvv.mobility.data.LocationFreshness
+import de.mvv.mobility.data.routeFailureMessage
 import de.mvv.mobility.data.DeviceCalendarRepository
 import de.mvv.mobility.data.DestinationLookup
 import de.mvv.mobility.data.MvvJourneyRepository
@@ -542,7 +543,7 @@ class MainActivity : ComponentActivity() {
                                                 if (it is MvvJourneyRepository.AmbiguousDestination) {
                                                     mvvCandidates = it.candidates
                                                     routeStatus = "Bitte die richtige MVV-Zielhaltestelle auswählen:"
-                                                } else routeStatus = "MVV-Abfrage fehlgeschlagen: ${it.localizedMessage ?: "Unbekannter Fehler"}"
+                                                } else routeStatus = routeFailureMessage(it)
                                             }
                                         )
                                     }
