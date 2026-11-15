@@ -116,7 +116,12 @@ class MeinWegComposeUiTest {
         compose.onNodeWithTag("walking_dashboard").assertDoesNotExist()
     }
 
-    @Test fun screenshotFixtureStartAndRouteAreSavedForVisualReview() = launchFixture {
+    @Test fun screenshotFixtureStartAndRouteAreSavedForVisualReview() {
+        val app = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(app, MainActivity::class.java)
+            .putExtra("mein_weg_test_fixture", true)
+            .putExtra("mein_weg_visual_fixture", true)
+        ActivityScenario.launch<MainActivity>(intent).use {
         val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
         val folder = File(context.getExternalFilesDir(null), "ui-screenshots").apply { mkdirs() }
         fun save(name: String) {
@@ -125,13 +130,16 @@ class MeinWegComposeUiTest {
             File(folder, name).outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
         }
         save("01-start.png")
+        compose.onNodeWithTag("tab_connections").performClick()
         compose.onNodeWithTag("mvv_search_button").performScrollTo().performClick()
         compose.onNodeWithTag("journey_summary").performScrollTo().assertExists()
         save("02-verbindungen.png")
         compose.onNodeWithTag("open_walking_dashboard").performScrollTo().performClick()
         compose.onNodeWithTag("walking_dashboard").performScrollTo().assertExists()
+        compose.onNodeWithTag("tab_journey").performClick()
         save("03-dashboard.png")
         org.junit.Assert.assertEquals(3, folder.listFiles()?.count { it.extension == "png" })
+        }
     }
 
 }
