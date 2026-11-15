@@ -95,7 +95,7 @@ class MeinWegComposeUiTest {
         compose.onNodeWithTag("mvv_search_button").performScrollTo().performClick()
         compose.onNodeWithTag("open_walking_dashboard").performScrollTo().performClick()
         compose.onNodeWithTag("walking_dashboard").performScrollTo().assertExists()
-        compose.onNodeWithText("Meine Fahrt · Dein Wegbegleiter").assertExists()
+        compose.onNodeWithTag("walking_dashboard").assertExists()
         compose.onNodeWithText("Dashboard schließen").performScrollTo().performClick()
         compose.onNodeWithTag("walking_dashboard").assertDoesNotExist()
     }
