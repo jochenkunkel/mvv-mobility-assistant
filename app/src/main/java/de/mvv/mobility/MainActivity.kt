@@ -111,23 +111,35 @@ class MainActivity : ComponentActivity() {
                             }
                         } else locationStatus = "Standortberechtigung nicht erteilt"
                     }
-                    Column(Modifier.fillMaxSize().background(Color(0xFFF7F6FB)).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Column(Modifier.fillMaxSize().background(Color(0xFFF7F6FB)).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Column(
                             modifier = Modifier.fillMaxWidth().background(Color(0xFF49309B), RoundedCornerShape(24.dp))
-                                .padding(horizontal = 22.dp, vertical = 26.dp),
+                                .padding(horizontal = 20.dp, vertical = 18.dp),
                             verticalArrangement = Arrangement.spacedBy(7.dp)
                         ) {
                             Text("MEIN WEG 2.0  ·  MÜNCHEN", color = Color(0xFFD9D1FF), style = MaterialTheme.typography.labelMedium)
                             Text("Mein Weg", modifier = Modifier.testTag("app_title"), color = Color.White,
                                 fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineLarge)
-                            Text("Entspannt und pünktlich ans Ziel", color = Color(0xFFF0EBFF),
+                            Text("Dein MVV-Wegbegleiter für München", color = Color(0xFFF0EBFF),
                                 style = MaterialTheme.typography.bodyMedium)
                         }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                             OutlinedButton(onClick = { settingsExpanded = !settingsExpanded },
                                 modifier = Modifier.testTag("settings_toggle")) {
-                                Text(if (settingsExpanded) "✕ Einstellungen schließen" else "⚙ Einstellungen")
+                                Text(if (settingsExpanded) "✕ Schließen" else "⚙ Einstellungen")
                             }
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth().background(Color(0xFFECE7FF), RoundedCornerShape(14.dp))
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text("1  Termin", color = Color(0xFF49309B), modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                            Text("2  Verbindung", color = Color(0xFF49309B), modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                            Text("3  Meine Fahrt", color = Color(0xFF49309B), modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                         }
                         if (settingsExpanded) {
                             Card(
