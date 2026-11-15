@@ -444,7 +444,7 @@ class MainActivity : ComponentActivity() {
                         }
                         Text("Von wo?", style = MaterialTheme.typography.titleMedium)
                         Text(effectiveLocationStatus, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("setup_location_status"))
-                        if (location == null && !fixture) {
+                        if (usableLocation == null && !fixture) {
                             TextButton(onClick = {
                                 if (!CurrentLocationRepository.hasPermission(this@MainActivity)) {
                                     locationPermissionLauncher.launch(arrayOf(
