@@ -4,6 +4,8 @@
 **Status:** Produktanforderungen beschlossen; **nicht** gleichbedeutend mit fertig implementiert.
 **Ziel:** Ein modernes, kompaktes Mobilitäts-Cockpit statt langer Fließtexte und unnötiger Klickketten. Standardfall: Termin auswählen → vorbereitete Route prüfen → Verbindung starten, möglichst ohne manuelle Zwischenschritte.
 
+> **Fortschrittsnachtrag (15.11.2026):** Die unten stehende historische Umsetzungsreihenfolge ist nicht mehr der aktuelle Ist-Stand. Kalenderautomatik `6b4471e7`, Zielvorbelegung/-Lookup `b0ef8030`, GPS-Start `f78a0266` und Vordergrund-Standortupdates `7afdfab3` sind implementiert; CI für `7afdfab3` ist mit fünf erfolgreichen Jobs abgeschlossen. Settings aus allen Tabs `2a27794b` sind implementiert, CI beim Erfassen noch offen. **Keine vollständige UX-/Geräteabnahme.** Aktueller Status, Risiken und drei Wireframes: [Projektstatus](PROJECT-STATUS-2026-11-15.md).
+
 ## Verbindliche UX-Prinzipien
 1. **Automatisch vorbereiten, nur bei Bedarf eingreifen.** Kalenderdaten, Ziel, letzte Präferenzen und (mit Berechtigung) Startposition vorbefüllen.
 2. **Drei Module auf Start:** 1 Termin, 2 Start & Ziel, 3 Fahrtwunsch. Nur das aktive Modul groß; andere als schmale, antippbare Zusammenfassung. Keine zusätzliche doppelte Cockpit-Übersicht.
