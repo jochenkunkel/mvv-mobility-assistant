@@ -15,8 +15,11 @@ import java.util.TimeZone
 data class JourneyOption(
     val departure: String, val arrival: String, val summary: String,
     val changes: Int, val walkingMinutes: Int,
-    val lines: List<String> = emptyList(), val products: List<String> = emptyList()
+    val lines: List<String> = emptyList(), val products: List<String> = emptyList(),
+    val steps: List<JourneyStep> = emptyList()
 )
+data class JourneyStep(val line: String, val product: String, val from: String, val to: String,
+    val departure: String, val arrival: String, val walking: Boolean, val minutes: Int)
 enum class RouteFilterMode { ANY, CONTAINS, ONLY_LINE_WITH_WALK }
 data class RoutePreference(val mode: RouteFilterMode = RouteFilterMode.ANY, val query: String = "")
 fun filterJourneys(options: List<JourneyOption>, preference: RoutePreference): List<JourneyOption> {
@@ -78,6 +81,21 @@ object MvvJourneyRepository {
             var walkingMinutes = 0
             var vehicles = 0
             val products = mutableListOf<String>()
+            val steps = mutableListOf<JourneyStep>()
+            fun endpoint(leg: JSONObject?, departure: Boolean): JSONObject? {
+                if (leg == null) return null
+                val points = leg.optJSONArray("points")
+                return if (points != null && points.length() > 0)
+                    points.optJSONObject(if (departure) 0 else points.length() - 1)
+                else leg.optJSONObject(if (departure) "origin" else "destination")
+            }
+            fun efaTime(point: JSONObject?): String {
+                val dt = point?.optJSONObject("dateTime")
+                val live = dt?.optString("rtTime").orEmpty()
+                val planned = dt?.optString("time").orEmpty()
+                return live.ifBlank { planned }.ifBlank { time(point) }
+            }
+
             for (j in 0 until legs.length()) {
                 val leg = legs.optJSONObject(j) ?: continue
                 // Real MVV EFA uses mode + points, unlike the legacy fixture schema.
@@ -90,6 +108,11 @@ object MvvJourneyRepository {
                     .ifBlank { transport?.text("name").orEmpty() }
                 val walking = product.contains("Fuss", true) || product.contains("Fuß", true) ||
                     product.contains("walk", true) || (mode == null && transport == null)
+                val from = endpoint(leg, true)
+                val to = endpoint(leg, false)
+                steps.add(JourneyStep(number, product, from?.optString("name").orEmpty(),
+                    to?.optString("name").orEmpty(), efaTime(from), efaTime(to), walking,
+                    leg.optInt("timeMinute", 0)))
                 if (walking) {
                     val distance = leg.optDouble("distance", 0.0)
                     if (distance > 0) {
@@ -105,19 +128,6 @@ object MvvJourneyRepository {
             }
             val first = legs.optJSONObject(0)
             val last = legs.optJSONObject(legs.length() - 1)
-            fun endpoint(leg: JSONObject?, departure: Boolean): JSONObject? {
-                if (leg == null) return null
-                val points = leg.optJSONArray("points")
-                return if (points != null && points.length() > 0)
-                    points.optJSONObject(if (departure) 0 else points.length() - 1)
-                else leg.optJSONObject(if (departure) "origin" else "destination")
-            }
-            fun efaTime(point: JSONObject?): String {
-                val dt = point?.optJSONObject("dateTime")
-                val live = dt?.optString("rtTime").orEmpty()
-                val planned = dt?.optString("time").orEmpty()
-                return live.ifBlank { planned }.ifBlank { time(point) }
-            }
             if (names.isEmpty() && vehicles == 0 && walkingMinutes == 0) continue
             results.add(JourneyOption(
                 departure = efaTime(endpoint(first, true)),
@@ -125,7 +135,7 @@ object MvvJourneyRepository {
                 summary = names.joinToString(" → ").ifBlank { "Verbindung ohne Linienangabe" },
                 changes = (vehicles - 1).coerceAtLeast(0),
                 walkingMinutes = walkingMinutes,
-                lines = names.toList(), products = products.toList()
+                lines = names.toList(), products = products.toList(), steps = steps.toList()
             ))
         }
         return results
