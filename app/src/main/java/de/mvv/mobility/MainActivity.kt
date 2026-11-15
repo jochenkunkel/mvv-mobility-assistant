@@ -357,7 +357,9 @@ class MainActivity : ComponentActivity() {
                         }
                         val destination = confirmedDestination.trim().ifBlank { appointment?.location?.trim().orEmpty() }
                         Button(
-                            modifier = Modifier.testTag("mvv_search_button"),
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("mvv_search_button"),
+                            shape = RoundedCornerShape(18.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5635B1)),
                             enabled = location != null && destination.isNotBlank() && !journeyLoading && (routeFilterMode == RouteFilterMode.ANY || routeFilterQuery.isNotBlank()),
                             onClick = {
                                 val start = location ?: return@Button
@@ -433,10 +435,15 @@ class MainActivity : ComponentActivity() {
                                     if (cal.timeInMillis > targetDay + 30 * 60000L) cal.add(java.util.Calendar.DAY_OF_MONTH, -1)
                                     return (cal.timeInMillis - clockMillis) / 60000L
                                 }
-                                Card(Modifier.fillMaxWidth().testTag("walking_dashboard")) {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth().testTag("walking_dashboard"),
+                                    shape = RoundedCornerShape(22.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFECE7FF)),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                                ) {
                                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        Text("Meine Fahrt · Dein Wegbegleiter", style = MaterialTheme.typography.titleMedium)
-                                        Text("Jetzt zur Haltestelle", style = MaterialTheme.typography.headlineSmall)
+                                        Text("MEINE FAHRT  ·  LIVE", color = Color(0xFF49309B), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Text("Jetzt zur Haltestelle", color = Color(0xFF263B2E), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall)
                                         Text(boarding?.from?.ifBlank { "Haltestelle noch nicht übermittelt" } ?: "Kein Verkehrsmittel in dieser Verbindung")
                                         if (boarding != null) {
                                             Text("Linie ${boarding.line} · Abfahrt ${boarding.departure}", style = MaterialTheme.typography.titleLarge)
@@ -483,9 +490,17 @@ class MainActivity : ComponentActivity() {
                             }
                             val leaveIn = minutesUntil(trip.departure)
                             val busIn = firstBus?.let { minutesUntil(it.departure) }
-                            Card(Modifier.fillMaxWidth()) {
-                                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Text("${trip.departure} – ${trip.arrival}", style = MaterialTheme.typography.titleLarge)
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = if (index == 0) Color(0xFFF0ECFF) else Color.White),
+                                elevation = CardDefaults.cardElevation(defaultElevation = if (index == 0) 4.dp else 2.dp)
+                            ) {
+                                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    if (index == 0) Text("★ EMPFOHLENE VERBINDUNG", color = Color(0xFF5635B1),
+                                        fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
+                                    Text("${trip.departure} – ${trip.arrival}", color = Color(0xFF35236D),
+                                        fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall)
                                     Text(trip.summary, modifier = Modifier.testTag("journey_summary"), color = MaterialTheme.colorScheme.primary)
                                     OutlinedButton(onClick = { dashboardJourney = index }, modifier = Modifier.testTag("open_walking_dashboard")) { Text("Meine Fahrt · Dashboard öffnen") }
                                     Text("${trip.changes} Umstiege · Fußweg geschätzt: ${trip.walkingMinutes} Min. bei %.1f km/h".format(java.util.Locale.GERMANY, walkingSpeed))
