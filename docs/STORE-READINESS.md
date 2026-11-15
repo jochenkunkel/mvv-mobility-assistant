@@ -1,6 +1,13 @@
 # Mein Weg 2.0 – Geräte-, Installations-, Update- und Store-Freigabeplan
 Stand: 15.11.2026. **Qualitätsanforderung für jede künftige Version; kein Nachweis einer bereits erfolgten Store-Freigabe.**
 
+## Primäres Referenzgerät: Samsung Galaxy S25 (Standardmodell)
+**Verbindliche Priorität:** Das reguläre Samsung Galaxy S25 ist das erste reale Abnahmegerät. Andere Smartphones, Tablets und Schriftgrößen bleiben zusätzliche Kompatibilitätsziele. S25 Ultra/Plus sind keine Ersatzprüfung für das Standard-S25.
+
+**S25-Abnahme:** Installieren, erster Kalender-/Standort-Prompt, Kalendertermin auswählen, Adresse automatisch auflösen, GPS bei aktiver App aktualisieren und beim Verlassen stoppen, MVV-Verbindung suchen, Fahrt öffnen, Settings speichern, App beenden/neustarten, signiertes Update über bestehende Installation, anschließend Deinstallation und Neuinstallation. Alle drei Tabs und Settings bei Standard- und vergrößerter Schrift auf dem Gerät visuell kontrollieren. One-UI-Berechtigungsdialoge und Android-Energiesparverhalten ausdrücklich beachten.
+
+**Status:** Noch **kein belegter Test auf einem echten Galaxy S25**; die bisherige CI nutzt einen Android-Emulator. Keine S25-Freigabe ohne realen Nachweis.
+
 ## 1. Darstellung auf verschiedenen Geräten
 | Klasse | Mindestprüfung | Akzeptanz |
 |---|---|---|
