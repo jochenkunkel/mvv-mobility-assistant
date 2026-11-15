@@ -10,11 +10,29 @@ android {
         applicationId = "de.mvv.mobility"
         minSdk = 28
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = providers.gradleProperty("meinWegVersionCode").orNull?.toIntOrNull() ?: 1
+        versionName = providers.gradleProperty("meinWegVersionName").orNull ?: "0.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-    buildTypes { release { isMinifyEnabled = false } }
+    val releaseKeystore = System.getenv("MEIN_WEG_KEYSTORE_PATH")
+    signingConfigs {
+        if (!releaseKeystore.isNullOrBlank()) {
+            create("stableRelease") {
+                storeFile = file(releaseKeystore)
+                storePassword = System.getenv("MEIN_WEG_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("MEIN_WEG_KEY_ALIAS")
+                keyPassword = System.getenv("MEIN_WEG_KEY_PASSWORD")
+            }
+        }
+    }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+            if (!releaseKeystore.isNullOrBlank()) {
+                signingConfig = signingConfigs.getByName("stableRelease")
+            }
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
