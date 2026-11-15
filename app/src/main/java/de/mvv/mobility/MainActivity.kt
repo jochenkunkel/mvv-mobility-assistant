@@ -682,13 +682,35 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                     if (firstBus != null) {
-                                        Text("Linie ${firstBus.line} · ${firstBus.from.ifBlank { "Einstiegshaltestelle unbekannt" }}",
-                                            color = Color(0xFF5635B1), fontWeight = FontWeight.SemiBold,
-                                            style = MaterialTheme.typography.bodyMedium)
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.Top
+                                        ) {
+                                            Surface(
+                                                shape = RoundedCornerShape(8.dp),
+                                                color = Color(0xFF5635B1)
+                                            ) {
+                                                Text(
+                                                    firstBus.line.ifBlank { "ÖPNV" },
+                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                                    color = Color.White,
+                                                    fontWeight = FontWeight.Bold,
+                                                    style = MaterialTheme.typography.labelLarge
+                                                )
+                                            }
+                                            Text(
+                                                firstBus.from.ifBlank { "Einstiegshaltestelle unbekannt" },
+                                                modifier = Modifier.weight(1f),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
                                     }
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                         Text("${trip.changes} Umstiege", style = MaterialTheme.typography.labelMedium)
-                                        Text("Fußweg ca. ${trip.walkingMinutes} Min.", style = MaterialTheme.typography.labelMedium)
+                                        Text("Fußweg geschätzt: ca. ${trip.walkingMinutes} Min.",
+                                            style = MaterialTheme.typography.labelMedium)
                                     }
                                     Text(trip.summary, modifier = Modifier.testTag("journey_summary"),
                                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -702,9 +724,9 @@ class MainActivity : ComponentActivity() {
                                             else "Diese Verbindung liegt bereits in der Vergangenheit.",
                                             color = MaterialTheme.colorScheme.primary)
                                     }
-                                    if (firstBus != null) {
-                                        Text("Einsteigen: ${firstBus.line} · ${firstBus.from.ifBlank { "Haltestelle nicht übermittelt" }} · ${firstBus.departure}")
-                                        if (busIn != null && busIn > 0) Text("Abfahrt in ca. $busIn Minuten")
+                                    if (firstBus != null && busIn != null && busIn > 0) {
+                                        Text("Linie ${firstBus.line}: Abfahrt in ca. $busIn Minuten",
+                                            style = MaterialTheme.typography.bodySmall)
                                     }
                                     TextButton(onClick = { expandedJourney = if (expandedJourney == index) null else index },
                                         modifier = Modifier.testTag("journey_details")) {
