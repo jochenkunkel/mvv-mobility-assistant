@@ -69,6 +69,7 @@ class MainActivity : ComponentActivity() {
                     var journeyLoading by remember { mutableStateOf(false) }
                     var routeFilterMode by remember { mutableStateOf(RouteFilterMode.ANY) }
                     var routeFilterQuery by remember { mutableStateOf("") }
+                    var arrivalBufferMinutes by remember { mutableIntStateOf(10) }
                     var mvvCandidates by remember { mutableStateOf<List<MvvJourneyRepository.StopCandidate>>(emptyList()) }
                     var location by remember { mutableStateOf<Location?>(if (fixture) Location("test").apply {
                         latitude = 48.137154
@@ -215,12 +216,30 @@ class MainActivity : ComponentActivity() {
                                 singleLine = true, modifier = Modifier.fillMaxWidth().testTag("route_filter_query"))
                             Text("Filtert die abgefragten MVV-Verbindungen; kein Treffer bedeutet nicht, dass die Linie nie fährt.")
                         }
+                        if (appointment != null) {
+                            HorizontalDivider()
+                            Text("Ankunft zum Kalendertermin", style = MaterialTheme.typography.titleMedium)
+                            Text("Terminbeginn: ${appointment.timeLabel()}")
+                            Text("Gewünschter Zeitpuffer vor dem Termin")
+                            listOf(10, 20, 30, 45, 60).forEach { minutes ->
+                                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                    RadioButton(selected = arrivalBufferMinutes == minutes,
+                                        onClick = { arrivalBufferMinutes = minutes; journeys = emptyList() })
+                                    Text("$minutes Minuten früher ankommen")
+                                }
+                            }
+                            val arrivalTarget = java.util.Date(appointment.startMillis - arrivalBufferMinutes * 60000L)
+                            val arrivalFormat = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", java.util.Locale.GERMANY)
+                            arrivalFormat.timeZone = java.util.TimeZone.getTimeZone("Europe/Berlin")
+                            Text("MVV-Suche: Ankunft spätestens ${arrivalFormat.format(arrivalTarget)}")
+                        }
                         val destination = confirmedDestination.trim().ifBlank { appointment?.location?.trim().orEmpty() }
                         Button(
                             modifier = Modifier.testTag("mvv_search_button"),
                             enabled = location != null && destination.isNotBlank() && !journeyLoading && (routeFilterMode == RouteFilterMode.ANY || routeFilterQuery.isNotBlank()),
                             onClick = {
                                 val start = location ?: return@Button
+                                val arrivalBy = appointment?.startMillis?.minus(arrivalBufferMinutes * 60000L)
                                 journeyLoading = true
                                 journeys = emptyList()
                                 mvvCandidates = emptyList()
@@ -235,7 +254,7 @@ class MainActivity : ComponentActivity() {
                                         result.fold(
                                             onSuccess = {
                                                 journeys = it.options
-                                                routeStatus = "${it.options.size} Verbindungen nach ${it.destination.name} geladen"
+                                                routeStatus = if (it.options.isEmpty() && routeFilterMode != RouteFilterMode.ANY) "Keine passende Linie unter den geprüften MVV-Verbindungen gefunden. Bitte andere Auswahl versuchen." else "${it.options.size} Verbindungen nach ${it.destination.name} geladen"
                                             },
                                             onFailure = {
                                                 if (it is MvvJourneyRepository.AmbiguousDestination) {
@@ -245,7 +264,7 @@ class MainActivity : ComponentActivity() {
                                             }
                                         )
                                     }
-                                }, preference = RoutePreference(routeFilterMode, routeFilterQuery))
+                                }, preference = RoutePreference(routeFilterMode, routeFilterQuery), arrivalByMillis = arrivalBy)
                             }
                         ) { Text(if (journeyLoading) "Suche läuft …" else "MVV-Verbindungen direkt anzeigen (Test)") }
                         mvvCandidates.forEach { candidate ->
