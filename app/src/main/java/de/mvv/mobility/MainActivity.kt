@@ -637,7 +637,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         }
-                        if (selectedTab == CockpitTab.CONNECTIONS || (fixture && !visualFixture)) {
+                        if (!settingsExpanded && (selectedTab == CockpitTab.CONNECTIONS || (fixture && !visualFixture))) {
                         journeys.forEachIndexed { index, trip ->
                             val firstBus = trip.steps.firstOrNull { !it.walking }
                             val targetDay = appointment?.startMillis?.minus(arrivalBufferMinutes * 60000L)
