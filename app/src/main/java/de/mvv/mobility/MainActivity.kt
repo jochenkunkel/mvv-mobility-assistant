@@ -26,6 +26,9 @@ import de.mvv.mobility.ui.components.CockpitTab
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -136,33 +139,50 @@ class MainActivity : ComponentActivity() {
                         longitude = 11.576124
                     } else null) }
                     var locationStatus by remember { mutableStateOf("Noch kein Standort abgerufen") }
+                    var locationPermissionGranted by remember {
+                        mutableStateOf(CurrentLocationRepository.hasPermission(this@MainActivity))
+                    }
+                    var appForeground by remember { mutableStateOf(false) }
+                    val lifecycleOwner = LocalLifecycleOwner.current
+                    DisposableEffect(lifecycleOwner) {
+                        appForeground = lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
+                        val observer = LifecycleEventObserver { _, event ->
+                            if (event == Lifecycle.Event.ON_START) appForeground = true
+                            if (event == Lifecycle.Event.ON_STOP) appForeground = false
+                        }
+                        lifecycleOwner.lifecycle.addObserver(observer)
+                        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+                    }
                     val locationPermissionLauncher = rememberLauncherForActivityResult(
                         ActivityResultContracts.RequestMultiplePermissions()
                     ) { grants ->
-                        if (grants.values.any { it }) {
-                            locationStatus = "Standort wird ermittelt …"
-                            CurrentLocationRepository.request(this@MainActivity) { found ->
-                                location = found
-                                locationStatus = if (found == null) "Standort nicht verfügbar. Standortdienste prüfen." else "Aktueller Startpunkt ermittelt"
-                            }
-                        } else locationStatus = "Standortberechtigung nicht erteilt"
+                        locationPermissionGranted = grants.values.any { it }
+                        locationStatus = if (locationPermissionGranted) "Standort wird laufend ermittelt …"
+                            else "Standortberechtigung nicht erteilt"
                     }
-                    // One foreground location request per screen entry. No background tracking.
                     LaunchedEffect(Unit) {
-                        if (!fixture) {
-                            if (CurrentLocationRepository.hasPermission(this@MainActivity)) {
-                                locationStatus = "Standort wird automatisch ermittelt …"
-                                CurrentLocationRepository.request(this@MainActivity) { found ->
+                        if (!fixture && !locationPermissionGranted) {
+                            locationStatus = "Standortfreigabe wird angefragt …"
+                            locationPermissionLauncher.launch(arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            ))
+                        }
+                    }
+                    DisposableEffect(appForeground, locationPermissionGranted, fixture) {
+                        if (!fixture && appForeground && locationPermissionGranted) {
+                            locationStatus = "Standort wird laufend ermittelt …"
+                            val stop = CurrentLocationRepository.observeForeground(this@MainActivity) { found ->
+                                if (found != null) {
                                     location = found
-                                    locationStatus = if (found == null) "Standort nicht verfügbar. Standortdienste prüfen." else "✓ Aktueller Startpunkt ermittelt"
+                                    locationStatus = "✓ Standort aktuell"
+                                } else if (location == null) {
+                                    locationStatus = "Standort nicht verfügbar. Standortdienste prüfen."
                                 }
-                            } else {
-                                locationStatus = "Standortfreigabe wird angefragt …"
-                                locationPermissionLauncher.launch(arrayOf(
-                                    Manifest.permission.ACCESS_FINE_LOCATION,
-                                    Manifest.permission.ACCESS_COARSE_LOCATION
-                                ))
                             }
+                            onDispose { stop() }
+                        } else {
+                            onDispose { }
                         }
                     }
                     val appointmentAnchor = remember { BringIntoViewRequester() }
@@ -374,21 +394,19 @@ class MainActivity : ComponentActivity() {
                         Text(locationStatus, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("setup_location_status"))
                         if (location == null && !fixture) {
                             TextButton(onClick = {
-                                if (CurrentLocationRepository.hasPermission(this@MainActivity)) {
-                                    locationStatus = "Standort wird erneut ermittelt …"
-                                    CurrentLocationRepository.request(this@MainActivity) { found ->
-                                        location = found
-                                        locationStatus = if (found == null) "Standort nicht verfügbar. Standortdienste prüfen." else "✓ Aktueller Startpunkt ermittelt"
-                                    }
-                                } else {
+                                if (!CurrentLocationRepository.hasPermission(this@MainActivity)) {
                                     locationPermissionLauncher.launch(arrayOf(
                                         Manifest.permission.ACCESS_FINE_LOCATION,
                                         Manifest.permission.ACCESS_COARSE_LOCATION
                                     ))
+                                } else {
+                                    // Re-register the foreground subscription after a location-services change.
+                                    locationPermissionGranted = false
+                                    locationPermissionGranted = true
                                 }
                             }, modifier = Modifier.testTag("setup_location_retry")) { Text("Standort erneut versuchen") }
                         }
-                        Text("Standort nur während der App-Nutzung ermittelt; keine Hintergrundverfolgung.", style = MaterialTheme.typography.bodySmall)
+                        Text("Standort wird bei geöffneter App ungefähr alle 5 Sekunden aktualisiert; keine Hintergrundverfolgung.", style = MaterialTheme.typography.bodySmall)
                         if (!(fixture && !visualFixture)) Button(onClick = { activeSetupStep = 2 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_preferences")) { Text("Weiter · Fahrtwunsch →") }
                         }
                         SetupStepHeader(3, "Fahrtwunsch", "Verkehrsmittel & Ankunft", activeSetupStep == 2, "setup_step_preferences") { activeSetupStep = 2 }
