@@ -16,6 +16,10 @@ Der **[systematische Entwicklungs- und Freigabeplan](docs/IMPLEMENTATION-ROADMAP
 
 **[Projektstatus vom 15.11.2026: Was umgesetzt ist, was noch geprüft werden muss und die nächsten Phasen](docs/PROJECT-STATUS-2026-11-15.md)**. Enthält drei schematische Bildschirmansichten für Start, Verbindungen und Meine Fahrt. Die Skizzen sind keine echten Emulator-Screenshots. Die [Roadmap](docs/IMPLEMENTATION-ROADMAP.md) enthält das aktualisierte Fortschrittsprotokoll.
 
+## App-Store-Reife und Gerätequalität
+
+Der verbindliche [Geräte-, Installations-, Update- und Store-Freigabeplan](docs/STORE-READINESS.md) legt Prüfungen für kleine/große Smartphones, Tablets, große Schrift, Erstinstallation, Deinstallation, signierte Updates und spätere Google-Play-Veröffentlichung fest. **Die Kriterien sind noch nicht vollständig nachgewiesen; keine Store-Freigabe behauptet.**
+
 ## Entwickeln und testen
 JDK 17, Android SDK 35 und Gradle 8.13. `gradle :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest`.
 
