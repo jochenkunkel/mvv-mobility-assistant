@@ -78,3 +78,11 @@ Heimadresse ist personenbezogen und wird lokal in App-Preferences gespeichert; a
 - Die erste Verbindung wird derzeit nur **visuell** als Empfehlung markiert. Eine echte Qualitätsbewertung und Rangfolge sind noch umzusetzen; bis dahin darf die Position nicht als fachliche Empfehlung gelten.
 - Der Emulator-Test schlug nach der Umbenennung der Dashboard-Überschrift fehl, obwohl die Ansicht existierte. Die Prüfung verwendet jetzt den stabilen Semantik-Tag `walking_dashboard` statt eines übersetzten oder veränderlichen Texts.
 - Der korrigierte Commit `2fc06a52` bestand alle fünf GitHub-Jobs einschließlich Emulator. Die Screenshots sind als Artefakt `emulator-test-results` in Lauf `43699900629` abgelegt. Eine visuelle Begutachtung bleibt von den automatischen Tests getrennt.
+
+## 2026-11-15 – Cockpit statt langer Testoberfläche (Migration)
+
+**Problem:** Die ursprüngliche `MainActivity` enthält Darstellung, Berechtigungen, Standort, Kalender und Routensuche in einer sehr langen scrollbaren Compose-Spalte. Eine reine kosmetische Anpassung reproduziert nicht die gewünschte kompakte Drei-Bereiche-Bedienung.
+
+**Entscheidung:** Schrittweise Migration zu einer komponentenbasierten Compose-Cockpit-Architektur, ohne den funktionierenden MVV-Datenpfad sofort neu zu schreiben. `ui/components/CockpitOverview.kt` ist der erste eigenständige Präsentationsbaustein mit drei interaktiven Einstiegspunkten. Er bekommt nur Daten und Callbacks, keine Repository-Abhängigkeiten. Die Einstiegspunkte navigieren zunächst per `BringIntoViewRequester` zu bestehenden Abschnitten.
+
+**Nächste Schritte:** Separates `Scaffold` mit NavigationBar und echten Start-/Verbindungen-/Meine-Fahrt-Screens; Zustandsverwaltung in einem ViewModel/UiState, Extraktion von Berechtigungs- und Netzwerk-Callbacks, Settings als eigener Screen, Screenshot-Tests je Screen. Die aktuelle Cockpit-Komponente ist ein Übergang, nicht die fertige Navigation. Jede Stufe muss den Emulator-Test bestehen; erst dann erfolgt eine APK-Freigabe.
