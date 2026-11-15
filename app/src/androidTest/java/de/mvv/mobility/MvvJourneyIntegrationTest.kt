@@ -5,6 +5,8 @@ import de.mvv.mobility.data.MvvJourneyRepository
 import de.mvv.mobility.data.RouteFilterMode
 import de.mvv.mobility.data.RoutePreference
 import de.mvv.mobility.data.filterJourneys
+import de.mvv.mobility.data.selectAppointmentJourneys
+import de.mvv.mobility.data.JourneyOption
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -106,6 +108,21 @@ class MvvJourneyIntegrationTest {
         assertEquals("Haltestelle B", trip.steps[1].to)
         assertEquals("07:10", trip.steps[1].departure)
         assertTrue(trip.steps.last().walking)
+    }
+
+    @Test fun appointmentShowsOnlyThreeClosestArrivalsNotNightBuses() {
+        val zone = java.util.TimeZone.getTimeZone("Europe/Berlin")
+        val target = java.util.Calendar.getInstance(zone).apply {
+            set(2026, java.util.Calendar.NOVEMBER, 16, 7, 50, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        val arrivals = listOf("01:10", "01:30", "06:50", "07:10", "07:30", "07:50", "08:10")
+        val journeys = arrivals.map { clock ->
+            JourneyOption("06:00", clock, "134", 0, 10)
+        }
+        val selected = selectAppointmentJourneys(journeys, target)
+        assertEquals(listOf("07:50", "07:30", "07:10"), selected.map { it.arrival })
+        assertTrue(selectAppointmentJourneys(listOf(journeys.first()), target).isEmpty())
     }
 
 }
