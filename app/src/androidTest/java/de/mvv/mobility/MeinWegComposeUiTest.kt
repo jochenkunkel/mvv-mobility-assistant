@@ -119,8 +119,9 @@ class MeinWegComposeUiTest {
     @Test fun settingsOpenFromEveryTabAndCloseCleanly() = launchFixture {
         for (tab in listOf("tab_start", "tab_connections", "tab_journey")) {
             compose.onNodeWithTag(tab).performClick()
-            compose.onNodeWithTag("settings_toggle").performClick()
-            compose.onNodeWithTag("settings_panel").performScrollTo().assertExists()
+            compose.onNodeWithTag("settings_toggle").performScrollTo().performClick()
+            compose.waitForIdle()
+            compose.onNodeWithTag("settings_panel").assertExists()
             compose.onNodeWithText("Bevorzugte Linien").performScrollTo().assertExists()
             compose.onNodeWithText("Schließen").performScrollTo().performClick()
             compose.onNodeWithTag("settings_panel").assertDoesNotExist()
