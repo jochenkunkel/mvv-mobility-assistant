@@ -125,9 +125,17 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     var journeyLoading by remember { mutableStateOf(false) }
-                    var routeFilterMode by remember { mutableStateOf(RouteFilterMode.ANY) }
-                    var routeFilterQuery by remember { mutableStateOf("") }
                     val settings = remember { getPreferences(MODE_PRIVATE) }
+                    var routeFilterMode by remember {
+                        mutableStateOf(
+                            runCatching {
+                                RouteFilterMode.valueOf(settings.getString("route_filter_mode", RouteFilterMode.ANY.name) ?: RouteFilterMode.ANY.name)
+                            }.getOrDefault(RouteFilterMode.ANY)
+                        )
+                    }
+                    var routeFilterQuery by remember {
+                        mutableStateOf(settings.getString("route_filter_query", "") ?: "")
+                    }
                     var settingsExpanded by remember { mutableStateOf(false) }
                     var homeAddress by remember { mutableStateOf(settings.getString("home_address", "") ?: "") }
                     var homeSaved by remember { mutableStateOf(homeAddress.isNotBlank()) }
@@ -254,6 +262,22 @@ class MainActivity : ComponentActivity() {
                                         }) { Text("Löschen") }
                                     }
                                     if (homeSaved) Text("Zuhause ist auf diesem Gerät gespeichert.")
+                                    HorizontalDivider()
+                                    Text("Bevorzugte Linien", style = MaterialTheme.typography.titleMedium)
+                                    Text("Die Auswahl filtert die gefundenen MVV-Verbindungen.", style = MaterialTheme.typography.bodySmall)
+                                    RouteFilterControl(routeFilterMode, routeFilterQuery,
+                                        onModeChange = {
+                                            routeFilterMode = it
+                                            settings.edit().putString("route_filter_mode", it.name).apply()
+                                            journeys = emptyList()
+                                        },
+                                        onQueryChange = {
+                                            routeFilterQuery = it
+                                            settings.edit().putString("route_filter_query", it).apply()
+                                            journeys = emptyList()
+                                        })
+                                    Text("Verkehrsmittel werden derzeit über die MVV-Verbindungsauswahl bestimmt; ein separater Modusfilter ist noch nicht verfügbar.", style = MaterialTheme.typography.bodySmall)
+                                    HorizontalDivider()
                                     Text("Ankunftspuffer", style = MaterialTheme.typography.titleMedium)
                                     Text("$arrivalBufferMinutes Minuten vor dem Termin")
                                     Slider(
@@ -428,8 +452,16 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         RouteFilterControl(routeFilterMode, routeFilterQuery,
-                            onModeChange = { routeFilterMode = it; journeys = emptyList() },
-                            onQueryChange = { routeFilterQuery = it; journeys = emptyList() })
+                            onModeChange = {
+                                routeFilterMode = it
+                                settings.edit().putString("route_filter_mode", it.name).apply()
+                                journeys = emptyList()
+                            },
+                            onQueryChange = {
+                                routeFilterQuery = it
+                                settings.edit().putString("route_filter_query", it).apply()
+                                journeys = emptyList()
+                            })
                         if (advancedExpanded) {
                             Card(Modifier.fillMaxWidth()) {
                                 Column(Modifier.padding(14.dp)) {
