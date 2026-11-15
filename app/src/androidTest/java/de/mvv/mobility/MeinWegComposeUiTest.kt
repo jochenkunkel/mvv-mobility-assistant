@@ -129,14 +129,17 @@ class MeinWegComposeUiTest {
             val image = compose.onRoot().captureToImage().asAndroidBitmap()
             File(folder, name).outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
         }
+        compose.onNodeWithTag("cockpit_overview").assertExists()
         save("01-start.png")
         compose.onNodeWithTag("tab_connections").performClick()
+        compose.onNodeWithTag("cockpit_overview").assertDoesNotExist()
         compose.onNodeWithTag("mvv_search_button").performScrollTo().performClick()
         compose.onNodeWithTag("journey_summary").performScrollTo().assertExists()
         save("02-verbindungen.png")
         compose.onNodeWithTag("open_walking_dashboard").performScrollTo().performClick()
         compose.onNodeWithTag("walking_dashboard").performScrollTo().assertExists()
         compose.onNodeWithTag("tab_journey").performClick()
+        compose.onNodeWithTag("walking_dashboard").assertExists()
         save("03-dashboard.png")
         org.junit.Assert.assertEquals(3, folder.listFiles()?.count { it.extension == "png" })
         }
