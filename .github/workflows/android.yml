@@ -27,7 +27,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check shell and embedded Python before any build
-        run: bash scripts/preflight.sh
+        run: |
+          bash scripts/preflight.sh
+          python3 scripts/test-emulator-navigation.py
 
   build-and-test:
     needs: preflight
