@@ -144,14 +144,11 @@ class MainActivity : ComponentActivity() {
                             destination = confirmedDestination.ifBlank { appointment?.location.orEmpty() },
                             journeyCount = journeys.size,
                             hasActiveJourney = dashboardJourney != null,
-                            onAppointment = { scope.launch { appointmentAnchor.bringIntoView() } },
-                            onConnections = { scope.launch { connectionsAnchor.bringIntoView() } },
-                            onJourney = { scope.launch {
-                                if (dashboardJourney != null) journeyAnchor.bringIntoView()
-                                else connectionsAnchor.bringIntoView()
-                            } }
+                            onAppointment = { selectedTab = CockpitTab.START },
+                            onConnections = { selectedTab = CockpitTab.CONNECTIONS },
+                            onJourney = { selectedTab = CockpitTab.JOURNEY }
                         )
-                        if (settingsExpanded) {
+                        if ((selectedTab == CockpitTab.START || fixture) && settingsExpanded) {
                             Card(
                                 modifier = Modifier.fillMaxWidth().testTag("settings_panel"),
                                 shape = RoundedCornerShape(20.dp),
@@ -215,6 +212,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
+                        if (selectedTab == CockpitTab.START || fixture) {
                         if (homeSaved) {
                             Button(
                                 onClick = {
@@ -379,7 +377,10 @@ class MainActivity : ComponentActivity() {
                             Text("MVV-Suche: Ankunft spätestens ${arrivalFormat.format(arrivalTarget)}")
                         }
                         Spacer(Modifier.height(1.dp).bringIntoViewRequester(connectionsAnchor))
+                        }
                         val destination = confirmedDestination.trim().ifBlank { appointment?.location?.trim().orEmpty() }
+                        if (selectedTab == CockpitTab.CONNECTIONS || fixture) {
+                        Text("Verbindungen", style = MaterialTheme.typography.titleLarge)
                         Button(
                             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("mvv_search_button"),
                             shape = RoundedCornerShape(18.dp),
@@ -440,6 +441,10 @@ class MainActivity : ComponentActivity() {
                             ) { Text(candidate.name) }
                         }
                         Spacer(Modifier.height(1.dp).bringIntoViewRequester(journeyAnchor))
+                        }
+                        if (selectedTab == CockpitTab.JOURNEY || fixture) {
+                        Text("Meine Fahrt", style = MaterialTheme.typography.titleLarge)
+                        if (dashboardJourney == null) TextButton(onClick = { selectedTab = CockpitTab.CONNECTIONS }) { Text("Verbindungen ansehen") }
                         if (dashboardJourney != null) {
                             val chosen = journeys.getOrNull(dashboardJourney!!)
                             if (chosen != null) {
@@ -493,11 +498,13 @@ class MainActivity : ComponentActivity() {
                                                 startActivity(Intent(Intent.ACTION_VIEW, uri))
                                             }, modifier = Modifier.fillMaxWidth()) { Text("Fußweg und nächste Abbiegung öffnen") }
                                         }
-                                        TextButton(onClick = { dashboardJourney = null }) { Text("Dashboard schließen") }
+                                        TextButton(onClick = { dashboardJourney = null; selectedTab = CockpitTab.CONNECTIONS }) { Text("Dashboard schließen") }
                                     }
                                 }
                             }
                         }
+                        }
+                        if (selectedTab == CockpitTab.CONNECTIONS || fixture) {
                         journeys.forEachIndexed { index, trip ->
                             val firstBus = trip.steps.firstOrNull { !it.walking }
                             val targetDay = appointment?.startMillis?.minus(arrivalBufferMinutes * 60000L)
@@ -527,7 +534,7 @@ class MainActivity : ComponentActivity() {
                                     Text("${trip.departure} – ${trip.arrival}", color = Color(0xFF35236D),
                                         fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall)
                                     Text(trip.summary, modifier = Modifier.testTag("journey_summary"), color = MaterialTheme.colorScheme.primary)
-                                    OutlinedButton(onClick = { dashboardJourney = index }, modifier = Modifier.testTag("open_walking_dashboard")) { Text("Meine Fahrt · Dashboard öffnen") }
+                                    OutlinedButton(onClick = { dashboardJourney = index; selectedTab = CockpitTab.JOURNEY }, modifier = Modifier.testTag("open_walking_dashboard")) { Text("Meine Fahrt · Dashboard öffnen") }
                                     Text("${trip.changes} Umstiege · Fußweg geschätzt: ${trip.walkingMinutes} Min. bei %.1f km/h".format(java.util.Locale.GERMANY, walkingSpeed))
                                     if (leaveIn != null) {
                                         Text(if (leaveIn > 0) "Losgehen in ca. $leaveIn Minuten · ${trip.departure}"
@@ -587,20 +594,9 @@ class MainActivity : ComponentActivity() {
                         if (destination.isBlank()) Text("Bitte einen Zielort im Kalender ergänzen oder oben eingeben.")
                         if (routeStatus.isNotBlank()) Text(routeStatus, modifier = Modifier.testTag("route_status"))
                         Text("Die Route öffnet sich zunächst in Google Maps mit ÖPNV-Auswahl. Die Einstellung für 3,0 km/h wird in Mein Weg gespeichert, aber vom externen Routenplaner noch nicht berücksichtigt. Eine eigene MVV-Routenbewertung folgt.")
-                    }
-                    CockpitNavigation(selectedTab) { tab ->
-                        selectedTab = tab
-                        scope.launch {
-                            when (tab) {
-                                CockpitTab.START -> appointmentAnchor.bringIntoView()
-                                CockpitTab.CONNECTIONS -> connectionsAnchor.bringIntoView()
-                                CockpitTab.JOURNEY -> {
-                                    if (dashboardJourney != null) journeyAnchor.bringIntoView()
-                                    else connectionsAnchor.bringIntoView()
-                                }
-                            }
                         }
                     }
+                    CockpitNavigation(selectedTab) { tab -> selectedTab = tab }
                 }
                 }
             }
