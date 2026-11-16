@@ -895,6 +895,13 @@ class MainActivity : ComponentActivity() {
                         }
                         if (!settingsExpanded && (selectedTab == CockpitTab.JOURNEY || (fixture && !visualFixture))) {
                         Text("Meine Fahrt", style = MaterialTheme.typography.titleLarge)
+                        if (gpsDebugEnabled) {
+                            OutlinedButton(
+                                modifier = Modifier.fillMaxWidth().testTag("export_gps_debug_journey"),
+                                onClick = { gpsExportLauncher.launch("meinweg-gps-debug.json") }
+                            ) { Text("📍 GPS-Protokoll exportieren") }
+                            if (gpsExportStatus.isNotBlank()) Text(gpsExportStatus)
+                        }
                         if (walkingOnlyDashboard && walkingRoute != null) {
                             val route = walkingRoute!!
                             Card(
