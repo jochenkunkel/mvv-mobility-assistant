@@ -704,6 +704,7 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.testTag("setup_destination_home")
                             ) { Text("⌂ Zuhause") }
                         }
+                        Column(Modifier.fillMaxWidth()) {
                         OutlinedTextField(
                             value = confirmedDestination,
                             onValueChange = {
@@ -753,23 +754,55 @@ class MainActivity : ComponentActivity() {
                             },
                             modifier = Modifier.fillMaxWidth().testTag("setup_destination_input")
                         )
-                        addressSuggestions.take(4).forEach { suggestion ->
-                            TextButton(
-                                onClick = {
-                                    lookupRequest++
-                                    confirmedDestination = suggestion
-                                    addressSuggestions = emptyList()
-                                    lookupStatus = "✓ Ziel übernommen"
-                                    destinationFocus.clearFocus()
-                                },
-                                modifier = Modifier.fillMaxWidth().testTag("setup_destination_suggestion")
-                            ) { Text(suggestion) }
-                        }
-                        if (lookupStatus.isNotBlank()) {
-                            Text(lookupStatus,
-                                color = if (lookupStatus.startsWith("✓")) Color(0xFF237A45)
-                                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.labelSmall)
+                            if (addressSuggestions.isNotEmpty()) {
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth()
+                                        .testTag("setup_destination_suggestions_panel"),
+                                    shape = RoundedCornerShape(
+                                        topStart = 0.dp, topEnd = 0.dp,
+                                        bottomStart = 14.dp, bottomEnd = 14.dp
+                                    ),
+                                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                                    tonalElevation = 2.dp,
+                                    shadowElevation = 2.dp
+                                ) {
+                                    Column(Modifier.fillMaxWidth()) {
+                                        addressSuggestions.take(4).forEachIndexed { index, suggestion ->
+                                            if (index > 0) HorizontalDivider(
+                                                modifier = Modifier.padding(horizontal = 12.dp))
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth()
+                                                    .clickable {
+                                                        lookupRequest++
+                                                        confirmedDestination = suggestion
+                                                        addressSuggestions = emptyList()
+                                                        lookupStatus = "✓ Ziel geprüft"
+                                                        destinationFocus.clearFocus()
+                                                    }
+                                                    .testTag("setup_destination_suggestion")
+                                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                            ) {
+                                                Text("⌖", color = MaterialTheme.colorScheme.primary)
+                                                Text(suggestion, modifier = Modifier.weight(1f),
+                                                    style = MaterialTheme.typography.bodyMedium)
+                                                Text("✓", color = MaterialTheme.colorScheme.primary)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if (lookupStatus.isNotBlank() && addressSuggestions.isEmpty()) {
+                                Text(
+                                    if (lookupStatus.startsWith("✓")) "✓ Ziel bestätigt"
+                                    else lookupStatus,
+                                    color = if (lookupStatus.startsWith("✓")) Color(0xFF237A45)
+                                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    modifier = Modifier.padding(start = 12.dp, top = 4.dp)
+                                )
+                            }
                         }
                         Row(Modifier.fillMaxWidth().testTag("setup_location_status"),
                             verticalAlignment = Alignment.CenterVertically,
