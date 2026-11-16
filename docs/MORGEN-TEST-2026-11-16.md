@@ -72,3 +72,10 @@ Diese Liste bündelt die noch offenen Punkte aus `IMPLEMENTATION-ROADMAP.md`, `C
 2. Ein kleines Paket umsetzen → gezielte Tests → CI → Screenshot-Sichtprüfung → Commit/Status mit Link und offenen Risiken.
 3. Nach jedem Paket diese Liste mit **Commit, CI-Lauf, Ergebnis und nächstem Schritt** fortschreiben; erledigte Punkte erst nach Nachweis abhaken.
 4. Ohne explizit eingerichtete Automation erfolgt keine eigenständige Entwicklung über Nacht.
+
+## Arbeitsstand 16.11.2026 – nächstes kleines UI-Paket
+- **Repository-HEAD vor Änderung:** `1c0c38ae`; keine zwischenzeitlichen neuen Commits in der GitHub-Commitliste gefunden.
+- **Code-Review:** Der in Audit #2 geforderte `searchGeneration`-Guard für verspätete MVV-Callbacks ist im aktuellen `MainActivity.kt` bereits vorhanden (einschließlich Invalidierung bei Termin-/Ziel-/Filteränderung). Audit-Text ist historisch; verbleibende Arbeit sind Tests und weitere Randfälle, nicht eine zweite blinde Implementierung.
+- **Umgesetzt:** Kompakter GPS-Header zeigt bei frischer Position ausdrücklich `GPS LIVE`, bei erteilter Berechtigung ohne frische Position neutralgrau `GPS …`, sonst rot `GPS AUS`. `LIVE` bezieht sich ausschließlich auf GPS, nicht auf MVV-Abfahrten. Code-Commit `4f6f8c2f`.
+- **Build-/Test-Gate weiterhin offen:** Kein bestätigter aktueller Actions-Lauf oder APK-Artefakt über die verfügbare Commit-Workflow-Abfrage; diese Abfrage deckt Push-Läufe nicht zuverlässig ab. `Android CI` auf GitHub manuell oder über den Push prüfen; **kein grüner Build behauptet**.
+- **Als Nächstes:** CI und Screenshot der GPS-Kopfzeile prüfen; dann gezielte Tests für verspätete Suchantworten und Standortwechsel. Kein automatisches Weiterarbeiten ohne erneute Aufforderung.
