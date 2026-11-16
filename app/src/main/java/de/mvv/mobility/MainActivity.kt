@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
         val fixture = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0 &&
             intent.getBooleanExtra("mein_weg_test_fixture", false)
         val visualFixture = fixture && intent.getBooleanExtra("mein_weg_visual_fixture", false)
-        val debugApk = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        val debugApk = BuildConfig.DEBUG && BuildConfig.ENABLE_MVV_DEBUG_EXPORT
         DebugResponseCapture.enabled = debugApk
         DebugResponseCapture.clear()
         setContent {
