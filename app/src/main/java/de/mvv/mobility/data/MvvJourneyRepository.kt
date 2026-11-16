@@ -19,7 +19,14 @@ data class JourneyOption(
     val steps: List<JourneyStep> = emptyList()
 )
 data class JourneyStep(val line: String, val product: String, val from: String, val to: String,
-    val departure: String, val arrival: String, val walking: Boolean, val minutes: Int)
+    val departure: String, val arrival: String, val walking: Boolean, val minutes: Int,
+    val fromStop: StopPosition? = null, val toStop: StopPosition? = null)
+/** MVV/EFA coordinates belong to the specific leg endpoint, not a geocoded street name. */
+data class StopPosition(
+    val latitude: Double, val longitude: Double,
+    val stopId: String? = null, val platform: String? = null
+)
+
 enum class RouteFilterMode { ANY, CONTAINS, ONLY_LINE_WITH_WALK }
 data class RoutePreference(val mode: RouteFilterMode = RouteFilterMode.ANY, val query: String = "")
 fun filterJourneys(options: List<JourneyOption>, preference: RoutePreference): List<JourneyOption> {
@@ -175,6 +182,28 @@ object MvvJourneyRepository {
                 return live.ifBlank { planned }.ifBlank { time(point) }
             }
 
+            fun stopPosition(point: JSONObject?): StopPosition? {
+                if (point == null) return null
+                val coord = point.optJSONObject("coord") ?: point.optJSONObject("coordinates")
+                val coordinateText = point.optString("ref").takeIf { it.contains(":") }
+                    ?: point.optString("coords").takeIf { it.contains(":") }
+                    ?: coord?.optString("coords")?.takeIf { it.contains(":") }
+                val parts = coordinateText?.split(":")
+                val lon = coord?.optDouble("x", Double.NaN)?.takeIf { it.isFinite() }
+                    ?: point.optDouble("longitude", Double.NaN).takeIf { it.isFinite() }
+                    ?: parts?.getOrNull(0)?.toDoubleOrNull()
+                val lat = coord?.optDouble("y", Double.NaN)?.takeIf { it.isFinite() }
+                    ?: point.optDouble("latitude", Double.NaN).takeIf { it.isFinite() }
+                    ?: parts?.getOrNull(1)?.toDoubleOrNull()
+                if (lat == null || lon == null || lat !in -90.0..90.0 || lon !in -180.0..180.0) return null
+                // Do not invent a platform when EFA only supplies the stop area.
+                val platform = listOf("platform", "platformName", "platformNumber")
+                    .firstNotNullOfOrNull { key -> point.optString(key).takeIf { it.isNotBlank() && it != "null" } }
+                val stopId = listOf("stateless", "id", "stopID")
+                    .firstNotNullOfOrNull { key -> point.optString(key).takeIf { it.isNotBlank() && it != "null" } }
+                return StopPosition(lat, lon, stopId, platform)
+            }
+
             for (j in 0 until legs.length()) {
                 val leg = legs.optJSONObject(j) ?: continue
                 // Real MVV EFA uses mode + points, unlike the legacy fixture schema.
@@ -191,7 +220,7 @@ object MvvJourneyRepository {
                 val to = endpoint(leg, false)
                 steps.add(JourneyStep(number, product, from?.optString("name").orEmpty(),
                     to?.optString("name").orEmpty(), efaTime(from), efaTime(to), walking,
-                    leg.optInt("timeMinute", 0)))
+                    leg.optInt("timeMinute", 0), stopPosition(from), stopPosition(to)))
                 if (walking) {
                     val distance = leg.optDouble("distance", 0.0)
                     if (distance > 0) {
