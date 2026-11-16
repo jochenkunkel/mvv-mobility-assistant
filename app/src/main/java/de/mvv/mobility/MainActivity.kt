@@ -460,7 +460,20 @@ class MainActivity : ComponentActivity() {
                         }
                         SetupStepHeader(2, "Start & Ziel", if (usableLocation == null) "Standort fehlt · Route noch nicht bereit" else confirmedDestination.ifBlank { appointment?.location ?: "Adresse festlegen" }, activeSetupStep == 1, "setup_step_address") { activeSetupStep = 1 }
                         if (activeSetupStep == 1 || (fixture && !visualFixture)) {
-                        Text("Wohin?", style = MaterialTheme.typography.titleMedium)
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Wohin?", style = MaterialTheme.typography.titleMedium)
+                            TextButton(
+                                onClick = {
+                                    lookupRequest++
+                                    confirmedDestination = homeAddress.trim()
+                                    addressSuggestions = emptyList()
+                                    lookupStatus = "Zuhause übernommen · bitte prüfen"
+                                },
+                                enabled = homeAddress.isNotBlank(),
+                                modifier = Modifier.testTag("setup_destination_home")
+                            ) { Text("⌂ Zuhause") }
+                        }
                         OutlinedTextField(
                             value = confirmedDestination,
                             onValueChange = { lookupRequest++; confirmedDestination = it; addressSuggestions = emptyList(); lookupStatus = "" },
