@@ -1,6 +1,12 @@
 package de.mvv.mobility.ui.components
 
 import android.location.Location
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -48,12 +54,52 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, modifier: Modifier 
         view.overlays.clear()
         val routePoints = route.path.map { GeoPoint(it.first, it.second) }
         if (routePoints.size >= 2) {
-            view.overlays.add(Polyline().apply {
-                setPoints(routePoints)
-                outlinePaint.color = android.graphics.Color.rgb(100, 54, 195)
-                outlinePaint.strokeWidth = 10f
-                outlinePaint.isAntiAlias = true
-            })
+            // Draw the untraveled route first. Use a nearest-segment projection
+            // rather than snapping to a vertex, so both strokes meet seamlessly.
+            val projection = position?.takeIf {
+                !it.hasAccuracy() || it.accuracy <= 35f
+            }?.let { de.mvv.mobility.data.RouteProgress.project(route.path, it.latitude, it.longitude) }
+                ?.takeIf { it.lateralMeters <= 35.0 }
+            val split = projection?.let { p ->
+                val i = p.segmentIndex
+                val a = route.path[i]
+                val b = route.path[i + 1]
+                val latitude = position!!.latitude
+                val cosLat = kotlin.math.cos(Math.toRadians(latitude)).coerceAtLeast(0.01)
+                val ax = a.second * cosLat
+                val ay = a.first
+                val bx = b.second * cosLat
+                val by = b.first
+                val dx = bx - ax
+                val dy = by - ay
+                val fraction = if (dx * dx + dy * dy < 1e-16) 0.0 else
+                    (((position.longitude * cosLat - ax) * dx +
+                        (latitude - ay) * dy) / (dx * dx + dy * dy)).coerceIn(0.0, 1.0)
+                i to GeoPoint(
+                    a.first + fraction * (b.first - a.first),
+                    a.second + fraction * (b.second - a.second)
+                )
+            }
+            fun drawLine(points: List<GeoPoint>, color: Int, width: Float) {
+                if (points.size < 2) return
+                view.overlays.add(Polyline().apply {
+                    setPoints(points)
+                    outlinePaint.color = color
+                    outlinePaint.strokeWidth = width
+                    outlinePaint.strokeCap = Paint.Cap.ROUND
+                    outlinePaint.strokeJoin = Paint.Join.ROUND
+                    outlinePaint.isAntiAlias = true
+                })
+            }
+            if (split == null) {
+                drawLine(routePoints, Color.rgb(197, 174, 241), 11f)
+            } else {
+                val (index, point) = split
+                drawLine(listOf(point) + routePoints.drop(index + 1),
+                    Color.rgb(210, 192, 246), 11f)
+                drawLine(routePoints.take(index + 1) + point,
+                    Color.rgb(91, 52, 175), 12f)
+            }
         }
         // Route-forward fallback avoids noisy GPS direction at walking speed.
         val origin = position?.let { GeoPoint(it.latitude, it.longitude) }
@@ -90,33 +136,35 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, modifier: Modifier 
                 this.position = center
                 title = "Aktuelle Position"
                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                // A directional triangle when the GPS bearing is trustworthy;
-                // a dot when stationary or no movement vector is available.
-                val moving = position.hasBearing() && position.hasSpeed() && position.speed > 0.4f
-                val bitmap = android.graphics.Bitmap.createBitmap(56, 56, android.graphics.Bitmap.Config.ARGB_8888)
-                val canvas = android.graphics.Canvas(bitmap)
-                val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                    color = android.graphics.Color.rgb(25, 117, 218)
-                    style = android.graphics.Paint.Style.FILL
-                }
+                // Branded violet position indicator with a white halo. The
+                // small directional chevron is only shown with reliable bearing.
+                val moving = position.hasBearing() && position.hasSpeed() &&
+                    position.speed > 0.4f && (!position.hasAccuracy() || position.accuracy <= 25f)
+                val bitmap = Bitmap.createBitmap(80, 80, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(bitmap)
+                val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+                paint.color = Color.argb(65, 68, 39, 130)
+                canvas.drawCircle(40f, 40f, 34f, paint)
+                paint.color = Color.WHITE
+                canvas.drawCircle(40f, 40f, 25f, paint)
+                paint.color = Color.rgb(91, 52, 175)
+                canvas.drawCircle(40f, 40f, 19f, paint)
                 if (moving) {
-                    val arrowPath = android.graphics.Path().apply {
-                        moveTo(28f, 5f)
-                        lineTo(48f, 48f)
-                        lineTo(28f, 37f)
-                        lineTo(8f, 48f)
+                    val chevron = Path().apply {
+                        moveTo(40f, 8f)
+                        lineTo(31f, 31f)
+                        lineTo(40f, 26f)
+                        lineTo(49f, 31f)
                         close()
                     }
-                    paint.setShadowLayer(2f, 0f, 1f, android.graphics.Color.WHITE)
-                    canvas.drawPath(arrowPath, paint)
+                    paint.color = Color.rgb(91, 52, 175)
+                    canvas.drawPath(chevron, paint)
                     rotation = position.bearing - view.mapOrientation
                 } else {
-                    canvas.drawCircle(28f, 28f, 16f, android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                        color = android.graphics.Color.WHITE
-                    })
-                    canvas.drawCircle(28f, 28f, 11f, paint)
+                    paint.color = Color.WHITE
+                    canvas.drawCircle(40f, 40f, 6f, paint)
                 }
-                icon = android.graphics.drawable.BitmapDrawable(context.resources, bitmap)
+                icon = BitmapDrawable(context.resources, bitmap)
             }
             view.overlays.add(arrow)
         }
