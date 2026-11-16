@@ -2,6 +2,15 @@
 
 Android-App mit Kalenderterminen, automatischer Standortermittlung und Vordergrund-Aktualisierung, MVV-Tür-zu-Tür-Verbindungen, Linienfilter, Ankunftspuffer und Geh-Dashboard.
 
+## Zentraler Projektstatus (für alle Chats und Agenten)
+
+**[docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md)** ist die gemeinsame
+Übergabedatei: aktuelle Commits, offene Issues, geprüfte/nicht geprüfte
+Änderungen und nächste Schritte. **Vor jeder Entwicklungsarbeit zuerst
+diese Datei, den aktuellen `main`-Branch und die GitHub-Actions-Läufe
+lesen.** Nach relevanten Änderungen den Status aktualisieren.
+Andere Chatverläufe werden nicht automatisch synchronisiert.
+
 ## Aktueller Code-Review (16.11.2026)
 
 **[Quellcode-Audit, dokumentierte Inkonsistenzen und priorisierter Reparaturplan](docs/CODE-REVIEW-2026-11-16.md)**. Der Bericht trennt Codebefunde von Risiken und ungeprüften Geräte-/CI-Nachweisen. Insbesondere die Fußweg-Navigation ist **nicht für zuverlässige Abbiegeführung freigegeben**. Ältere Status- und Auditdateien bleiben als datierte historische Dokumente erhalten.
