@@ -1207,7 +1207,7 @@ class MainActivity : ComponentActivity() {
                                 val approximateMeters = (walkMinutes * walkingSpeed * 1000f / 60f).toInt()
                                 val targetDay = if (journeyTimingMode == "planned" && !plannedArrival) null else searchTimeMillis
                                 fun countdown(clock: String): Long? {
-                                    if (targetDay == null || !Regex("""\d{1,2}:\d{2}""").matches(clock)) return null
+                                    if (!Regex("""\d{1,2}:\d{2}""").matches(clock)) return null
                                     val parts = clock.split(":")
                                     val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("Europe/Berlin"))
                                     cal.timeInMillis = targetDay
@@ -1340,19 +1340,20 @@ class MainActivity : ComponentActivity() {
                                                         dynamicBufferMinutes >= 3 -> Color(0xFF9A6700)
                                                         else -> Color(0xFFB3261E)
                                                     }
-                                                    Text(dynamicBufferMinutes?.let { "ca. $it Min." } ?: "3 Min.",
+                                                    Text(dynamicBufferMinutes?.let { "$it Min." } ?: "–",
                                                         color = bufferColor, fontWeight = FontWeight.Bold,
                                                         style = MaterialTheme.typography.titleMedium)
                                                     Text(when {
-                                                        dynamicBufferMinutes == null -> "Geplante Reserve · keine GPS-Prognose"
+                                                        dynamicBufferMinutes == null -> "Abfahrt oder Gehzeit unbekannt"
                                                         dynamicBufferMinutes >= 5 -> "Gut in der Zeit · geschätzt"
                                                         dynamicBufferMinutes >= 3 -> "Reserve knapp · geschätzt"
-                                                        else -> "Beeilen · Schätzung!"
+                                                        dynamicBufferMinutes < 0 -> "Bus voraussichtlich nicht erreichbar"
+                                                         else -> "Sofort losgehen · kaum Reserve"
                                                     }, style = MaterialTheme.typography.labelSmall)
                                                 }
                                             }
                                         }
-                                        Text("Fahrplanzeiten · Puffer = Abfahrt minus GPS-Restgehzeit (bei aktiver OSM-Navigation) · ohne Live-Verspätungen",
+                                        Text("Restpuffer = Zeit bis Abfahrt minus verbleibende Gehzeit (GPS oder Planwert) · ohne Live-Verspätungen",
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         if (boarding != null && countdown(boarding.departure)?.let { it < 0 } == true) {
