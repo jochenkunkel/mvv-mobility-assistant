@@ -132,3 +132,8 @@ Diese Liste bündelt die noch offenen Punkte aus `IMPLEMENTATION-ROADMAP.md`, `C
 - Zentraler Schalter `BuildConfig.ENABLE_GPS_DEBUG_EXPORT` ist in debug=true, release=false; zusätzlich `BuildConfig.DEBUG` erforderlich. Keine automatische Übertragung, kein Hintergrundtracking; beim Neustart beginnt ein neues RAM-Protokoll.
 - **Datenschutz:** Export enthält präzise Koordinaten und einen zeitlichen Bewegungsverlauf. Vor Weitergabe prüfen/anonymisieren. Keine automatische Anonymisierung.
 - **Tests offen:** Android CI, Export nach 1–5 Minuten Navigation, Providerwechsel, GPS-Ausfall, App-Hintergrund, Exportabbruch, Release-Flag und JSON-Validität. Noch keine bestätigte APK.
+
+## 16.11.2026 – OSM-Minikarte im Fußweg-Dashboard
+- Neben der nächsten Abbiegeanweisung steht eine OSM-Minikarte (osmdroid, Mapnik-Kacheln). Die violette Linie zeigt die vollständige OSRM-GeoJSON-Fußweggeometrie (`overview=full&geometries=geojson`); ein blauer Punkt zeigt den GPS-Standort, bei ausreichender Geschwindigkeit und GPS-Bearing ein blauer Richtungspfeil. Die Karte folgt der letzten für Navigation freigegebenen Position.
+- Die Karte darf bei altem/ungenauem GPS keinen Live-Pfeil anzeigen; ohne aktuellen Fix wird nur die Route dargestellt. Internet ist für noch nicht zwischengespeicherte OSM-Kacheln nötig. Keine Positionsdaten an den OSM-Kachelserver als explizite Koordinaten übertragen; Kartenausschnitt-Kachelanfragen können den Standortbereich offenbaren.
+- Prüfung offen: CI-Build und Galaxy-S25-Test, Bewegungsvektor-Richtung, Hintergrund/Vordergrund, Kartenzentrierung, OSM-Attribution, Route ohne GeoJSON, Kachelausfall. Experimentell, keine verifizierte turn-by-turn-Kartennavigation.
