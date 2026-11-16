@@ -96,7 +96,7 @@ fun reachableNowJourneys(options: List<JourneyOption>, nowMillis: Long,
     val zone = TimeZone.getTimeZone("Europe/Berlin")
     return options.filter { trip ->
         val first = trip.steps.firstOrNull() ?: return@filter false
-        val match = Regex("""^(\\d{1,2}):(\\d{2})$""").matchEntire(first.departure)
+        val match = Regex("""^([0-9]{1,2}):([0-9]{2})$""").matchEntire(first.departure)
             ?: return@filter false
         val hour = match.groupValues[1].toInt()
         val minute = match.groupValues[2].toInt()
