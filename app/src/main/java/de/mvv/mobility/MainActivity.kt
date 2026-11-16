@@ -43,6 +43,7 @@ import de.mvv.mobility.data.WalkingNavigation
 import de.mvv.mobility.data.WalkingRoute
 import de.mvv.mobility.data.DeviceCalendarRepository
 import de.mvv.mobility.data.DestinationLookup
+import de.mvv.mobility.data.DebugResponseCapture
 import de.mvv.mobility.data.MvvJourneyRepository
 import de.mvv.mobility.data.isCurrentSearchResponse
 import de.mvv.mobility.data.JourneyOption
@@ -71,9 +72,28 @@ class MainActivity : ComponentActivity() {
         val fixture = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0 &&
             intent.getBooleanExtra("mein_weg_test_fixture", false)
         val visualFixture = fixture && intent.getBooleanExtra("mein_weg_visual_fixture", false)
+        val debugApk = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        DebugResponseCapture.enabled = debugApk
+        DebugResponseCapture.clear()
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+                    var debugExportStatus by remember { mutableStateOf("") }
+                    val debugExportLauncher = rememberLauncherForActivityResult(
+                        ActivityResultContracts.CreateDocument("application/json")
+                    ) { uri ->
+                        if (uri != null && debugApk) {
+                            val payload = DebugResponseCapture.snapshot()
+                            if (payload != null) {
+                                runCatching {
+                                    contentResolver.openOutputStream(uri)?.use { stream ->
+                                        stream.write(payload.toByteArray(Charsets.UTF_8))
+                                    } ?: error("Datei konnte nicht geöffnet werden")
+                                }.onSuccess { debugExportStatus = "MVV-Debugantwort gespeichert." }
+                                    .onFailure { debugExportStatus = "Export fehlgeschlagen: ${it.localizedMessage}" }
+                            } else debugExportStatus = "Keine MVV-Antwort vorhanden."
+                        }
+                    }
                     var allowed by remember { mutableStateOf(DeviceCalendarRepository.hasPermission(this)) }
                     var refresh by remember { mutableIntStateOf(0) }
                     val scope = rememberCoroutineScope()
@@ -728,6 +748,16 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             }
+                        }
+                        if (debugApk) {
+                            OutlinedButton(
+                                modifier = Modifier.testTag("export_mvv_debug_response"),
+                                enabled = DebugResponseCapture.snapshot() != null && !journeyLoading,
+                                onClick = { debugExportLauncher.launch("meinweg-mvv-debug.json") }
+                            ) { Text("🐞 MVV-Debugantwort speichern") }
+                            Text("Nur Debug-APK. Die Datei kann genaue Standort- und Zieladressen enthalten. Vor dem Teilen bitte prüfen.",
+                                style = MaterialTheme.typography.labelSmall)
+                            if (debugExportStatus.isNotBlank()) Text(debugExportStatus)
                         }
                         mvvCandidates.forEach { candidate ->
                             OutlinedButton(
