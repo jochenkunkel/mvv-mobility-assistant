@@ -8,6 +8,7 @@ import android.location.LocationManager
 import android.location.LocationListener
 import android.os.Looper
 import android.os.Build
+import android.os.SystemClock
 import android.os.CancellationSignal
 
 /** Foreground-only location helpers. No background tracking or persistence. */
@@ -15,6 +16,13 @@ object CurrentLocationRepository {
     fun hasPermission(context: Context): Boolean =
         context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
         context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+    private fun isFreshFix(fix: Location, maxAgeMillis: Long = LocationFreshness.MAX_AGE_MILLIS): Boolean =
+        if (fix.elapsedRealtimeNanos > 0L)
+            LocationFreshness.isFreshElapsed(fix.elapsedRealtimeNanos,
+                SystemClock.elapsedRealtimeNanos(), maxAgeMillis)
+        else LocationFreshness.isFresh(fix.time, System.currentTimeMillis()) &&
+            System.currentTimeMillis() - fix.time <= maxAgeMillis
 
     fun request(context: Context, onResult: (Location?) -> Unit) {
         if (!hasPermission(context)) {
@@ -39,7 +47,7 @@ object CurrentLocationRepository {
             } else {
                 @Suppress("DEPRECATION")
                 onResult(manager.getLastKnownLocation(provider)?.takeIf {
-                    LocationFreshness.isFresh(it.time, System.currentTimeMillis())
+                    isFreshFix(it)
                 })
             }
         } catch (_: SecurityException) {
@@ -92,8 +100,7 @@ object CurrentLocationRepository {
                 @Suppress("DEPRECATION")
                 manager.getLastKnownLocation(provider)
             }.getOrNull()
-        }.filter { LocationFreshness.isFresh(it.time, System.currentTimeMillis()) &&
-            System.currentTimeMillis() - it.time < 30_000L
+        }.filter { isFreshFix(it, 30_000L)
         }.maxByOrNull { it.time }
         if (cached != null) onResult(cached)
         val stop: () -> Unit = { manager.removeUpdates(listener) }
