@@ -75,6 +75,21 @@ internal object RouteProgress {
             val isDeparture = index == 0 && turn.instruction == "Geradeaus" && along < 15.0
             !isDeparture && along >= here.alongMeters - 8.0
         } ?: return null
-        return next.second to (next.third - here.alongMeters).coerceAtLeast(0.0).roundToInt()
+        val remaining = (next.third - here.alongMeters).coerceAtLeast(0.0).roundToInt()
+        if (next.second.instruction == "Ziel erreicht") {
+            // OSRM 'arrive' means the destination is ahead, not that it is reached.
+            // Require proximity to the final route coordinate before confirming arrival.
+            val destination = route.path.last()
+            val north = (destination.first - latitude) * 111_320.0
+            val east = (destination.second - longitude) * 111_320.0 *
+                cos(Math.toRadians(latitude))
+            val straightLineMeters = hypot(north, east)
+            val arrived = remaining <= 20 && straightLineMeters <= 20.0 &&
+                here.lateralMeters <= 15.0
+            if (!arrived) {
+                return next.second.copy(instruction = "Zum Ziel weitergehen", arrow = "↑") to remaining
+            }
+        }
+        return next.second to remaining
     }
 }
