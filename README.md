@@ -2,6 +2,13 @@
 
 Android-App mit Kalenderterminen, automatischer Standortermittlung und Vordergrund-Aktualisierung, MVV-Tür-zu-Tür-Verbindungen, Linienfilter, Ankunftspuffer und Geh-Dashboard.
 
+## Neuer Chat? Hier starten
+
+**[docs/CHAT-START.md](docs/CHAT-START.md)** enthält den vollständigen
+Einstieg für neue Chats/Agenten: Auftrag, Pflichtlektüre, Architektur,
+letzte Arbeiten, offene Issues, Prioritäten, Test- und Übergaberegeln
+sowie einen direkt kopierbaren Start-Prompt.
+
 ## Zentraler Projektstatus (für alle Chats und Agenten)
 
 **[docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md)** ist die gemeinsame
