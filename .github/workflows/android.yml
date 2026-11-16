@@ -46,10 +46,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check shell and embedded Python before any build
+      - name: Check shell and embedded Python before any build (verbose diagnostics)
         run: |
-          bash scripts/preflight.sh
-          python3 scripts/test-emulator-navigation.py
+          bash -x scripts/preflight.sh
+          python3 -u scripts/test-emulator-navigation.py
 
   build-and-test:
     needs: preflight
