@@ -52,6 +52,7 @@ import de.mvv.mobility.data.TransitModeIcon
 import de.mvv.mobility.data.JourneyOption
 import de.mvv.mobility.data.RouteFilterMode
 import de.mvv.mobility.data.RoutePreference
+import de.mvv.mobility.data.reachableNowJourneys
 import de.mvv.mobility.data.filterJourneys
 import de.mvv.mobility.data.selectAppointmentJourneys
 import de.mvv.mobility.data.UpcomingAppointment
@@ -845,9 +846,9 @@ class MainActivity : ComponentActivity() {
                                         journeyLoading = false
                                         result.fold(
                                             onSuccess = {
-                                                journeys = it.options
-                                                if (it.options.isEmpty()) {
-                                                    startWalkingFallback("Keine passende ÖPNV-Verbindung. Fußweg zum Ziel wird geprüft.")
+                                                journeys = if (journeyTimingMode == "now") reachableNowJourneys(it.options, System.currentTimeMillis()) else it.options
+                                                if (journeys.isEmpty()) {
+                                                    startWalkingFallback("Keine aktuell noch erreichbare ÖPNV-Verbindung. Bitte Suche erneut starten oder Fußweg zum Ziel prüfen.")
                                                 } else {
                                                     // Always calculate a direct walking alternative in parallel
                                                     // with successful public-transport results.
@@ -864,7 +865,7 @@ class MainActivity : ComponentActivity() {
                                                             walkingRouteStatus = walkResult.exceptionOrNull()?.localizedMessage ?: ""
                                                         }
                                                     }
-                                                    routeStatus = "${it.options.size} passende Verbindungen nach ${it.destination.name} geladen"
+                                                    routeStatus = "${journeys.size} aktuell erreichbare Verbindungen nach ${it.destination.name} geladen"
                                                 }
                                             },
                                             onFailure = {
