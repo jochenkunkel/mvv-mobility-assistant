@@ -17,13 +17,28 @@ android {
         minSdk = 28
         targetSdk = 35
         versionCode = providers.gradleProperty("meinWegVersionCode").orNull?.toIntOrNull() ?: 1
-        versionName = providers.gradleProperty("meinWegVersionName").orNull ?: "0.2.0"
+        versionName = providers.gradleProperty("meinWegVersionName").orNull
+            ?: "0.2.0_build${providers.gradleProperty("meinWegVersionCode").orNull ?: "1"}"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["launcherIcon"] = "@mipmap/ic_launcher_$meinWegRegion"
         buildConfigField("String", "MOBILITY_REGION", "\"$meinWegRegion\"")
     }
     val releaseKeystore = System.getenv("MEIN_WEG_KEYSTORE_PATH")
+    val ciDebugKeystore = System.getenv("MEIN_WEG_CI_SIGNING_STORE")
+    val ciDebugStorePassword = System.getenv("MEIN_WEG_CI_SIGNING_STORE_PASSWORD")
+    val ciDebugKeyAlias = System.getenv("MEIN_WEG_CI_SIGNING_KEY_ALIAS")
+    val ciDebugKeyPassword = System.getenv("MEIN_WEG_CI_SIGNING_KEY_PASSWORD")
+    val stableCiSigningReady = listOf(ciDebugKeystore, ciDebugStorePassword,
+        ciDebugKeyAlias, ciDebugKeyPassword).all { !it.isNullOrBlank() }
     signingConfigs {
+        if (stableCiSigningReady) {
+            create("stableCiDebug") {
+                storeFile = file(ciDebugKeystore!!)
+                storePassword = ciDebugStorePassword
+                keyAlias = ciDebugKeyAlias
+                keyPassword = ciDebugKeyPassword
+            }
+        }
         if (!releaseKeystore.isNullOrBlank()) {
             create("stableRelease") {
                 storeFile = file(releaseKeystore)
@@ -35,6 +50,7 @@ android {
     }
     buildTypes {
         getByName("debug") {
+            if (stableCiSigningReady) signingConfig = signingConfigs.getByName("stableCiDebug")
             buildConfigField("boolean", "ENABLE_MVV_DEBUG_EXPORT", "true")
             buildConfigField("boolean", "ENABLE_GPS_DEBUG_EXPORT", "true")
         }
