@@ -849,12 +849,39 @@ class MainActivity : ComponentActivity() {
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         if (boarding != null && countdown(boarding.departure)?.let { it < 0 } == true) {
-                                            Text("Die geplante Abfahrt ist vorbei. Bitte unter Verbindungen eine neue Route suchen.", color = MaterialTheme.colorScheme.error)
+                                            Text("Die geplante Busabfahrt liegt zurück. Deine Reise ist damit nicht automatisch beendet. Wenn du ausgestiegen bist, starte den Fußweg zum Reiseziel.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             TextButton(onClick = { dashboardJourney = null; selectedTab = CockpitTab.CONNECTIONS }) {
                                                 Text("Neue Verbindung suchen")
                                             }
                                         }
-                                        if (boarding?.from?.isNotBlank() == true && usableLocation != null) {
+                                        // Do not navigate back to the boarding stop after the scheduled bus departure.
+                                        // The user explicitly confirms they have left the bus; timetable alone
+                                        // cannot establish their actual position in the journey.
+                                        val busDeparturePassed = boarding?.let { countdown(it.departure)?.let { minutes -> minutes < 0 } } == true
+                                        val finalWalkingDestination = chosen.steps.lastOrNull()?.to?.takeIf { it.isNotBlank() }
+                                            ?: destination.takeIf { it.isNotBlank() }
+                                        if (busDeparturePassed && finalWalkingDestination != null) {
+                                            Button(
+                                                onClick = {
+                                                    val start = usableLocation ?: return@Button
+                                                    val requestId = ++walkingRequestId
+                                                    walkingRoute = null
+                                                    walkingNavigationOpen = true
+                                                    walkingRouteStatus = "Fußweg zum Ziel wird berechnet …"
+                                                    WalkingNavigation.fetch(this@MainActivity, start, finalWalkingDestination) { result ->
+                                                        if (walkingRequestId == requestId) {
+                                                            walkingRoute = result.getOrNull()
+                                                            walkingRouteStatus = result.exceptionOrNull()?.localizedMessage ?: ""
+                                                        }
+                                                    }
+                                                },
+                                                enabled = usableLocation != null,
+                                                modifier = Modifier.fillMaxWidth().testTag("continue_walking_after_bus")
+                                            ) { Text("🚶 Ausgestiegen – zum Ziel navigieren") }
+                                            Text("Ziel: $finalWalkingDestination · OSM-Fußweg ab aktuellem GPS-Standort. Bitte Zieladresse und Weg prüfen.",
+                                                style = MaterialTheme.typography.labelSmall)
+                                        }
+                                        if (!busDeparturePassed && boarding?.from?.isNotBlank() == true && usableLocation != null) {
                                             Button(onClick = {
                                                 val start = usableLocation ?: return@Button
                                                 walkingRequestId++
