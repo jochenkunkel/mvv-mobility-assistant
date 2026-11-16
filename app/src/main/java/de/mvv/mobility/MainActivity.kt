@@ -277,6 +277,13 @@ class MainActivity : ComponentActivity() {
                         fixture || ((CurrentLocationRepository.ageMillis(it)?.let { age -> age <= 45_000L } == true) &&
                             (!it.hasAccuracy() || it.accuracy <= 80f))
                     }
+                    val gpsIndicatorText = when {
+                        navigationLocation != null -> "🛰 GPS aktiv"
+                        location != null -> "🛰 GPS wartet"
+                        else -> "🛰 Kein GPS"
+                    }
+                    val gpsIndicatorColor = if (navigationLocation != null)
+                        Color(0xFF237A45) else Color(0xFF9A661B)
                     val locationAgeSeconds = location?.takeIf { !fixture }
                         ?.let { CurrentLocationRepository.ageMillis(it)?.div(1000L) }
                     LaunchedEffect(gpsDebugEnabled, appForeground, walkingNavigationOpen, walkingOnlyDashboard) {
@@ -1281,8 +1288,15 @@ class MainActivity : ComponentActivity() {
                                 colors = CardDefaults.cardColors(containerColor = Color(0xFFECE7FF))
                             ) {
                                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    Text("MEINE FAHRT · FUSSWEG", style = MaterialTheme.typography.titleMedium,
-                                        color = Color(0xFF49309B), fontWeight = FontWeight.Bold)
+                                    Row(modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically) {
+                                        Text("MEINE FAHRT · FUSSWEG", style = MaterialTheme.typography.titleMedium,
+                                            color = Color(0xFF49309B), fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.weight(1f))
+                                        Text(gpsIndicatorText, color = gpsIndicatorColor,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            modifier = Modifier.testTag("walking_gps_status"))
+                                    }
                                     Row(verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.fillMaxWidth()) {
                                         Text("🚶 Nur zu Fuß", style = MaterialTheme.typography.headlineMedium,
@@ -1573,6 +1587,9 @@ class MainActivity : ComponentActivity() {
                                                         modifier = Modifier.fillMaxWidth()) {
                                                         Text("FUSSWEG-NAVIGATION · OSM", fontWeight = FontWeight.Bold,
                                                             modifier = Modifier.weight(1f))
+                                                        Text(gpsIndicatorText, color = gpsIndicatorColor,
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            modifier = Modifier.testTag("journey_walking_gps_status"))
                                                         TextButton(onClick = {
                                                             voiceMuted = !voiceMuted
                                                             settings.edit().putBoolean("walking_voice_muted", voiceMuted).apply()
