@@ -70,8 +70,7 @@ jobs:
           gradle-version: "8.13"
       - name: Unit tests and debug APK (every commit)
         run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
-      - name: Android lint (release validation)
-        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.test_level == 'release') || startsWith(github.ref, 'refs/tags/v') }}
+      - name: Android lint (every commit)
         run: gradle --no-daemon :app:lintDebug
       - uses: actions/upload-artifact@v4
         if: success()
