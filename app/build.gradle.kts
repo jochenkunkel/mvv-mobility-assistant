@@ -3,6 +3,12 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+// Build-time region controls both the launcher icon and the visible region config.
+// Example: ./gradlew :app:assembleDebug -PmeinWegRegion=berlin
+val meinWegRegion = providers.gradleProperty("meinWegRegion").orNull?.lowercase() ?: "munich"
+require(meinWegRegion in setOf("munich", "berlin", "frankfurt")) {
+    "Unsupported meinWegRegion: $meinWegRegion (munich, berlin, frankfurt)"
+}
 android {
     namespace = "de.mvv.mobility"
     compileSdk = 35
@@ -13,6 +19,8 @@ android {
         versionCode = providers.gradleProperty("meinWegVersionCode").orNull?.toIntOrNull() ?: 1
         versionName = providers.gradleProperty("meinWegVersionName").orNull ?: "0.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["launcherIcon"] = "@mipmap/ic_launcher_$meinWegRegion"
+        buildConfigField("String", "MOBILITY_REGION", "\"$meinWegRegion\"")
     }
     val releaseKeystore = System.getenv("MEIN_WEG_KEYSTORE_PATH")
     signingConfigs {
