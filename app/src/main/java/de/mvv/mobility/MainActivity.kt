@@ -602,9 +602,28 @@ class MainActivity : ComponentActivity() {
                         Spacer(Modifier.height(1.dp).bringIntoViewRequester(connectionsAnchor))
                         }
                         val destination = confirmedDestination.trim().ifBlank { appointment?.location?.trim().orEmpty() }
-                        LaunchedEffect(destination, appointment?.startMillis, arrivalBufferMinutes, routeFilterMode, routeFilterQuery, walkingSpeed, usableLocation?.latitude, usableLocation?.longitude, usableLocation?.time) {
+                        LaunchedEffect(destination, appointment?.startMillis, arrivalBufferMinutes, routeFilterMode, routeFilterQuery, walkingSpeed) {
                             searchGeneration++
                             journeyLoading = false
+                        }
+                        val startWalkingFallback: (String) -> Unit = { reason ->
+                            val start = usableLocation
+                            if (start != null && destination.isNotBlank()) {
+                                walkingOnlyFallback = true
+                                walkingNavigationOpen = true
+                                walkingRoute = null
+                                val walkingId = ++walkingRequestId
+                                walkingRouteStatus = "Fußweg zum Ziel wird berechnet …"
+                                routeStatus = reason
+                                WalkingNavigation.fetch(this@MainActivity, start, destination) { walkResult ->
+                                    if (walkingId == walkingRequestId && walkingOnlyFallback) {
+                                        walkingRoute = walkResult.getOrNull()
+                                        walkingRouteStatus = walkResult.exceptionOrNull()?.localizedMessage ?: ""
+                                    }
+                                }
+                            } else {
+                                routeStatus = reason + " Für Fußnavigation werden GPS und Ziel benötigt."
+                            }
                         }
                         val searchConnections: () -> Unit = {
                                 val start = usableLocation
@@ -629,18 +648,7 @@ class MainActivity : ComponentActivity() {
                                             onSuccess = {
                                                 journeys = it.options
                                                 if (it.options.isEmpty()) {
-                                                    walkingOnlyFallback = true
-                                                    walkingNavigationOpen = true
-                                                    walkingRoute = null
-                                                    val walkingId = ++walkingRequestId
-                                                    walkingRouteStatus = "Fußweg zum Ziel wird berechnet …"
-                                                    routeStatus = "Keine passende ÖPNV-Verbindung. Fußweg zum Ziel wird geprüft."
-                                                    WalkingNavigation.fetch(this@MainActivity, start, destination) { walkResult ->
-                                                        if (walkingId == walkingRequestId && walkingOnlyFallback) {
-                                                            walkingRoute = walkResult.getOrNull()
-                                                            walkingRouteStatus = walkResult.exceptionOrNull()?.localizedMessage ?: ""
-                                                        }
-                                                    }
+                                                    startWalkingFallback("Keine passende ÖPNV-Verbindung. Fußweg zum Ziel wird geprüft.")
                                                 } else {
                                                     walkingOnlyFallback = false
                                                     routeStatus = "${it.options.size} passende Verbindungen nach ${it.destination.name} geladen"
@@ -650,7 +658,9 @@ class MainActivity : ComponentActivity() {
                                                 if (it is MvvJourneyRepository.AmbiguousDestination) {
                                                     mvvCandidates = it.candidates
                                                     routeStatus = "Bitte die richtige MVV-Zielhaltestelle auswählen:"
-                                                } else routeStatus = routeFailureMessage(it)
+                                                } else {
+                                                    startWalkingFallback("MVV-Suche derzeit nicht verfügbar: ${routeFailureMessage(it)}. Fußweg als Alternative.")
+                                                }
                                             }
                                         )
                                     }
@@ -700,7 +710,7 @@ class MainActivity : ComponentActivity() {
                             Card(modifier = Modifier.fillMaxWidth().testTag("walking_only_fallback")) {
                                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Text("🚶 Nur zu Fuß", style = MaterialTheme.typography.titleLarge)
-                                    Text("Keine passende ÖPNV-Verbindung gefunden. Fußweg ab aktuellem Standort zum Ziel: $destination")
+                                    Text("Fußweg als Alternative ab aktuellem Standort zum Ziel: $destination")
                                     if (walkingRoute != null) {
                                         Text("Fußroute: ca. ${walkingRoute!!.totalMeters} m")
                                         val next = navigationLocation?.let { WalkingNavigation.nextTurn(walkingRoute!!, it) }
