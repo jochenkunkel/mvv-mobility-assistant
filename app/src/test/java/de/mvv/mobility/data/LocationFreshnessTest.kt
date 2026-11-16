@@ -35,4 +35,21 @@ class LocationFreshnessTest {
         assertFalse(LocationFreshness.isFreshElapsed(3_000_000_000L, 2_000_000_000L))
     }
 
+    @Test fun elapsedAgeUsesMonotonicClock() {
+        assertTrue(LocationFreshness.elapsedAgeMillis(1_000_000_000L, 2_500_000_000L) == 1_500L)
+        assertTrue(LocationFreshness.elapsedAgeMillis(3_000_000_000L, 2_000_000_000L) == null)
+    }
+
+    @Test fun wallClockFallbackRejectsFutureAndMissingTimes() {
+        assertTrue(LocationFreshness.wallAgeMillis(now - 500L, now) == 500L)
+        assertTrue(LocationFreshness.wallAgeMillis(now + 1L, now) == null)
+        assertTrue(LocationFreshness.wallAgeMillis(0L, now) == null)
+    }
+
+    @Test fun monotonicAgeIsUnaffectedByWallClockJump() {
+        val fixNanos = 5_000_000_000L
+        val nowNanos = 15_000_000_000L
+        assertTrue(LocationFreshness.isFreshElapsed(fixNanos, nowNanos, 45_000L))
+        assertTrue(LocationFreshness.elapsedAgeMillis(fixNanos, nowNanos) == 10_000L)
+    }
 }
