@@ -24,6 +24,7 @@ import androidx.compose.foundation.relocation.bringIntoViewRequester
 import de.mvv.mobility.ui.components.SetupStepHeader
 import de.mvv.mobility.ui.components.CockpitOverview
 import de.mvv.mobility.ui.components.CockpitNavigation
+import de.mvv.mobility.ui.components.WalkingMiniMap
 import de.mvv.mobility.ui.components.CockpitTab
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -1078,15 +1079,36 @@ class MainActivity : ComponentActivity() {
                                     Text("Ziel: $destination", style = MaterialTheme.typography.bodyMedium)
                                     Text("Fußroute: ca. ${route.totalMeters} m", style = MaterialTheme.typography.titleLarge)
                                     val next = navigationLocation?.let { WalkingNavigation.nextTurn(route, it) }
-                                    if (next != null) {
-                                        Text(next.first.arrow, style = MaterialTheme.typography.displayLarge,
-                                            color = Color(0xFF49309B))
-                                        Text("${next.second} m", style = MaterialTheme.typography.headlineLarge,
-                                            fontWeight = FontWeight.Bold)
-                                        Text(next.first.instruction, style = MaterialTheme.typography.titleLarge)
-                                    } else {
-                                        Text("Aktueller GPS-Standort fehlt oder ist zu alt. Route bleibt erhalten; Abbiegehinweise warten auf GPS.")
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.weight(1f),
+                                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            if (next != null) {
+                                                Text(next.first.arrow, style = MaterialTheme.typography.displayLarge,
+                                                    color = Color(0xFF49309B))
+                                                Text("${next.second} m", style = MaterialTheme.typography.headlineLarge,
+                                                    fontWeight = FontWeight.Bold)
+                                                Text(next.first.instruction, style = MaterialTheme.typography.titleMedium)
+                                            } else {
+                                                Text("GPS fehlt oder ist zu alt. Abbiegehinweise warten auf GPS.")
+                                            }
+                                        }
+                                        Surface(
+                                            modifier = Modifier.weight(1f).height(205.dp)
+                                                .testTag("walking_osm_minimap"),
+                                            shape = RoundedCornerShape(14.dp),
+                                            color = Color.White
+                                        ) {
+                                            WalkingMiniMap(route, navigationLocation)
+                                        }
                                     }
+                                    Text("Karte: © OpenStreetMap-Mitwirkende · Violett: Fußweg · Blau: Position",
+                                        style = MaterialTheme.typography.labelSmall)
                                     Text("OSM-Fußwegführung ist experimentell. Weg und Ziel bitte prüfen.",
                                         style = MaterialTheme.typography.labelSmall)
                                     OutlinedButton(onClick = {
