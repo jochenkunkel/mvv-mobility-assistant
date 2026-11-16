@@ -422,16 +422,17 @@ class MainActivity : ComponentActivity() {
                         val route = walkingRoute
                         if (!appForeground || selectedTab != CockpitTab.JOURNEY ||
                             !(walkingOnlyDashboard || walkingNavigationOpen) ||
-                            fix == null || route == null || route.destination == null ||
-                            !fix.hasAccuracy() || fix.accuracy > 25f ||
+                            route == null || route.destination == null ||
                             route.path.size < 2 || rerouting) {
                             offRouteFixes = 0
+                        } else if (fix == null || !fix.hasAccuracy() || fix.accuracy > 35f) {
+                            // A temporary GPS gap must not erase confirmed off-route evidence.
                         } else if (fix.time != lastOffRouteFixTime) {
                             lastOffRouteFixTime = fix.time
                             val lateral = de.mvv.mobility.data.RouteProgress.project(
                                 route.path, fix.latitude, fix.longitude)?.lateralMeters
                             // 45m minimum; add GPS uncertainty to avoid false reroutes.
-                            if (lateral != null && lateral > 45.0 + fix.accuracy) {
+                            if (lateral != null && lateral > 25.0 + fix.accuracy) {
                                 offRouteFixes++
                             } else {
                                 offRouteFixes = 0
