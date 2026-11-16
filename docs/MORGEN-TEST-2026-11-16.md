@@ -79,3 +79,9 @@ Diese Liste bündelt die noch offenen Punkte aus `IMPLEMENTATION-ROADMAP.md`, `C
 - **Umgesetzt:** Kompakter GPS-Header zeigt bei frischer Position ausdrücklich `GPS LIVE`, bei erteilter Berechtigung ohne frische Position neutralgrau `GPS …`, sonst rot `GPS AUS`. `LIVE` bezieht sich ausschließlich auf GPS, nicht auf MVV-Abfahrten. Code-Commit `4f6f8c2f`.
 - **Build-/Test-Gate weiterhin offen:** Kein bestätigter aktueller Actions-Lauf oder APK-Artefakt über die verfügbare Commit-Workflow-Abfrage; diese Abfrage deckt Push-Läufe nicht zuverlässig ab. `Android CI` auf GitHub manuell oder über den Push prüfen; **kein grüner Build behauptet**.
 - **Als Nächstes:** CI und Screenshot der GPS-Kopfzeile prüfen; dann gezielte Tests für verspätete Suchantworten und Standortwechsel. Kein automatisches Weiterarbeiten ohne erneute Aufforderung.
+
+## Arbeitsstand 16.11.2026 – Schutz vor veralteten MVV-Antworten
+- **Umgesetzt:** Bei Änderung der nutzbaren GPS-Position (Breite/Länge/Zeitstempel, einschließlich Wegfall einer frischen Position) wird die laufende MVV-Suche invalidiert; spätere Antworten dürfen den aktuellen Zustand nicht überschreiben. Commit `845f94cd`.
+- **Testbarer Guard:** `isCurrentSearchResponse` wird in beiden MVV-Callback-Pfaden verwendet, inklusive Haltestellen-Auswahl. Neue Datei und JVM-Unit-Tests für gültige, verspätete und invalidierte Antworten; Commits `ade2c408`, `172a2ed3`.
+- **Noch offen:** Tests wurden nicht in CI ausgeführt; kein grüner Build, Emulator-Screenshot oder APK-Nachweis. Tests simulieren die Generationsentscheidung, nicht den kompletten Android-Netzwerkablauf. Bei CI-Fehlern zuerst korrigieren.
+- **Nächster Schritt:** `Android CI` auf dem aktuellen HEAD prüfen, `testDebugUnitTest`/`assembleDebug`, anschließend Release-Emulatorlauf und Galaxy-S25-Sichtprüfung.
