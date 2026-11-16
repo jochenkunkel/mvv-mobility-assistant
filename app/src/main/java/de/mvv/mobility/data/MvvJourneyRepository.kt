@@ -207,7 +207,7 @@ object MvvJourneyRepository {
         connection.setRequestProperty("Accept", "application/json")
         return try {
             if (connection.responseCode !in 200..299) error("MVV HTTP ${connection.responseCode}")
-            connection.inputStream.bufferedReader().use { it.readText() }
+            connection.inputStream.bufferedReader().use { it.readText() }.also { DebugResponseCapture.record(it) }
         } finally { connection.disconnect() }
     }
 
