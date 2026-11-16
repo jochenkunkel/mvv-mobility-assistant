@@ -1208,7 +1208,7 @@ class MainActivity : ComponentActivity() {
                                 val firstWalk = chosen.steps.takeWhile { it.walking }
                                 val walkMinutes = firstWalk.sumOf { it.minutes }
                                 val approximateMeters = (walkMinutes * walkingSpeed * 1000f / 60f).toInt()
-                                val targetDay = if (journeyTimingMode == "planned" && !plannedArrival) null else searchTimeMillis
+                                val targetDay: Long = searchTimeMillis ?: clockMillis
                                 fun countdown(clock: String): Long? {
                                     if (!Regex("""\d{1,2}:\d{2}""").matches(clock)) return null
                                     val parts = clock.split(":")
@@ -1218,7 +1218,8 @@ class MainActivity : ComponentActivity() {
                                     cal.set(java.util.Calendar.MINUTE, parts[1].toInt())
                                     cal.set(java.util.Calendar.SECOND, 0)
                                     cal.set(java.util.Calendar.MILLISECOND, 0)
-                                    if (cal.timeInMillis > targetDay + 30 * 60000L) cal.add(java.util.Calendar.DAY_OF_MONTH, -1)
+                                    if (cal.timeInMillis < targetDay - 12 * 60 * 60000L) cal.add(java.util.Calendar.DAY_OF_MONTH, 1)
+                                    if (cal.timeInMillis > targetDay + 12 * 60 * 60000L) cal.add(java.util.Calendar.DAY_OF_MONTH, -1)
                                     return (cal.timeInMillis - clockMillis) / 60000L
                                 }
                                 Card(
