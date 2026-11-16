@@ -102,20 +102,31 @@ object MvvJourneyRepository {
         val root = JSONObject(json)
         // A successful HTTP response can still have an unsupported EFA schema.
         // Do not confuse parsing failure with a valid search returning zero trips.
-        val trips = root.optJSONArray("trips") ?: root.optJSONObject("trip")?.optJSONArray("trips")
+        // EFA serializes single items as objects and multiple items as arrays.
+        // Real responses use trips.trip; older fixtures may use trips directly.
+        fun asArray(value: Any?): org.json.JSONArray? = when (value) {
+            is org.json.JSONArray -> value
+            is JSONObject -> org.json.JSONArray().put(value)
+            else -> null
+        }
+        val tripContainer = root.opt("trips")
+        val trips = when (tripContainer) {
+            is org.json.JSONArray -> tripContainer
+            is JSONObject -> asArray(tripContainer.opt("trip"))
+                ?: if (tripContainer.has("legs")) asArray(tripContainer) else null
+            else -> null
+        } ?: root.optJSONObject("trip")?.let { asArray(it.opt("trips")) }
         if (trips == null) {
             val keys = root.keys().asSequence().take(12).joinToString(", ")
             val error = root.optString("error").take(160)
                 .ifBlank { root.optString("message").take(160) }
             val detail = if (error.isBlank()) "" else "; Hinweis: $error"
-            throw IllegalStateException(
-                "MVV-Antwort nicht lesbar (Felder: $keys)$detail"
-            )
+            throw IllegalStateException("MVV-Antwort nicht lesbar (Felder: $keys)$detail")
         }
         val results = mutableListOf<JourneyOption>()
         if (trips != null) for (i in 0 until minOf(trips.length(), 24)) {
             val trip = trips.optJSONObject(i) ?: continue
-            val legs = trip.optJSONArray("legs") ?: continue
+            val legs = asArray(trip.opt("legs")) ?: continue
             val names = mutableListOf<String>()
             var walkingMinutes = 0
             var vehicles = 0
@@ -175,7 +186,7 @@ object MvvJourneyRepository {
             results.add(JourneyOption(
                 departure = efaTime(endpoint(first, true)),
                 arrival = efaTime(endpoint(last, false)),
-                summary = names.joinToString(" → ").ifBlank { "Verbindung ohne Linienangabe" },
+                summary = names.joinToString(" → ").ifBlank { if (vehicles == 0) "Nur zu Fuß" else "Verbindung ohne Linienangabe" },
                 changes = (vehicles - 1).coerceAtLeast(0),
                 walkingMinutes = walkingMinutes,
                 lines = names.toList(), products = products.toList(), steps = steps.toList()
