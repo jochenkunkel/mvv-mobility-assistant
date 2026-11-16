@@ -823,15 +823,22 @@ class MainActivity : ComponentActivity() {
                         }
                         SetupStepHeader(3, "Fahrtwunsch", "Verkehrsmittel & Ankunft", activeSetupStep == 2, "setup_step_preferences") { activeSetupStep = 2 }
                         if (activeSetupStep == 2 || (fixture && !visualFixture)) {
-                        Row(modifier = Modifier.fillMaxWidth(),
+                        // Keep the heading and radio options as one compact group.
+                        // A default Material TextButton adds a 48dp touch row and previously
+                        // made the gap above the radio options look much larger.
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth().heightIn(min = 36.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween) {
                             Text("Verkehrsmittel", style = MaterialTheme.typography.titleMedium)
-                            TextButton(onClick = { advancedExpanded = !advancedExpanded },
-                                modifier = Modifier.testTag("advanced_options_toggle")) {
-                                Text(if (advancedExpanded) "Optionen ▲" else "Optionen ▼",
-                                    style = MaterialTheme.typography.labelMedium)
-                            }
+                            Text(
+                                if (advancedExpanded) "Optionen ▲" else "Optionen ▼",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color(0xFF6B4CA0),
+                                modifier = Modifier.testTag("advanced_options_toggle")
+                                    .clickable { advancedExpanded = !advancedExpanded }
+                                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                            )
                         }
                         RouteFilterControl(routeFilterMode, routeFilterQuery,
                             onModeChange = {
@@ -844,6 +851,7 @@ class MainActivity : ComponentActivity() {
                                 settings.edit().putString("route_filter_query", it).apply()
                                 journeys = emptyList()
                             })
+                        } // compact heading + transport radio group
                         if (advancedExpanded) {
                             Card(Modifier.fillMaxWidth()) {
                                 Column(Modifier.padding(14.dp)) {
