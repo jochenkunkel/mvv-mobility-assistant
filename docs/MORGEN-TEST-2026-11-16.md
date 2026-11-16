@@ -92,3 +92,8 @@ Diese Liste bündelt die noch offenen Punkte aus `IMPLEMENTATION-ROADMAP.md`, `C
 - **Grenze:** Das ist eine manuelle Anschlussnavigation, **keine** automatische Erkennung des Ausstiegs, keine vollständige Etappen-/Umstiegs-State-Machine und keine garantierte genaue Ziel-Geokodierung. Bei mehreren Bus-/Bahnabschnitten darf die Schaltfläche nicht als verifizierter nächster Umstieg verstanden werden.
 - **P0-Tests offen:** Android CI, echte Screenshots und Galaxy-S25-Test: vergangene Abfahrt, frischer/staler GPS-Fix, Zieladresse, OSRM-Ausfall, mehrere Verkehrsmittel und Ziel mit zusätzlichem Fußweg. Bei fehlendem GPS bleibt die Aktion deaktiviert. Die alte APK enthält diese Korrektur noch nicht.
 - **Nächster Architektur-Task:** aktive Etappe (Zubringerfußweg → Fahrzeug → Umstieg → Anschlussfußweg → Ziel) anhand aller `JourneyStep` darstellen, Ausstieg explizit bestätigen, Zielkoordinaten aus MVV verwenden und Routenfortschritt entlang der Geometrie ermitteln; niemals Fahrtende allein aus Abfahrtsuhrzeit ableiten.
+
+## UX-Korrektur 16.11.2026 – kein zweiter Suchklick
+- Nutzerbefund: Start → „Verbindung finden“ startet die Suche bereits, auf „Verbindungen“ wurde aber erneut ein großer „Verbindung finden“-Button gezeigt.
+- Code-Commit `785fed2e`: Während der laufenden Suche zeigt die Verbindungsseite Ladebalken und Status statt eines zweiten Buttons. Bei vorhandenem Suchstatus/Ergebnis bleibt nur eine dezente Aktion „Verbindung erneut suchen“. Ein initialer Suchbutton erscheint nur, wenn noch keine Suche ausgelöst wurde (z. B. direkter Tabwechsel).
+- Abnahme offen: Build, Compose-/Emulator-Sichtprüfung für Start→Verbindungen, Direktaufruf Verbindungen, Fehler/0 Treffer, Filteränderung und manuelle Wiederholung. Keine APK-Freigabe ohne CI-Nachweis.
