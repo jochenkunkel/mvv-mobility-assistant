@@ -1408,24 +1408,28 @@ class MainActivity : ComponentActivity() {
                                             Text("Einstieg: ${boarding.from}$stopLabel",
                                                 style = MaterialTheme.typography.labelMedium)
                                             if (stop == null) {
-                                                Text("MVV liefert für diesen Einstieg keine nutzbaren Koordinaten. Keine Navigation zu einer geratenen Straßenadresse.",
+                                                Text("MVV-Koordinaten fehlen. Rückfall: Suche nach Haltestellenname; Ergebnis vor dem Losgehen auf der Karte prüfen.",
                                                     color = MaterialTheme.colorScheme.error,
                                                     style = MaterialTheme.typography.labelSmall)
                                             }
                                             Button(onClick = {
                                                 val start = usableLocation ?: return@Button
-                                                val target = stop ?: return@Button
+                                                val fallbackName = boarding.from.takeIf { it.isNotBlank() }
+                                                if (stop == null && fallbackName == null) return@Button
                                                 val requestId = ++walkingRequestId
                                                 walkingRoute = null
                                                 walkingNavigationOpen = true
-                                                walkingRouteStatus = "Fußweg zum MVV-Einstiegspunkt wird berechnet …"
-                                                WalkingNavigation.fetch(start, target) { result ->
+                                                walkingRouteStatus = if (stop != null) "Fußweg zum MVV-Einstiegspunkt wird berechnet …" else "⚠ Position anhand des Haltestellennamens geschätzt – Karte prüfen"
+                                                val onRoute: (Result<de.mvv.mobility.data.WalkingRoute>) -> Unit = { result ->
                                                     if (walkingRequestId == requestId) {
                                                         walkingRoute = result.getOrNull()
-                                                        walkingRouteStatus = result.exceptionOrNull()?.localizedMessage ?: ""
+                                                        walkingRouteStatus = result.exceptionOrNull()?.localizedMessage
+                                                            ?: if (stop == null) "⚠ Position anhand des Haltestellennamens geschätzt – Karte prüfen" else ""
                                                     }
                                                 }
-                                            }, enabled = usableLocation != null && stop != null,
+                                                if (stop != null) WalkingNavigation.fetch(start, stop, onRoute)
+                                                else WalkingNavigation.fetch(this@MainActivity, start, fallbackName!!, onRoute)
+                                            }, enabled = usableLocation != null && (stop != null || boarding.from.isNotBlank()),
                                                 modifier = Modifier.fillMaxWidth()) {
                                                 Text("🚶 Zum MVV-Einstiegspunkt navigieren")
                                             }
