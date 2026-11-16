@@ -22,6 +22,21 @@ object WalkingNavigation {
                     ?: emptyList()
                 val destination = matches.firstOrNull()
                     ?: error("Haltestelle konnte nicht lokalisiert werden")
+                // Free-text geocoding can return a street instead of the actual stop.
+                val ambiguous = matches.drop(1).any { other ->
+                    val first = Location("geocoder").apply {
+                        latitude = destination.latitude
+                        longitude = destination.longitude
+                    }
+                    val second = Location("geocoder").apply {
+                        latitude = other.latitude
+                        longitude = other.longitude
+                    }
+                    first.distanceTo(second) > 75f
+                }
+                check(!ambiguous) {
+                    "Haltestelle nicht eindeutig lokalisiert – bitte Ziel prüfen"
+                }
                 val url = URL("https://routing.openstreetmap.de/routed-foot/route/v1/driving/" +
                     "${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}" +
                     "?overview=full&geometries=geojson&steps=true")
@@ -78,8 +93,15 @@ object WalkingNavigation {
 
     fun nextTurn(route: WalkingRoute, position: Location): Pair<WalkingTurn, Int>? {
         // Never present a precise maneuver from an inaccurate or off-route GPS fix.
-        if (position.hasAccuracy() && position.accuracy > 60f) return null
-        return RouteProgress.nextTurn(route, position.latitude, position.longitude)
+        if (position.hasAccuracy() && position.accuracy > 35f) return null
+        val turn = RouteProgress.nextTurn(route, position.latitude, position.longitude)
+        if (turn?.first?.instruction == "Ziel erreicht" &&
+            (!position.hasAccuracy() || position.accuracy > 12f)) {
+            return turn.first.copy(
+                instruction = "Zielnähe – Haltestelle prüfen", arrow = "⌖"
+            ) to turn.second
+        }
+        return turn
     }
 
 }
