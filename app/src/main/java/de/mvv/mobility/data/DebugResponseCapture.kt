@@ -1,5 +1,7 @@
 package de.mvv.mobility.data
 
+import de.mvv.mobility.BuildConfig
+
 /**
  * Opt-in, in-memory capture of the latest MVV response for debug APKs.
  * Never persists automatically; the user explicitly exports through SAF.
@@ -10,10 +12,10 @@ object DebugResponseCapture {
     @Volatile private var lastResponse: String? = null
 
     fun record(response: String) {
-        if (enabled) lastResponse = response.take(512_000)
+        if (BuildConfig.DEBUG && BuildConfig.ENABLE_MVV_DEBUG_EXPORT && enabled) lastResponse = response.take(512_000)
     }
 
-    fun snapshot(): String? = if (enabled) lastResponse else null
+    fun snapshot(): String? = if (BuildConfig.DEBUG && BuildConfig.ENABLE_MVV_DEBUG_EXPORT && enabled) lastResponse else null
 
     fun clear() { lastResponse = null }
 }
