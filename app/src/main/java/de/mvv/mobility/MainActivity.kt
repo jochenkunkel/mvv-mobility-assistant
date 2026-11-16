@@ -843,7 +843,21 @@ class MainActivity : ComponentActivity() {
                                                 if (it.options.isEmpty()) {
                                                     startWalkingFallback("Keine passende ÖPNV-Verbindung. Fußweg zum Ziel wird geprüft.")
                                                 } else {
-                                                    walkingOnlyFallback = false
+                                                    // Always calculate a direct walking alternative in parallel
+                                                    // with successful public-transport results.
+                                                    walkingOnlyFallback = true
+                                                    walkingOnlyDashboard = false
+                                                    walkingRoute = null
+                                                    walkingNavigationOpen = false
+                                                    val walkingId = ++walkingRequestId
+                                                    walkingRouteStatus = "Fußweg zum Ziel wird berechnet …"
+                                                    WalkingNavigation.fetch(this@MainActivity, start, destination) { walkResult ->
+                                                        if (walkingId == walkingRequestId &&
+                                                            requestId == searchGeneration && walkingOnlyFallback) {
+                                                            walkingRoute = walkResult.getOrNull()
+                                                            walkingRouteStatus = walkResult.exceptionOrNull()?.localizedMessage ?: ""
+                                                        }
+                                                    }
                                                     routeStatus = "${it.options.size} passende Verbindungen nach ${it.destination.name} geladen"
                                                 }
                                             },
@@ -900,10 +914,41 @@ class MainActivity : ComponentActivity() {
                                 onClick = searchConnections
                             ) { Text("Verbindung finden") }
                         }
-                        if (walkingOnlyFallback) {
+                        // Compare the direct route against door-to-door public transport time.
+                        // For 'now' include time until the departure; never recommend a
+                        // scheduled bus that has already departed.
+                        val directWalkMinutes = walkingRoute?.let {
+                            kotlin.math.ceil(it.totalMeters.toDouble() / (walkingSpeed * 1000.0 / 60.0)).toInt()
+                        }
+                        fun transitMinutes(trip: de.mvv.mobility.data.JourneyOption): Int? {
+                            val dep = trip.departure.split(":").mapNotNull { it.toIntOrNull() }
+                            val arr = trip.arrival.split(":").mapNotNull { it.toIntOrNull() }
+                            if (dep.size != 2 || arr.size != 2) return null
+                            val depMinute = dep[0] * 60 + dep[1]
+                            val arrMinute = arr[0] * 60 + arr[1]
+                            val rideMinutes = (arrMinute - depMinute + 1440) % 1440
+                            if (rideMinutes == 0) return null
+                            val nowCal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("Europe/Berlin"))
+                            nowCal.timeInMillis = clockMillis
+                            val nowMinute = nowCal.get(java.util.Calendar.HOUR_OF_DAY) * 60 +
+                                nowCal.get(java.util.Calendar.MINUTE)
+                            val waitMinutes = if (journeyTimingMode == "now") {
+                                val delta = (depMinute - nowMinute + 1440) % 1440
+                                // An old same-day departure must not become tomorrow's option.
+                                if (delta > 360) return null
+                                delta
+                            } else 0
+                            return rideMinutes + waitMinutes
+                        }
+                        val bestTransitMinutes = journeys.mapNotNull { transitMinutes(it) }.minOrNull()
+                        val walkingFaster = directWalkMinutes != null &&
+                            (journeys.isEmpty() || bestTransitMinutes != null &&
+                                directWalkMinutes < bestTransitMinutes)
+                        if (walkingOnlyFallback && (journeys.isEmpty() || walkingFaster)) {
                             Card(modifier = Modifier.fillMaxWidth().testTag("walking_only_fallback")) {
                                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Text("🚶 Nur zu Fuß", style = MaterialTheme.typography.titleLarge)
+                                    Text(if (walkingFaster && journeys.isNotEmpty()) "🚶 Empfehlung: Zu Fuß schneller" else "🚶 Nur zu Fuß", style = MaterialTheme.typography.titleLarge)
+                                    if (directWalkMinutes != null) Text("Gehzeit ca. $directWalkMinutes Min." + (bestTransitMinutes?.let { " · ÖPNV ca. $it Min." } ?: ""))
                                     Text("Fußweg als Alternative ab aktuellem Standort zum Ziel: $destination")
                                     if (walkingRoute != null) {
                                         Text("Fußroute: ca. ${walkingRoute!!.totalMeters} m")
@@ -981,7 +1026,19 @@ class MainActivity : ComponentActivity() {
                                                             }
                                                         }
                                                     } else {
-                                                        walkingOnlyFallback = false
+                                                        walkingOnlyFallback = true
+                                                        walkingOnlyDashboard = false
+                                                        walkingRoute = null
+                                                        walkingNavigationOpen = false
+                                                        val walkingId = ++walkingRequestId
+                                                        walkingRouteStatus = "Fußweg zum Ziel wird berechnet …"
+                                                        WalkingNavigation.fetch(this@MainActivity, start, destination) { walkResult ->
+                                                            if (walkingId == walkingRequestId &&
+                                                                requestId == searchGeneration && walkingOnlyFallback) {
+                                                                walkingRoute = walkResult.getOrNull()
+                                                                walkingRouteStatus = walkResult.exceptionOrNull()?.localizedMessage ?: ""
+                                                            }
+                                                        }
                                                         routeStatus = "${it.options.size} Verbindungen nach ${it.destination.name} geladen"
                                                     }
                                                 },
