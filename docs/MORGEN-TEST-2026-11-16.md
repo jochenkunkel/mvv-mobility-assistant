@@ -119,3 +119,9 @@ Diese Liste bündelt die noch offenen Punkte aus `IMPLEMENTATION-ROADMAP.md`, `C
 - Screenshot 07:52: Fußweg-Fallback zeigt 198 m, aber keinen Einstieg ins Dashboard; GPS vorübergehend nicht aktuell.
 - Commit `1aba90d4`: Karte „Nur zu Fuß“ bietet „Als meine Fahrt öffnen“; neue Dashboard-Ansicht zeigt Ziel, OSM-Distanz, nächsten Abbiegehinweis bei frischem GPS und GPS-Fallback-Hinweis ohne Route zu verwerfen. Zurücknavigation zu Verbindungen.
 - Offene Abnahme: Build, Fußwegkarte→Dashboard, GPS-Ausfall und Wiederkehr, Zielwechsel während offener Fußwegfahrt, Neuplanung und Fahrtdashboard bei ÖPNV. Reine Fußwege aus erfolgreich geparsten MVV-Trips brauchen ggf. denselben expliziten Einstieg; aktuell ist der neue Knopf auf den OSM-Fallback begrenzt.
+
+## 16.11.2026 – GPS toggelt trotz bestehender Route
+- Nutzer meldet wiederholt GPS LIVE/fehlend im Wechsel; Fußnavigation verliert Abbiegehinweise.
+- Ursache im Code: `CurrentLocationRepository.observeForeground` registrierte nur GPS **oder** Netzwerk, nie beide; `navigationLocation` wurde nach 20 Sekunden ohne neuen Fix sofort null.
+- Commits `10bf3eb8`, `b2e67f2e`: GPS und Netzwerk parallel beobachten (nur bei passender Berechtigung), zuletzt bekannten Fix bis maximal 45 Sekunden und Genauigkeit maximal 80 m für Navigation zulassen; Status nur bis 15 Sekunden `GPS LIVE`, danach Alter ausdrücklich anzeigen. Routenobjekt bleibt bei GPS-Unterbrechung erhalten.
+- Noch offen: echte Geräteabnahme auf Galaxy S25 beim Gehen, Akku-/Providerverhalten, GPS/Netzwerk-Fix-Qualität, GPS-Ausfall >45 s und Wiederaufnahme. Keine Live-Behauptung ohne frischen Fix; bei längerem Ausfall keine neuen Abbiegehinweise aus alter Position ableiten. Mittelfristig FusedLocationProvider und Route-Map-Matching prüfen.
