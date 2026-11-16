@@ -68,14 +68,43 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.13"
+      - name: Restore stable CI signing key (when configured)
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          KEY_B64: ${{ secrets.MEIN_WEG_CI_SIGNING_KEY_B64 }}
+          STORE_PASSWORD: ${{ secrets.MEIN_WEG_CI_SIGNING_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.MEIN_WEG_CI_SIGNING_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.MEIN_WEG_CI_SIGNING_KEY_PASSWORD }}
+        run: |
+          if [[ -n "$KEY_B64" && -n "$STORE_PASSWORD" && -n "$KEY_ALIAS" && -n "$KEY_PASSWORD" ]]; then
+            printf '%s' "$KEY_B64" | base64 --decode > "$RUNNER_TEMP/mein-weg-ci.keystore"
+            echo "MEIN_WEG_CI_SIGNING_STORE=$RUNNER_TEMP/mein-weg-ci.keystore" >> "$GITHUB_ENV"
+            echo "MEIN_WEG_CI_SIGNING_STORE_PASSWORD=$STORE_PASSWORD" >> "$GITHUB_ENV"
+            echo "MEIN_WEG_CI_SIGNING_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
+            echo "MEIN_WEG_CI_SIGNING_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+            echo "STABLE_UPDATE_SIGNING=true" >> "$GITHUB_ENV"
+          else
+            echo "Stable signing not configured; debug artifact is not an update APK."
+          fi
       - name: Unit tests and debug APK (every commit)
-        run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
+        run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug -PmeinWegVersionCode=${{ github.run_number }}
+      - name: Verify APK signature and package metadata
+        run: |
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | head -n 3
       - name: Android lint (every commit)
         run: gradle --no-daemon :app:lintDebug
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: mein-weg-debug-apk
+          name: mein-weg-debug-apk-not-update-guaranteed
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+      - name: Upload signed in-place update APK
+        if: ${{ success() && env.STABLE_UPDATE_SIGNING == 'true' && github.event_name != 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mein-weg-signed-update-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
 
