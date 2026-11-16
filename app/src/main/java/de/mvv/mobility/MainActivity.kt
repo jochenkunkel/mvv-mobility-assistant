@@ -48,6 +48,7 @@ import de.mvv.mobility.data.GpsDebugRecorder
 import de.mvv.mobility.data.DebugResponseCapture
 import de.mvv.mobility.data.MvvJourneyRepository
 import de.mvv.mobility.data.isCurrentSearchResponse
+import de.mvv.mobility.data.TransitModeIcon
 import de.mvv.mobility.data.JourneyOption
 import de.mvv.mobility.data.RouteFilterMode
 import de.mvv.mobility.data.RoutePreference
@@ -1488,11 +1489,12 @@ class MainActivity : ComponentActivity() {
                                                 Row(verticalAlignment = Alignment.Top,
                                                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                                                     modifier = Modifier.fillMaxWidth().testTag("journey_summary_leg_${stepIndex}")) {
-                                                    Text(if (step.walking) "🚶" else "🚍",
+                                                    Text(TransitModeIcon.symbol(step.product, step.line, step.walking),
+                                                        color = if (TransitModeIcon.symbol(step.product, step.line) == "Ⓢ") Color(0xFF198754) else Color.Unspecified,
                                                         style = MaterialTheme.typography.titleMedium)
                                                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                                                         Text(if (step.walking) "FUSSWEG · ca. ${step.minutes.coerceAtLeast(0)} Min."
-                                                            else "LINIE ${step.line.ifBlank { "ÖPNV" }}",
+                                                            else "${TransitModeIcon.label(step.product, step.line).uppercase()} ${step.line.ifBlank { "" }}".trim(),
                                                             color = Color(0xFF62577D),
                                                             style = MaterialTheme.typography.labelSmall,
                                                             fontWeight = FontWeight.Bold)
@@ -1564,7 +1566,8 @@ class MainActivity : ComponentActivity() {
                                                             horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                                             Surface(shape = RoundedCornerShape(12.dp),
                                                                 color = if (step.walking) Color(0xFFECE8FA) else Color(0xFF5635B1)) {
-                                                                Text(if (step.walking) "🚶" else "🚌",
+                                                                Text(TransitModeIcon.symbol(step.product, step.line, step.walking),
+                                                                    color = if (!step.walking && TransitModeIcon.symbol(step.product, step.line) == "Ⓢ") Color(0xFF198754) else Color.Unspecified,
                                                                     modifier = Modifier.padding(10.dp),
                                                                     style = MaterialTheme.typography.titleMedium)
                                                             }
