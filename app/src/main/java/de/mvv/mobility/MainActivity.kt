@@ -731,9 +731,18 @@ class MainActivity : ComponentActivity() {
                                             if (index < 0) null else (metersToTurn +
                                                 turns.drop(index).dropLast(1).sumOf { it.distanceMeters }).coerceAtLeast(0)
                                         }
+                                        // Use measured walking speed only when Android reports a plausible
+                                        // value and the GPS fix is accurate. Otherwise use configured pace.
+                                        val measuredWalkingKmh = usableLocation?.takeIf {
+                                            it.hasSpeed() && it.hasAccuracy() && it.accuracy <= 30f &&
+                                                it.speed in 0.5f..2.2f
+                                        }?.speed?.times(3.6f)
+                                        val estimatedWalkingKmh = measuredWalkingKmh ?: walkingSpeed
                                         val remainingWalkMinutes = remainingWalkMeters?.let {
-                                            kotlin.math.ceil(it / (walkingSpeed * 1000.0 / 60.0)).toInt()
+                                            kotlin.math.ceil(it / (estimatedWalkingKmh * 1000.0 / 60.0)).toInt()
                                         }
+                                        val dynamicBufferMinutes = if (remainingWalkMinutes != null && untilBus != null)
+                                            untilBus - remainingWalkMinutes else null
                                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                             Surface(Modifier.weight(1f), shape = RoundedCornerShape(14.dp), color = Color.White) {
                                                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -786,13 +795,25 @@ class MainActivity : ComponentActivity() {
                                             Surface(Modifier.weight(1f), shape = RoundedCornerShape(14.dp), color = Color.White) {
                                                 Column(Modifier.padding(12.dp)) {
                                                     Text("⏱ PUFFER", style = MaterialTheme.typography.labelSmall)
-                                                    Text("3 Min.", fontWeight = FontWeight.Bold,
+                                                    val bufferColor = when {
+                                                        dynamicBufferMinutes == null -> Color(0xFF6B7280)
+                                                        dynamicBufferMinutes >= 5 -> Color(0xFF247A43)
+                                                        dynamicBufferMinutes >= 3 -> Color(0xFF9A6700)
+                                                        else -> Color(0xFFB3261E)
+                                                    }
+                                                    Text(dynamicBufferMinutes?.let { "ca. $it Min." } ?: "3 Min.",
+                                                        color = bufferColor, fontWeight = FontWeight.Bold,
                                                         style = MaterialTheme.typography.titleMedium)
-                                                    Text("Vor dem Losgehen", style = MaterialTheme.typography.labelSmall)
+                                                    Text(when {
+                                                        dynamicBufferMinutes == null -> "Geplante Reserve · keine GPS-Prognose"
+                                                        dynamicBufferMinutes >= 5 -> "Gut in der Zeit · geschätzt"
+                                                        dynamicBufferMinutes >= 3 -> "Reserve knapp · geschätzt"
+                                                        else -> "Beeilen · Schätzung!"
+                                                    }, style = MaterialTheme.typography.labelSmall)
                                                 }
                                             }
                                         }
-                                        Text("Fahrplanzeiten · GPS-Restweg nur bei aktiver OSM-Navigation und gutem Signal geschätzt · keine Live-Verspätungsabfrage",
+                                        Text("Fahrplanzeiten · Puffer = Abfahrt minus GPS-Restgehzeit (bei aktiver OSM-Navigation) · ohne Live-Verspätungen",
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         if (boarding != null && countdown(boarding.departure)?.let { it < 0 } == true) {
