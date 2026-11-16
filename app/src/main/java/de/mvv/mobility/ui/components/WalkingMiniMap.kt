@@ -168,6 +168,28 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, modifier: Modifier 
             }
             view.overlays.add(arrow)
         }
+        route.destination?.let { stop ->
+            val target = Marker(view).apply {
+                position = GeoPoint(stop.latitude, stop.longitude)
+                title = stop.platform?.let { "MVV-Einstieg · Steig $it" }
+                    ?: "MVV-Einstieg · Steig nicht eindeutig"
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                val bitmap = Bitmap.createBitmap(76, 76, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(bitmap)
+                val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+                paint.color = Color.WHITE
+                canvas.drawCircle(38f, 38f, 30f, paint)
+                paint.color = Color.rgb(91, 52, 175)
+                canvas.drawCircle(38f, 38f, 25f, paint)
+                paint.color = Color.WHITE
+                paint.textSize = 34f
+                paint.textAlign = Paint.Align.CENTER
+                paint.isFakeBoldText = true
+                canvas.drawText("H", 38f, 50f, paint)
+                icon = BitmapDrawable(context.resources, bitmap)
+            }
+            view.overlays.add(target)
+        }
         if (cameraPoint != null) view.controller.setCenter(cameraPoint)
         view.invalidate()
     })
