@@ -1335,17 +1335,39 @@ class MainActivity : ComponentActivity() {
                                                     val route = walkingRoute
                                                     val next = if (fix != null && route != null)
                                                         WalkingNavigation.nextTurn(route, fix) else null
-                                                    if (next != null) {
-                                                        Text(next.first.arrow, style = MaterialTheme.typography.displayLarge,
-                                                            color = Color(0xFF49309B))
-                                                        Text("${next.second} m", style = MaterialTheme.typography.headlineLarge,
-                                                            fontWeight = FontWeight.Bold)
-                                                        Text(next.first.instruction, style = MaterialTheme.typography.titleLarge)
-                                                        Text("Route: ca. ${route?.totalMeters ?: 0} m · GPS aktualisiert die Entfernung",
+                                                    Row(modifier = Modifier.fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                                        verticalAlignment = Alignment.CenterVertically) {
+                                                        Column(Modifier.weight(1f),
+                                                            verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                            if (next != null) {
+                                                                Text(next.first.arrow,
+                                                                    style = MaterialTheme.typography.displayLarge,
+                                                                    color = Color(0xFF49309B))
+                                                                Text("${next.second} m",
+                                                                    style = MaterialTheme.typography.headlineLarge,
+                                                                    fontWeight = FontWeight.Bold)
+                                                                Text(next.first.instruction,
+                                                                    style = MaterialTheme.typography.titleLarge)
+                                                            } else {
+                                                                Text(if (route != null) "GPS zu ungenau – bitte freien Himmel abwarten"
+                                                                    else walkingRouteStatus.ifBlank { "Route wird geladen …" })
+                                                            }
+                                                        }
+                                                        if (route != null) {
+                                                            Surface(modifier = Modifier.weight(1f).height(205.dp)
+                                                                .testTag("journey_walking_osm_minimap"),
+                                                                shape = RoundedCornerShape(14.dp),
+                                                                color = Color(0xFFF2EFFA)) {
+                                                                WalkingMiniMap(route, navigationLocation)
+                                                            }
+                                                        }
+                                                    }
+                                                    if (route != null) {
+                                                        Text("Route: ca. ${route.totalMeters} m · GPS aktualisiert die Entfernung",
                                                             style = MaterialTheme.typography.labelSmall)
-                                                    } else {
-                                                        Text(if (route != null) "GPS zu ungenau – bitte freien Himmel abwarten"
-                                                            else walkingRouteStatus.ifBlank { "Route wird geladen …" })
+                                                        Text("Karte: © OpenStreetMap-Mitwirkende · Violett: Fußweg · Blau: Position",
+                                                            style = MaterialTheme.typography.labelSmall)
                                                     }
                                                     TextButton(onClick = {
                                                         walkingNavigationOpen = false
