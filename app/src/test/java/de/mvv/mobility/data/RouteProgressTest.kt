@@ -49,4 +49,13 @@ class RouteProgressTest {
     @Test fun invalidCoordinatesAreRejected() {
         assertNull(RouteProgress.project(path, Double.NaN, 11.5))
     }
+    @Test fun mapHeadingFollowsProjectedSegment() {
+        assertEquals(90.0f, requireNotNull(RouteProgress.heading(path, 48.1000, 11.5005)), 1.0f)
+        assertEquals(0.0f, requireNotNull(RouteProgress.heading(path, 48.1005, 11.5010)), 1.0f)
+    }
+
+    @Test fun mapHeadingIsUnavailableFarOffRoute() {
+        assertNull(RouteProgress.heading(path, 48.1050, 11.5050))
+    }
+
 }
