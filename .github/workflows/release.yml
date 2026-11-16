@@ -6,6 +6,11 @@ on:
         description: 'Version name, e.g. 0.2.0'
         required: true
         default: '0.2.0'
+# New runs in any workflow cancel older runs, including signed releases.
+concurrency:
+  group: single-active-ci
+  cancel-in-progress: true
+
 permissions:
   contents: read
 jobs:

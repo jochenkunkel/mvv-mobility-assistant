@@ -116,3 +116,15 @@ Heimadresse ist personenbezogen und wird lokal in App-Preferences gespeichert; a
 - **Entscheidung:** Debug-Export bleibt im Source Code und wird über die BuildConfig-Konstante `ENABLE_MVV_DEBUG_EXPORT` gesteuert; in `debug` true, in `release` false. Zusätzlich muss `BuildConfig.DEBUG` gelten.
 - **Umgesetzt:** `app/build.gradle.kts` aktiviert `buildConfig` und definiert beide Build-Typen; `MainActivity.kt` zeigt den Export nur bei aktivem Flag; `DebugResponseCapture.kt` prüft denselben Schutz bei Aufnahme und Abruf der Rohantwort. Commits `5f7d1117`, `a586f1eb`, `13ac8ed6`.
 - **Sicherheit:** Rohantwort enthält möglicherweise Standort- und Zielinformationen; keine automatische Übertragung und kein Release-Export. Nutzer exportiert über Android-Dateiauswahl. **Noch offen:** Build/Unit-Test und UI-Test für beide Varianten, Prüfung von gespeicherten Rohdaten und Exportformat.
+
+### ADR-008 – Globale GitHub-Actions-Serialisierung (16.11.2026)
+- **Beschlossen:** Alle Workflow-Dateien unter `.github/workflows/*.yml` verwenden auf oberster Ebene exakt dieselbe Concurrency-Konfiguration:
+```yaml
+concurrency:
+  group: single-active-ci
+  cancel-in-progress: true
+```
+- **Geltungsbereich:** `android.yml` (Build, Unit-Tests, Lint, Emulator-/Live-Tests, manuelle Tests) und `release.yml` (signierte Release-Artefakte). Alle Trigger, Branches und Workflow-Namen teilen eine einzige Gruppe; ein neuer Lauf kann einen älteren laufenden oder wartenden Lauf ersetzen. **Auch laufende Release-Tests und signierte Release-Builds werden abgebrochen.**
+- **Zweck:** GitHub-Actions-Minuten sparen, ohne Workflows zu deaktivieren. Alle Jobs eines Workflow-Laufs werden gemeinsam abgebrochen; die Jobs innerhalb des neuesten Laufs dürfen weiterhin parallel laufen. Dies ist keine Garantie, dass zu jedem Zeitpunkt nur ein einzelner Job aktiv ist.
+- **Betrieb:** Für wichtige Releases keine neuen CI-Läufe auslösen, bis der Release-Lauf fertig ist. Abgebrochene Läufe können bei Bedarf manuell neu gestartet werden; der neueste Lauf erhält Vorrang. GitHub garantiert bei konkurrierenden Ereignissen keine FIFO-Reihenfolge.
+- **Prüfung:** Workflow-YAML in GitHub Actions und Abbruchverhalten mit zwei kurz aufeinanderfolgenden Läufen kontrollieren; nicht als bereits erfolgreich getestet ausgeben.
