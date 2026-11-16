@@ -1457,40 +1457,39 @@ class MainActivity : ComponentActivity() {
                                             }
                                         }
                                     }
-                                    if (firstBus != null) {
-                                        Surface(shape = RoundedCornerShape(12.dp), color = Color.White,
-                                            modifier = Modifier.fillMaxWidth().testTag("journey_stop_card")) {
-                                            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                                Row(verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                    Text("🚏", style = MaterialTheme.typography.titleMedium)
-                                                    Column {
-                                                        Text("ERSTE HALTESTELLE", style = MaterialTheme.typography.labelSmall,
-                                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                        Text(firstBus.from.ifBlank { "Einstieg noch unbekannt" },
-                                                            fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                    // Show the entire journey at a glance, including every transfer and walk.
+                                    Surface(shape = RoundedCornerShape(12.dp), color = Color.White,
+                                        modifier = Modifier.fillMaxWidth().testTag("journey_all_legs_summary")) {
+                                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            trip.steps.forEachIndexed { stepIndex, step ->
+                                                if (stepIndex > 0) HorizontalDivider(color = Color(0xFFF0EDF6))
+                                                Row(verticalAlignment = Alignment.Top,
+                                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                                    modifier = Modifier.fillMaxWidth().testTag("journey_summary_leg_${stepIndex}")) {
+                                                    Text(if (step.walking) "🚶" else "🚍",
+                                                        style = MaterialTheme.typography.titleMedium)
+                                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                                        Text(if (step.walking) "FUSSWEG · ca. ${step.minutes.coerceAtLeast(0)} Min."
+                                                            else "LINIE ${step.line.ifBlank { "ÖPNV" }}",
+                                                            color = Color(0xFF62577D),
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            fontWeight = FontWeight.Bold)
+                                                        Text("${step.from.ifBlank { "Startpunkt" }} → ${step.to.ifBlank { "Zielpunkt" }}",
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            fontWeight = FontWeight.Medium)
                                                     }
-                                                }
-                                                if (firstBus.to.isNotBlank()) {
-                                                    HorizontalDivider()
-                                                    Row(verticalAlignment = Alignment.CenterVertically,
-                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                        Text("🚌", style = MaterialTheme.typography.titleMedium)
-                                                        Column {
-                                                            Text("LINIE ${firstBus.line} · NÄCHSTER AUSSTIEG",
-                                                                style = MaterialTheme.typography.labelSmall,
-                                                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                            Text(firstBus.to, fontWeight = FontWeight.Bold,
-                                                                style = MaterialTheme.typography.bodyMedium)
+                                                    if (step.departure.isNotBlank() || step.arrival.isNotBlank()) {
+                                                        Column(horizontalAlignment = Alignment.End) {
+                                                            Text(step.departure.ifBlank { "–" },
+                                                                style = MaterialTheme.typography.labelMedium,
+                                                                fontWeight = FontWeight.Bold)
+                                                            Text(step.arrival.ifBlank { "–" },
+                                                                style = MaterialTheme.typography.labelSmall)
                                                         }
                                                     }
                                                 }
                                             }
                                         }
-                                    }
-                                    if (totalWalk > knownWalk) {
-                                        Text("🚶 Weitere Fußwege: ca. ${totalWalk - knownWalk} Min.",
-                                            style = MaterialTheme.typography.labelSmall)
                                     }
                                     OutlinedButton(
                                         onClick = { dashboardJourney = index; selectedTab = CockpitTab.JOURNEY },
