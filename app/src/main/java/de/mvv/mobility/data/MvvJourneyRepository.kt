@@ -159,10 +159,14 @@ object MvvJourneyRepository {
                     } else {
                         walkingMinutes += leg.optInt("timeMinute", 0)
                     }
-                } else if (number.isNotBlank()) {
-                    names.add(number)
-                    products.add(product)
+                } else {
+                    // Count every non-walking vehicle leg, even if EFA omits its line number.
+                    // Otherwise a transfer can incorrectly appear as a direct connection.
                     vehicles++
+                    if (number.isNotBlank()) {
+                        names.add(number)
+                        products.add(product)
+                    }
                 }
             }
             val first = legs.optJSONObject(0)
