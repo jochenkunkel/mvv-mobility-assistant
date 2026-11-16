@@ -136,7 +136,7 @@ class MainActivity : ComponentActivity() {
                     LaunchedEffect(Unit) {
                         while (true) {
                             clockMillis = System.currentTimeMillis()
-                            delay(30000)
+                            delay(5_000L)
                         }
                     }
                     var journeyLoading by remember { mutableStateOf(false) }
@@ -229,8 +229,8 @@ class MainActivity : ComponentActivity() {
                                     locationStatus = if (LocationFreshness.isFresh(found.time, locationClock))
                                         "✓ Standort aktuell" else "Standort veraltet – bitte aktualisieren"
                                 } else {
-                                    location = null
-                                    locationStatus = "Standort derzeit nicht verfügbar. Bitte Android-Standortdienste prüfen."
+                                    // Keep last fix through brief provider gaps; freshness still expires it.
+                                    locationStatus = "GPS-Signal unterbrochen – letzte Position wird geprüft"
                                 }
                             }
                             onDispose { stop() }
@@ -691,6 +691,7 @@ class MainActivity : ComponentActivity() {
                                         // GPS describes location freshness only, never MVV real-time departures.
                                         val gpsLabel = when {
                                             usableLocation != null -> "GPS LIVE"
+                                            locationPermissionGranted && location != null -> "GPS ALT"
                                             locationPermissionGranted -> "GPS …"
                                             else -> "GPS AUS"
                                         }
@@ -721,6 +722,18 @@ class MainActivity : ComponentActivity() {
                                             }.format(java.util.Date(it))
                                         }
                                         val untilBus = boarding?.let { countdown(it.departure) }
+                                        // OSRM step lengths approximate remaining walking distance during navigation.
+                                        val liveTurn = if (walkingNavigationOpen && usableLocation != null && walkingRoute != null)
+                                            WalkingNavigation.nextTurn(walkingRoute!!, usableLocation) else null
+                                        val remainingWalkMeters = liveTurn?.let { (turn, metersToTurn) ->
+                                            val turns = walkingRoute!!.turns
+                                            val index = turns.indexOf(turn)
+                                            if (index < 0) null else (metersToTurn +
+                                                turns.drop(index).dropLast(1).sumOf { it.distanceMeters }).coerceAtLeast(0)
+                                        }
+                                        val remainingWalkMinutes = remainingWalkMeters?.let {
+                                            kotlin.math.ceil(it / (walkingSpeed * 1000.0 / 60.0)).toInt()
+                                        }
                                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                             Surface(Modifier.weight(1f), shape = RoundedCornerShape(14.dp), color = Color.White) {
                                                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -761,9 +774,12 @@ class MainActivity : ComponentActivity() {
                                             Surface(Modifier.weight(1f), shape = RoundedCornerShape(14.dp), color = Color.White) {
                                                 Column(Modifier.padding(12.dp)) {
                                                     Text("👟 FUSSWEG", style = MaterialTheme.typography.labelSmall)
-                                                    Text(if (walkMinutes > 0) "ca. $walkMinutes Min." else "–",
+                                                    Text(if (remainingWalkMinutes != null) "ca. $remainingWalkMinutes Min."
+                                                             else if (walkMinutes > 0) "ca. $walkMinutes Min." else "–",
                                                         fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                                                    Text(if (walkMinutes > 0) "ca. $approximateMeters m" else "Keine Angabe",
+                                                    Text(if (remainingWalkMeters != null) "GPS-Schätzung: ca. $remainingWalkMeters m"
+                                                             else if (walkMinutes > 0) "Planwert: ca. $approximateMeters m"
+                                                             else "Keine Angabe",
                                                         style = MaterialTheme.typography.labelSmall)
                                                 }
                                             }
@@ -776,7 +792,7 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             }
                                         }
-                                        Text("Fahrplanzeiten · keine GPS-Restgehzeit oder automatische Live-Verspätungsabfrage",
+                                        Text("Fahrplanzeiten · GPS-Restweg nur bei aktiver OSM-Navigation und gutem Signal geschätzt · keine Live-Verspätungsabfrage",
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         if (boarding != null && countdown(boarding.departure)?.let { it < 0 } == true) {
