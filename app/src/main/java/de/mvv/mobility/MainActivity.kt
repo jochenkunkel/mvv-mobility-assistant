@@ -1197,7 +1197,7 @@ class MainActivity : ComponentActivity() {
                                             WalkingMiniMap(route, navigationLocation)
                                         }
                                     }
-                                    Text("Karte: © OpenStreetMap-Mitwirkende · Violett: Fußweg · Blau: Position",
+                                    Text("Karte: © OpenStreetMap-Mitwirkende · Violett: Fußweg · Standort violett",
                                         style = MaterialTheme.typography.labelSmall)
                                     Text("OSM-Fußwegführung ist experimentell. Weg und Ziel bitte prüfen.",
                                         style = MaterialTheme.typography.labelSmall)
@@ -1401,22 +1401,34 @@ class MainActivity : ComponentActivity() {
                                             Text("Ziel: $finalWalkingDestination · OSM-Fußweg ab aktuellem GPS-Standort. Bitte Zieladresse und Weg prüfen.",
                                                 style = MaterialTheme.typography.labelSmall)
                                         }
-                                        if (!busDeparturePassed && boarding?.from?.isNotBlank() == true && usableLocation != null) {
+                                        if (!busDeparturePassed && boarding != null) {
+                                            val stop = boarding.fromStop
+                                            val stopLabel = stop?.platform?.let { " · Steig $it" }
+                                                ?: " · Steig nicht eindeutig"
+                                            Text("Einstieg: ${boarding.from}$stopLabel",
+                                                style = MaterialTheme.typography.labelMedium)
+                                            if (stop == null) {
+                                                Text("MVV liefert für diesen Einstieg keine nutzbaren Koordinaten. Keine Navigation zu einer geratenen Straßenadresse.",
+                                                    color = MaterialTheme.colorScheme.error,
+                                                    style = MaterialTheme.typography.labelSmall)
+                                            }
                                             Button(onClick = {
                                                 val start = usableLocation ?: return@Button
-                                                walkingRequestId++
-                                                val requestId = walkingRequestId
+                                                val target = stop ?: return@Button
+                                                val requestId = ++walkingRequestId
                                                 walkingRoute = null
                                                 walkingNavigationOpen = true
-                                                walkingRouteStatus = "Fußweg wird über OpenStreetMap berechnet …"
-                                                WalkingNavigation.fetch(this@MainActivity, start, boarding.from) { result ->
+                                                walkingRouteStatus = "Fußweg zum MVV-Einstiegspunkt wird berechnet …"
+                                                WalkingNavigation.fetch(start, target) { result ->
                                                     if (walkingRequestId == requestId) {
                                                         walkingRoute = result.getOrNull()
-                                                        walkingRouteStatus = result.exceptionOrNull()?.localizedMessage
-                                                            ?: ""
+                                                        walkingRouteStatus = result.exceptionOrNull()?.localizedMessage ?: ""
                                                     }
                                                 }
-                                            }, modifier = Modifier.fillMaxWidth()) { Text("🚶 Fußweg-Navigation starten") }
+                                            }, enabled = usableLocation != null && stop != null,
+                                                modifier = Modifier.fillMaxWidth()) {
+                                                Text("🚶 Zum MVV-Einstiegspunkt navigieren")
+                                            }
                                         }
                                         if (walkingNavigationOpen) {
                                             Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
