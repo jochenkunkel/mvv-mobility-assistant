@@ -44,6 +44,29 @@ class WalkingNavigationTest {
         }
     }
 
+    @Test fun preservesManeuverOrderAcrossMultipleOsrmLegs() {
+        // Multi-leg OSRM responses must not drop the first maneuver of a later leg.
+        val json = """{"code":"Ok","routes":[{"distance":240.0,"legs":[
+            {"steps":[
+                {"distance":100,"maneuver":{"type":"depart","location":[11.50,48.10]}},
+                {"distance":20,"maneuver":{"type":"turn","modifier":"right","location":[11.51,48.11]}}
+            ]},
+            {"steps":[
+                {"distance":120,"maneuver":{"type":"turn","modifier":"left","location":[11.52,48.12]}},
+                {"distance":0,"maneuver":{"type":"arrive","location":[11.53,48.13]}}
+            ]}
+        ]}]}"""
+        val route = WalkingNavigation.parse(json)
+        assertEquals(240, route.totalMeters)
+        assertEquals(4, route.turns.size)
+        assertEquals(listOf(100, 20, 120, 0), route.turns.map { it.distanceMeters })
+        assertEquals("Rechts abbiegen", route.turns[1].instruction)
+        assertEquals("Links abbiegen", route.turns[2].instruction)
+        assertEquals("Ziel erreicht", route.turns[3].instruction)
+        assertEquals(48.13, route.turns[3].latitude, 0.000001)
+        assertEquals(11.53, route.turns[3].longitude, 0.000001)
+    }
+
     @Test fun rejectsMissingRoutes() {
         try {
             WalkingNavigation.parse("""{"code":"NoRoute","routes":[]}""")
