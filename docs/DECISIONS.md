@@ -86,3 +86,27 @@ Heimadresse ist personenbezogen und wird lokal in App-Preferences gespeichert; a
 **Entscheidung:** Schrittweise Migration zu einer komponentenbasierten Compose-Cockpit-Architektur, ohne den funktionierenden MVV-Datenpfad sofort neu zu schreiben. `ui/components/CockpitOverview.kt` ist der erste eigenständige Präsentationsbaustein mit drei interaktiven Einstiegspunkten. Er bekommt nur Daten und Callbacks, keine Repository-Abhängigkeiten. Die Einstiegspunkte navigieren zunächst per `BringIntoViewRequester` zu bestehenden Abschnitten.
 
 **Nächste Schritte:** Separates `Scaffold` mit NavigationBar und echten Start-/Verbindungen-/Meine-Fahrt-Screens; Zustandsverwaltung in einem ViewModel/UiState, Extraktion von Berechtigungs- und Netzwerk-Callbacks, Settings als eigener Screen, Screenshot-Tests je Screen. Die aktuelle Cockpit-Komponente ist ein Übergang, nicht die fertige Navigation. Jede Stufe muss den Emulator-Test bestehen; erst dann erfolgt eine APK-Freigabe.
+
+
+### ADR-006 – Verkehrsprovider und Region zentral konfigurieren (16.11.2026)
+- **Beschlossen:** Zunächst ausschließlich MVV in München produktiv entwickeln und testen. Region/Provider als zentrale Konfiguration abbilden; UI, Reise-Cockpit, Fußwegführung und später die Etappen-State-Machine möglichst providerunabhängig halten.
+- **Erste Umsetzung:** `MobilityProviderConfig.kt` enthält `MobilityProvider.MVV`, Stadt München, Land DE, Zeitzone Europe/Berlin und Geocoding-Kontext München/Deutschland. `WalkingNavigation.fetch` verwendet den konfigurierten Geocoding-Kontext statt eines hartcodierten München-Strings. Commits `d016bd46`, `3d8eb19e`.
+- **Architektur-Skizze:**
+```text
+                     MeinWeg2 UI / Cockpit / Etappenführung
+                                      |
+                          Reiseplanung (neutrales Modell)
+                             /                  \
+                TransitProvider               Fußweg/OSRM
+                      |                          |
+                MVV-Adapter                  RegionConfig
+                      |
+              MVV API (München)
+
+     Zukunft (NICHT implementiert):
+              BVG/VBB-Adapter (Berlin) -- neue API + Mapping + Tests
+```
+- **Geplante Schnittstelle:** `TransitProvider` mit Suche nach Verbindungen, Auflösung von Haltestellen, Umstiegs-/Etappenmodell und klarer Kennzeichnung geplanter bzw. echter Live-Zeiten. Adapter-spezifische APIs und IDs bleiben innerhalb der Adapter.
+- **Wichtige Grenze:** Ein Wechsel der Stadt in der Konfiguration aktiviert **keine** Berlin-Unterstützung. Dafür braucht es einen echten BVG/VBB-Adapter, Geocoding-/Routingtests, regionale Tarif-/Zeitregeln und eigene Geräteabnahme. Der aktuelle MVV-Repository-Code ist noch nicht in ein Interface extrahiert.
+- **Reihenfolge:** Erst München stabilisieren (Busausstieg, Anschluss-Fußweg, reine Fußwege, CI, Geräteabnahme); danach Provider-Interface und MVV-Adapter schrittweise extrahieren; erst dann Berlin.
+- **Teststatus:** Diese Vorbereitungen sind committed, aber nicht als grüner Android-Build oder vollständig getestete Provider-Abstraktion bestätigt.
