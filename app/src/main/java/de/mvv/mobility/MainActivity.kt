@@ -858,8 +858,8 @@ class MainActivity : ComponentActivity() {
                                         // The user explicitly confirms they have left the bus; timetable alone
                                         // cannot establish their actual position in the journey.
                                         val busDeparturePassed = boarding?.let { countdown(it.departure)?.let { minutes -> minutes < 0 } } == true
-                                        val finalWalkingDestination = chosen.steps.lastOrNull()?.to?.takeIf { it.isNotBlank() }
-                                            ?: destination.takeIf { it.isNotBlank() }
+                                        val finalWalkingDestination = destination.takeIf { it.isNotBlank() }
+                                            ?: chosen.steps.lastOrNull()?.to?.takeIf { it.isNotBlank() }
                                         if (busDeparturePassed && finalWalkingDestination != null) {
                                             Button(
                                                 onClick = {
