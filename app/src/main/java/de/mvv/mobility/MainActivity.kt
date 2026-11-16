@@ -353,6 +353,9 @@ class MainActivity : ComponentActivity() {
                                         !CurrentLocationRepository.isFreshFix(found) -> "stale_or_future"
                                         previous != null && !CurrentLocationRepository.isNewer(found, previous) -> "out_of_order"
                                         found.hasAccuracy() && found.accuracy > 100f -> "accuracy_over_100m"
+                                        previous != null && previous.hasAccuracy() && previous.accuracy <= 25f &&
+                                            CurrentLocationRepository.isFreshFix(previous, 15_000L) &&
+                                            (!found.hasAccuracy() || found.accuracy > previous.accuracy + 35f) -> "worse_than_recent_gps"
                                         else -> "accepted"
                                     }
                                     GpsDebugRecorder.event("provider_update", found, reason,
@@ -365,9 +368,15 @@ class MainActivity : ComponentActivity() {
                                     val previous = location
                                     // Ignore stale, out-of-order or implausibly inaccurate fixes.
                                     // Do not overwrite a good fix with an older cached result.
+                                    val recentPreciseFix = previous != null &&
+                                        previous.hasAccuracy() && previous.accuracy <= 25f &&
+                                        CurrentLocationRepository.isFreshFix(previous, 15_000L)
+                                    val substantiallyWorse = recentPreciseFix &&
+                                        (!found.hasAccuracy() || found.accuracy > previous!!.accuracy + 35f)
                                     val acceptable = CurrentLocationRepository.isFreshFix(found) &&
                                         (previous == null || CurrentLocationRepository.isNewer(found, previous)) &&
-                                        (!found.hasAccuracy() || found.accuracy <= 100f)
+                                        (!found.hasAccuracy() || found.accuracy <= 100f) &&
+                                        !substantiallyWorse
                                     if (acceptable) {
                                         location = found
                                         locationClock = now
