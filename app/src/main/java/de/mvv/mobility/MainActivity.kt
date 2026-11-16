@@ -167,7 +167,7 @@ class MainActivity : ComponentActivity() {
                     LaunchedEffect(confirmedDestination) {
                         val query = confirmedDestination.trim()
                         if (query.length < 3 || lookupStatus.startsWith("✓")) return@LaunchedEffect
-                        delay(550L)
+                        delay(10_000L)
                         lookupRequest++
                         val requestId = lookupRequest
                         lookupStatus = "Adresse wird geprüft …"
