@@ -904,6 +904,9 @@ class MainActivity : ComponentActivity() {
                         val searchConnections: () -> Unit = {
                                 val start = usableLocation
                                 if (start != null) {
+                                // Capture a fresh departure instant for EVERY "Jetzt" search,
+                                // including retries after the user has been delayed.
+                                val nowDepartureMillis = if (journeyTimingMode == "now") System.currentTimeMillis() else null
                                 val arrivalBy = if (journeyTimingMode == "planned" && !plannedArrival) null else searchTimeMillis
                                 val requestId = ++searchGeneration
                                 journeyLoading = true
@@ -922,7 +925,7 @@ class MainActivity : ComponentActivity() {
                                         journeyLoading = false
                                         result.fold(
                                             onSuccess = {
-                                                journeys = if (journeyTimingMode == "now") reachableNowJourneys(it.options, System.currentTimeMillis()) else it.options
+                                                journeys = if (journeyTimingMode == "now") reachableNowJourneys(it.options, nowDepartureMillis ?: System.currentTimeMillis()) else it.options
                                                 if (journeys.isEmpty()) {
                                                     startWalkingFallback("Keine aktuell noch erreichbare ÖPNV-Verbindung. Bitte Suche erneut starten oder Fußweg zum Ziel prüfen.")
                                                 } else {
@@ -955,8 +958,8 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                 }, preference = RoutePreference(routeFilterMode, routeFilterQuery), arrivalByMillis = arrivalBy,
-                                    departureAtMillis = if (journeyTimingMode == "planned" && !plannedArrival) plannedAtMillis else null,
-                                    startNowMillis = if (journeyTimingMode == "now") System.currentTimeMillis() else null)
+                                    departureAtMillis = nowDepartureMillis ?: if (journeyTimingMode == "planned" && !plannedArrival) plannedAtMillis else null,
+                                    startNowMillis = nowDepartureMillis)
                                 }
                         }
 
