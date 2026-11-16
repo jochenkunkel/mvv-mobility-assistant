@@ -29,7 +29,7 @@ import org.osmdroid.views.overlay.Polyline
  * when already-cached map tiles are available.
  */
 @Composable
-fun WalkingMiniMap(route: WalkingRoute, position: Location?, modifier: Modifier = Modifier) {
+fun WalkingMiniMap(route: WalkingRoute, position: Location?, walkedTrack: List<Pair<Double, Double>> = emptyList(), modifier: Modifier = Modifier) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val lastHeading = remember { mutableFloatStateOf(Float.NaN) }
     val map = remember {
@@ -100,6 +100,18 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, modifier: Modifier 
                 drawLine(routePoints.take(index + 1) + point,
                     Color.rgb(91, 52, 175), 12f)
             }
+        }
+        // Actual walked path is independent of the current planned route.
+        // It remains visible after rerouting or a temporary GPS outage.
+        if (walkedTrack.size >= 2) {
+            view.overlays.add(Polyline().apply {
+                setPoints(walkedTrack.map { GeoPoint(it.first, it.second) })
+                outlinePaint.color = Color.rgb(33, 135, 128)
+                outlinePaint.strokeWidth = 7f
+                outlinePaint.strokeCap = Paint.Cap.ROUND
+                outlinePaint.strokeJoin = Paint.Join.ROUND
+                outlinePaint.isAntiAlias = true
+            })
         }
         // Route-forward fallback avoids noisy GPS direction at walking speed.
         val origin = position?.let { GeoPoint(it.latitude, it.longitude) }
