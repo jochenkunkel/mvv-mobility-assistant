@@ -28,9 +28,11 @@ android {
     buildTypes {
         getByName("debug") {
             buildConfigField("boolean", "ENABLE_MVV_DEBUG_EXPORT", "true")
+            buildConfigField("boolean", "ENABLE_GPS_DEBUG_EXPORT", "true")
         }
         getByName("release") {
             buildConfigField("boolean", "ENABLE_MVV_DEBUG_EXPORT", "false")
+            buildConfigField("boolean", "ENABLE_GPS_DEBUG_EXPORT", "false")
             isMinifyEnabled = false
             if (!releaseKeystore.isNullOrBlank()) {
                 signingConfig = signingConfigs.getByName("stableRelease")
