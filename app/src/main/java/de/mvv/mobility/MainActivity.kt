@@ -389,6 +389,57 @@ class MainActivity : ComponentActivity() {
                     val connectionsAnchor = remember { BringIntoViewRequester() }
                     val journeyAnchor = remember { BringIntoViewRequester() }
                     var selectedTab by remember { mutableStateOf(CockpitTab.START) }
+
+                    // Re-route only after three distinct, reliable off-route GPS fixes.
+                    // A cooldown prevents repeated network requests in narrow streets.
+                    var offRouteFixes by remember { mutableIntStateOf(0) }
+                    var lastOffRouteFixTime by remember { mutableLongStateOf(0L) }
+                    var lastRerouteAt by remember { mutableLongStateOf(0L) }
+                    var rerouting by remember { mutableStateOf(false) }
+                    LaunchedEffect(walkingRoute) {
+                        offRouteFixes = 0
+                        lastOffRouteFixTime = 0L
+                    }
+                    LaunchedEffect(navigationLocation?.time, walkingRoute, walkingOnlyDashboard,
+                        walkingNavigationOpen, selectedTab, appForeground) {
+                        val fix = navigationLocation
+                        val route = walkingRoute
+                        if (!appForeground || selectedTab != CockpitTab.JOURNEY ||
+                            !(walkingOnlyDashboard || walkingNavigationOpen) ||
+                            fix == null || route == null || route.destination == null ||
+                            !fix.hasAccuracy() || fix.accuracy > 25f ||
+                            route.path.size < 2 || rerouting) {
+                            offRouteFixes = 0
+                        } else if (fix.time != lastOffRouteFixTime) {
+                            lastOffRouteFixTime = fix.time
+                            val lateral = de.mvv.mobility.data.RouteProgress.project(
+                                route.path, fix.latitude, fix.longitude)?.lateralMeters
+                            // 45m minimum; add GPS uncertainty to avoid false reroutes.
+                            if (lateral != null && lateral > 45.0 + fix.accuracy) {
+                                offRouteFixes++
+                            } else {
+                                offRouteFixes = 0
+                            }
+                            if (offRouteFixes >= 3 &&
+                                System.currentTimeMillis() - lastRerouteAt >= 30_000L) {
+                                offRouteFixes = 0
+                                lastRerouteAt = System.currentTimeMillis()
+                                rerouting = true
+                                walkingRouteStatus = "Route wird ab aktuellem Standort neu berechnet …"
+                                val requestId = ++walkingRequestId
+                                WalkingNavigation.fetch(fix, route.destination) { result ->
+                                    if (requestId == walkingRequestId) {
+                                        result.onSuccess { walkingRoute = it }
+                                        walkingRouteStatus = result.exceptionOrNull()?.let {
+                                            "Neuberechnung fehlgeschlagen: ${it.localizedMessage}"
+                                        } ?: "Route aktualisiert"
+                                    }
+                                    rerouting = false
+                                }
+                            }
+                        }
+                    }
+
                     var voiceMuted by remember {
                         mutableStateOf(getPreferences(MODE_PRIVATE).getBoolean("walking_voice_muted", false))
                     }
