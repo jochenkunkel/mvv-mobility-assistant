@@ -134,14 +134,29 @@ class MainActivity : ComponentActivity() {
                             UpcomingAppointment("Testtermin $index", "Olympiapark München", fixtureBaseTime + index * 3600000L)
                         } else if (allowed) DeviceCalendarRepository.appointments(this, visibleAppointments) else emptyList()
                     }
-                    val appointment = appointments.firstOrNull { it.startMillis == selectedAppointmentStart } ?: appointments.firstOrNull()
-                    var confirmedDestination by remember(appointment?.startMillis) { mutableStateOf(appointment?.location.orEmpty()) }
-                    var addressSuggestions by remember(appointment?.startMillis) { mutableStateOf<List<String>>(emptyList()) }
-                    var lookupStatus by remember(appointment?.startMillis) { mutableStateOf("") }
-                    var lookupRequest by remember(appointment?.startMillis) { mutableIntStateOf(0) }
-                    LaunchedEffect(appointment?.startMillis, appointment?.location) {
+                    // The calendar must never influence "Jetzt" or "Geplant".
+                    var journeyTimingMode by remember { mutableStateOf<String?>(null) }
+                    var plannedArrival by remember { mutableStateOf(false) }
+                    var plannedAtMillis by remember { mutableLongStateOf(System.currentTimeMillis() + 60 * 60000L) }
+                    val appointment = if (journeyTimingMode == "calendar")
+                        (appointments.firstOrNull { it.startMillis == selectedAppointmentStart } ?: appointments.firstOrNull())
+                        else null
+                    val plannedCalendar = java.util.Calendar.getInstance().apply { timeInMillis = plannedAtMillis }
+                    val plannedLabel = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", java.util.Locale.GERMANY)
+                        .format(java.util.Date(plannedAtMillis))
+                    val searchTimeMillis: Long? = when (journeyTimingMode) {
+                        "calendar" -> appointment?.startMillis?.minus(arrivalBufferMinutes * 60000L)
+                        "planned" -> plannedAtMillis
+                        else -> null
+                    }
+                    var confirmedDestination by remember { mutableStateOf("") }
+                    var addressSuggestions by remember { mutableStateOf<List<String>>(emptyList()) }
+                    var lookupStatus by remember { mutableStateOf("") }
+                    var lookupRequest by remember { mutableIntStateOf(0) }
+                    LaunchedEffect(journeyTimingMode, appointment?.startMillis, appointment?.location) {
                         val calendarDestination = appointment?.location?.trim().orEmpty()
-                        if (!fixture && calendarDestination.isNotBlank()) {
+                        if (!fixture && journeyTimingMode == "calendar" && calendarDestination.isNotBlank()) {
+                            confirmedDestination = calendarDestination
                             lookupRequest++
                             val requestId = lookupRequest
                             lookupStatus = "Adresse wird automatisch geprüft …"
@@ -470,7 +485,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         if (!settingsExpanded && (selectedTab == CockpitTab.START || (fixture && !visualFixture))) {
-                        if (homeSaved) {
+                        if (homeSaved && journeyTimingMode != null) {
                             Button(
                                 onClick = {
                                     val uri = Uri.parse("https://www.google.com/maps/dir/?api=1").buildUpon()
@@ -482,9 +497,86 @@ class MainActivity : ComponentActivity() {
                             ) { Text("⌂ Nach Hause navigieren") }
                         }
                         Spacer(Modifier.height(1.dp).bringIntoViewRequester(appointmentAnchor))
-                        SetupStepHeader(1, "Termin", appointment?.title ?: "Termin auswählen", activeSetupStep == 0, "setup_step_appointment") { activeSetupStep = 0 }
+                        SetupStepHeader(1, "Wann fahren?", when (journeyTimingMode) {
+                            "now" -> "Jetzt"
+                            "planned" -> "Geplant · $plannedLabel"
+                            "calendar" -> appointment?.title ?: "Kalendertermin auswählen"
+                            else -> "Jetzt, Geplant oder Kalender auswählen"
+                        }, activeSetupStep == 0, "setup_step_appointment") { activeSetupStep = 0 }
                         if (activeSetupStep == 0 || (fixture && !visualFixture)) {
                         if (fixture) Text("TESTMODUS: simulierte Kalender-, GPS- und MVV-Daten", color = MaterialTheme.colorScheme.error)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf("now" to "Jetzt", "planned" to "Geplant", "calendar" to "Kalender").forEach { (mode, title) ->
+                                val selected = journeyTimingMode == mode
+                                OutlinedButton(
+                                    onClick = {
+                                        if (journeyTimingMode != mode) {
+                                            journeyTimingMode = mode
+                                            selectedAppointmentStart = null
+                                            confirmedDestination = ""
+                                            lookupRequest++
+                                            lookupStatus = ""
+                                            addressSuggestions = emptyList()
+                                            journeys = emptyList()
+                                            dashboardJourney = null
+                                            walkingOnlyFallback = false
+                                            walkingOnlyDashboard = false
+                                            walkingRoute = null
+                                            routeStatus = ""
+                                            activeSetupStep = 0
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f).testTag("timing_$mode"),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        containerColor = if (selected) Color(0xFFE6DFFF) else Color.White
+                                    )
+                                ) { Text(title, maxLines = 1) }
+                            }
+                        }
+                        if (journeyTimingMode == "now") {
+                            Text("Sofort starten. Ziel im nächsten Schritt wählen – ohne Kalendertermin.")
+                        }
+                        if (journeyTimingMode == "planned") {
+                            Text("Datum und Uhrzeit: $plannedLabel", style = MaterialTheme.typography.titleMedium)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedButton(onClick = {
+                                    android.app.DatePickerDialog(this@MainActivity,
+                                        { _, year, month, day ->
+                                            val updated = java.util.Calendar.getInstance().apply {
+                                                timeInMillis = plannedAtMillis
+                                                set(year, month, day)
+                                            }
+                                            plannedAtMillis = updated.timeInMillis
+                                        },
+                                        plannedCalendar.get(java.util.Calendar.YEAR),
+                                        plannedCalendar.get(java.util.Calendar.MONTH),
+                                        plannedCalendar.get(java.util.Calendar.DAY_OF_MONTH)
+                                    ).show()
+                                }) { Text("Datum") }
+                                OutlinedButton(onClick = {
+                                    android.app.TimePickerDialog(this@MainActivity,
+                                        { _, hour, minute ->
+                                            val updated = java.util.Calendar.getInstance().apply {
+                                                timeInMillis = plannedAtMillis
+                                                set(java.util.Calendar.HOUR_OF_DAY, hour)
+                                                set(java.util.Calendar.MINUTE, minute)
+                                                set(java.util.Calendar.SECOND, 0)
+                                            }
+                                            plannedAtMillis = updated.timeInMillis
+                                        },
+                                        plannedCalendar.get(java.util.Calendar.HOUR_OF_DAY),
+                                        plannedCalendar.get(java.util.Calendar.MINUTE), true
+                                    ).show()
+                                }) { Text("Uhrzeit") }
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = !plannedArrival, onClick = { plannedArrival = false })
+                                Text("Abfahrt")
+                                RadioButton(selected = plannedArrival, onClick = { plannedArrival = true })
+                                Text("Ankunft")
+                            }
+                        }
+                        if (journeyTimingMode == "calendar") {
                         if (!allowed && !fixture) {
                             Text("Damit Mein Weg deine Termine anzeigen kann, erlaube den Kalenderzugriff. Die Daten bleiben auf deinem Gerät.")
                             Button(onClick = { permissionLauncher.launch(Manifest.permission.READ_CALENDAR) }) {
@@ -533,8 +625,14 @@ class MainActivity : ComponentActivity() {
 
                             }
                         }
-                        if (!(fixture && !visualFixture)) Button(onClick = { activeSetupStep = 1 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_address")) { Text("Weiter · Start & Ziel →") }
                         }
+                        if (journeyTimingMode != null && (journeyTimingMode != "calendar" || appointment != null) && !(fixture && !visualFixture)) {
+                            Button(onClick = { activeSetupStep = 1 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_address")) {
+                                Text("Weiter · Start & Ziel →")
+                            }
+                        }
+                        }
+                        if (journeyTimingMode != null) {
                         SetupStepHeader(2, "Start & Ziel", if (usableLocation == null) "Standort fehlt · Route noch nicht bereit" else confirmedDestination.ifBlank { appointment?.location ?: "Adresse festlegen" }, activeSetupStep == 1, "setup_step_address") { activeSetupStep = 1 }
                         if (activeSetupStep == 1 || (fixture && !visualFixture)) {
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
@@ -676,7 +774,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
-                        if (appointment != null) {
+                        if (journeyTimingMode == "calendar" && appointment != null) {
                             HorizontalDivider()
                             Text("Ankunft zum Kalendertermin", style = MaterialTheme.typography.titleMedium)
                             Text("Terminbeginn: ${appointment.timeLabel()}")
@@ -694,8 +792,9 @@ class MainActivity : ComponentActivity() {
                         }
                         Spacer(Modifier.height(1.dp).bringIntoViewRequester(connectionsAnchor))
                         }
-                        val destination = confirmedDestination.trim().ifBlank { appointment?.location?.trim().orEmpty() }
-                        LaunchedEffect(destination, appointment?.startMillis, arrivalBufferMinutes, routeFilterMode, routeFilterQuery, walkingSpeed) {
+                        }
+                        val destination = confirmedDestination.trim().ifBlank { if (journeyTimingMode == "calendar") appointment?.location?.trim().orEmpty() else "" }
+                        LaunchedEffect(destination, journeyTimingMode, searchTimeMillis, plannedArrival, arrivalBufferMinutes, routeFilterMode, routeFilterQuery, walkingSpeed) {
                             searchGeneration++
                             journeyLoading = false
                         }
@@ -721,7 +820,7 @@ class MainActivity : ComponentActivity() {
                         val searchConnections: () -> Unit = {
                                 val start = usableLocation
                                 if (start != null) {
-                                val arrivalBy = appointment?.startMillis?.minus(arrivalBufferMinutes * 60000L)
+                                val arrivalBy = if (journeyTimingMode == "planned" && !plannedArrival) null else searchTimeMillis
                                 val requestId = ++searchGeneration
                                 journeyLoading = true
                                 journeys = emptyList()
@@ -942,7 +1041,7 @@ class MainActivity : ComponentActivity() {
                                 val firstWalk = chosen.steps.takeWhile { it.walking }
                                 val walkMinutes = firstWalk.sumOf { it.minutes }
                                 val approximateMeters = (walkMinutes * walkingSpeed * 1000f / 60f).toInt()
-                                val targetDay = appointment?.startMillis?.minus(arrivalBufferMinutes * 60000L)
+                                val targetDay = if (journeyTimingMode == "planned" && !plannedArrival) null else searchTimeMillis
                                 fun countdown(clock: String): Long? {
                                     if (targetDay == null || !Regex("""\d{1,2}:\d{2}""").matches(clock)) return null
                                     val parts = clock.split(":")
