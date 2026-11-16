@@ -32,6 +32,13 @@ class DepartureRecommendationTest {
         val leave = recommendedLeaveMillis(journey("23:50", emptyList()), at(16, 0, 15))
         assertEquals(at(15, 23, 47), leave)
     }
+    @Test fun missingWalkingStartDoesNotTreatBusClockAsWalkingClock() {
+        val walking = JourneyStep("", "Fußweg", "GPS", "Bellinzonastraße", "", "14:53", true, 4)
+        val bus = JourneyStep("56", "Bus", "Bellinzonastraße", "Ziel", "14:53", "15:10", false, 17)
+        val leave = recommendedLeaveMillis(journey("14:53", listOf(walking, bus), 4), at(16, 14, 32))
+        assertEquals(at(16, 14, 46), leave)
+    }
+
     @Test fun missingWalkingStartUsesBusTimeMinusAccessWalk() {
         val walking = JourneyStep("", "Fußweg", "GPS", "Bellinzonastraße", "", "14:53", true, 4)
         val bus = JourneyStep("56", "Bus", "Bellinzonastraße", "Ziel", "14:53", "15:10", false, 17)
