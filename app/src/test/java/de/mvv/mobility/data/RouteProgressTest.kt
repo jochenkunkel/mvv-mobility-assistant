@@ -32,10 +32,22 @@ class RouteProgressTest {
         assertTrue(result.second in 15..23)
     }
 
-    @Test fun switchesToArrivalAfterPassingCorner() {
+    @Test fun destinationAheadDoesNotMeanArrived() {
         val result = requireNotNull(RouteProgress.nextTurn(route, 48.1003, 11.5010))
-        assertEquals("Ziel erreicht", result.first.instruction)
+        assertEquals("Zum Ziel weitergehen", result.first.instruction)
         assertTrue(result.second > 60)
+    }
+
+    @Test fun arrivalOnlyNearActualRouteEndpoint() {
+        val near = requireNotNull(RouteProgress.nextTurn(route, 48.10095, 11.5010))
+        assertEquals("Ziel erreicht", near.first.instruction)
+        assertTrue(near.second <= 20)
+    }
+
+    @Test fun doesNotArriveThirtyMetersBeforeStop() {
+        val before = requireNotNull(RouteProgress.nextTurn(route, 48.10073, 11.5010))
+        assertEquals("Zum Ziel weitergehen", before.first.instruction)
+        assertTrue(before.second >= 25)
     }
 
     @Test fun rejectsPositionFarOffRoute() {
