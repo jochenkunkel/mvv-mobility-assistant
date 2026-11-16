@@ -1,10 +1,10 @@
 # CI-Concurrency: Release-Läufe vor Push-Abbruch schützen
 
-Stand: 16.11.2026, 19:20 MEZ. **Code-Review und reproduzierbarer Änderungsvorschlag; noch keine Workflow-Änderung und kein bestandener Test.**
+Stand: 16.11.2026, 21:16 MEZ. **Die Workflow-Änderung wurde mit Commit `6b2b55f` auf `main` umgesetzt; eine erfolgreiche Actions-Ausführung ist weiterhin nicht nachgewiesen.**
 
 ## Bestätigter Befund
 
-In `.github/workflows/android.yml` gilt derzeit:
+Vor der Korrektur galt in `.github/workflows/android.yml`:
 
 ```yaml
 concurrency:
@@ -34,6 +34,13 @@ Hinweis: Bei zwei manuellen Release-Läufen auf derselben Ref kann GitHub trotz 
 ## Weiterhin offene Nachweise
 
 - Für `42a7fd9` liefert die Commit-Status-Abfrage nur `statuses: []`; der verfügbare Commit-Workflow-Connector erfasst Push-Läufe nicht vollständig. CI-Ergebnis daher **unbekannt**, nicht grün.
-- Die neue Concurrency-Regel ist ein **Vorschlag**, nicht implementiert. Vor Änderung prüfen, ob die globale Serialisierung bewusst aus Ressourcengründen eingerichtet wurde.
+- Die neue Concurrency-Regel ist in `main` seit `6b2b55f` implementiert; die Wirkung ist **noch nicht mit überlappenden Actions-Läufen bestätigt**. Wichtig: `cancel-in-progress: false` verhindert das Abbrechen eines *laufenden* manuellen Jobs, aber GitHub kann bei mehreren wartenden Läufen derselben Gruppe einen älteren **pending**-Lauf durch einen neueren ersetzen. Release-Läufe derselben Ref sind daher nicht garantiert alle ausführbar; vor einer Gerätefreigabe stets die konkrete Run-ID prüfen.
 - Andere Projekt-Chats sind in diesem Durchlauf nicht vollständig zugänglich. Repository und bekannte Chat-Anforderungen bleiben maßgeblich.
-- Nächste Priorität: diesen CI-Schutz nach Klärung der Serialisierungsabsicht umsetzen, dann GPS-/Rerouting-Regressionstests und den vollständigen Release-Workflow verifizieren.
+- Nächste Priorität: CI-Schutz mit realen überlappenden Workflow-Run-IDs validieren, dann GPS-/Rerouting-Regressionstests und vollständigen Release-Workflow verifizieren.
+
+## Prüfprotokoll 16.11.2026, 21:16 MEZ
+
+- Repository-Abgleich: `main` endet nach verfügbarer Commit-Suche bei `6b2b55fb1ff971717a948aedc2aca212f2b8e2e0`; `.github/workflows/android.yml` enthält die getrennte Concurrency-Gruppe tatsächlich.
+- Commitbezogene Actions-Abfrage für `6b2b55f`: `workflow_runs: []`. Diese Schnittstelle liefert nur PR-bezogene Läufe; **Push-Buildstatus unbekannt**.
+- Regressionstest als manueller Nachweis: Release-Dispatch `test_level=release` starten und Run-ID notieren; parallelen Branch-Push starten; Release-Run muss `success` oder weiterhin `in_progress` bleiben, nicht `cancelled`. Zwei Branch-Pushes nacheinander müssen nur ihre eigene Push-Gruppe beeinflussen. Abschließend zwei Dispatches auf derselben Ref prüfen und pending-Ersetzung ausdrücklich protokollieren.
+- Freigabe-Gate: Kein grüner Android-Build, keine Emulator-/Live-Probes und kein APK-Artefakt für diese SHA nachgewiesen; keine Installationsfreigabe.
