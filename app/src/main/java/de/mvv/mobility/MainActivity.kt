@@ -236,20 +236,20 @@ class MainActivity : ComponentActivity() {
                     // Retain the last accepted fix for display, but never treat an old
                     // position as live navigation input.
                     val usableLocation = if (fixture) location else location?.takeIf {
-                        LocationFreshness.isFresh(it.time, locationClock)
+                        CurrentLocationRepository.isFreshFix(it)
                     }
                     val navigationLocation = usableLocation?.takeIf {
-                        fixture || (locationClock - it.time <= 45_000L &&
+                        fixture || ((CurrentLocationRepository.ageMillis(it)?.let { age -> age <= 45_000L } == true) &&
                             (!it.hasAccuracy() || it.accuracy <= 80f))
                     }
-                    val locationAgeSeconds = location?.takeIf { !fixture && it.time > 0L }
-                        ?.let { ((locationClock - it.time).coerceAtLeast(0L) / 1000L) }
+                    val locationAgeSeconds = location?.takeIf { !fixture }
+                        ?.let { CurrentLocationRepository.ageMillis(it)?.div(1000L) }
                     LaunchedEffect(gpsDebugEnabled, appForeground, walkingNavigationOpen, walkingOnlyDashboard) {
                         if (gpsDebugEnabled && appForeground) {
                             while (true) {
                                 val fix = location
                                 val now = System.currentTimeMillis()
-                                val age = fix?.let { now - it.time }
+                                val age = fix?.let { CurrentLocationRepository.ageMillis(it) }
                                 val state = when {
                                     fix == null -> "no_fix"
                                     age == null || age < 0 -> "invalid_time"
@@ -315,14 +315,14 @@ class MainActivity : ComponentActivity() {
                                     val previous = location
                                     val reason = when {
                                         found == null -> "provider_no_fix"
-                                        !LocationFreshness.isFresh(found.time, now) -> "stale_or_future"
-                                        previous != null && found.time <= previous.time -> "out_of_order"
+                                        !CurrentLocationRepository.isFreshFix(found) -> "stale_or_future"
+                                        previous != null && !CurrentLocationRepository.isNewer(found, previous) -> "out_of_order"
                                         found.hasAccuracy() && found.accuracy > 100f -> "accuracy_over_100m"
                                         else -> "accepted"
                                     }
                                     GpsDebugRecorder.event("provider_update", found, reason,
                                         walkingNavigationOpen || walkingOnlyDashboard,
-                                        found?.let { now - it.time })
+                                        found?.let { CurrentLocationRepository.ageMillis(it) })
                                 }
 
                                 if (found != null) {
@@ -330,8 +330,8 @@ class MainActivity : ComponentActivity() {
                                     val previous = location
                                     // Ignore stale, out-of-order or implausibly inaccurate fixes.
                                     // Do not overwrite a good fix with an older cached result.
-                                    val acceptable = LocationFreshness.isFresh(found.time, now) &&
-                                        (previous == null || found.time > previous.time) &&
+                                    val acceptable = CurrentLocationRepository.isFreshFix(found) &&
+                                        (previous == null || CurrentLocationRepository.isNewer(found, previous)) &&
                                         (!found.hasAccuracy() || found.accuracy <= 100f)
                                     if (acceptable) {
                                         location = found
