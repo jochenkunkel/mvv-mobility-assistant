@@ -37,19 +37,24 @@ fun recommendedLeaveMillis(
     require(safetyBufferMinutes >= 0)
     val firstVehicle = journey.steps.firstOrNull { !it.walking }
     val firstWalking = journey.steps.firstOrNull()?.takeIf { it.walking }
+    val accessWalkMinutes = journey.steps.takeWhile { it.walking }
+        .sumOf { it.minutes.coerceAtLeast(0) }
+        .takeIf { it > 0 } ?: journey.walkingMinutes.coerceAtLeast(0)
+    val firstVehicleDeparture = firstVehicle?.let {
+        journeyClockMillis(it.departure, appointmentTargetMillis)
+    }
+    val firstWalkingDeparture = firstWalking?.let {
+        journeyClockMillis(it.departure, appointmentTargetMillis)
+    }
+    val journeyDeparture = journeyClockMillis(journey.departure, appointmentTargetMillis)
+    // Prefer the actual walking departure when provided. If it is absent, calculate
+    // from the first vehicle departure rather than mistaking the bus clock for
+    // the departure of the entire door-to-door journey.
     val start = when {
-        firstWalking != null -> journeyClockMillis(firstWalking.departure, appointmentTargetMillis)
-            ?: journeyClockMillis(journey.departure, appointmentTargetMillis)
-            // Some MVV responses omit the walking departure clock entirely.
-            // Use the first vehicle time minus the summed access legs instead of "–".
-            ?: firstVehicle?.let { vehicle ->
-                journeyClockMillis(vehicle.departure, appointmentTargetMillis)?.minus(
-                    journey.steps.takeWhile { it.walking }.sumOf { it.minutes.coerceAtLeast(0) } * 60_000L
-                )
-            }
-        firstVehicle != null -> journeyClockMillis(firstVehicle.departure, appointmentTargetMillis)
-            ?.minus(journey.walkingMinutes.coerceAtLeast(0) * 60_000L)
-        else -> journeyClockMillis(journey.departure, appointmentTargetMillis)
+        firstWalkingDeparture != null -> firstWalkingDeparture
+        firstVehicleDeparture != null -> firstVehicleDeparture - accessWalkMinutes * 60_000L
+        journeyDeparture != null -> journeyDeparture
+        else -> null
     }
     return start?.minus(safetyBufferMinutes * 60_000L)
 }
