@@ -856,7 +856,8 @@ class MainActivity : ComponentActivity() {
                                             }
                                         )
                                     }
-                                }, preference = RoutePreference(routeFilterMode, routeFilterQuery), arrivalByMillis = arrivalBy)
+                                }, preference = RoutePreference(routeFilterMode, routeFilterQuery), arrivalByMillis = arrivalBy,
+                                    departureAtMillis = if (journeyTimingMode == "planned" && !plannedArrival) plannedAtMillis else null)
                                 }
                         }
 
