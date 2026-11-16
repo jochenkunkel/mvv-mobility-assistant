@@ -8,6 +8,8 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.net.Uri
 import android.location.Location
+import android.speech.tts.TextToSpeech
+import java.util.Locale
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -387,6 +389,53 @@ class MainActivity : ComponentActivity() {
                     val connectionsAnchor = remember { BringIntoViewRequester() }
                     val journeyAnchor = remember { BringIntoViewRequester() }
                     var selectedTab by remember { mutableStateOf(CockpitTab.START) }
+                    var voiceMuted by remember {
+                        mutableStateOf(getPreferences(MODE_PRIVATE).getBoolean("walking_voice_muted", false))
+                    }
+                    var speechReady by remember { mutableStateOf(false) }
+                    val speech = remember { arrayOfNulls<TextToSpeech>(1) }
+                    DisposableEffect(Unit) {
+                        val engine = TextToSpeech(this@MainActivity) { status ->
+                            if (status == TextToSpeech.SUCCESS) speechReady = true
+                        }
+                        speech[0] = engine
+                        onDispose {
+                            engine.stop()
+                            engine.shutdown()
+                            speech[0] = null
+                        }
+                    }
+                    val spokenTurn = if ((walkingOnlyDashboard || walkingNavigationOpen) &&
+                        selectedTab == CockpitTab.JOURNEY && navigationLocation != null && walkingRoute != null)
+                        WalkingNavigation.nextTurn(walkingRoute!!, navigationLocation!!) else null
+                    val spokenTurnKey = spokenTurn?.first?.let {
+                        "${it.latitude},${it.longitude},${it.instruction}"
+                    }
+                    var lastSpokenTurnKey by remember { mutableStateOf<String?>(null) }
+                    LaunchedEffect(walkingRoute, walkingOnlyDashboard, walkingNavigationOpen) {
+                        lastSpokenTurnKey = null
+                    }
+                    LaunchedEffect(spokenTurnKey, voiceMuted, speechReady, selectedTab) {
+                        if (!voiceMuted && speechReady && spokenTurnKey != null &&
+                            spokenTurnKey != lastSpokenTurnKey && spokenTurn != null) {
+                            val engine = speech[0]
+                            if (engine != null) {
+                                engine.language = Locale.GERMANY
+                                val germanMale = engine.voices?.firstOrNull { voice ->
+                                    voice.locale.language == "de" &&
+                                        (voice.name.contains("male", ignoreCase = true) ||
+                                            voice.name.contains("männlich", ignoreCase = true))
+                                }
+                                if (germanMale != null) engine.voice = germanMale
+                                val announcement = if (spokenTurn.first.instruction == "Ziel erreicht")
+                                    "Ziel erreicht"
+                                else "In ${spokenTurn.second} Metern ${spokenTurn.first.instruction.lowercase(Locale.GERMANY)}"
+                                engine.speak(announcement, TextToSpeech.QUEUE_FLUSH, null, spokenTurnKey)
+                                lastSpokenTurnKey = spokenTurnKey
+                            }
+                        }
+                    }
+
                     var activeSetupStep by remember { mutableIntStateOf(0) }
                     Column(Modifier.fillMaxSize().background(Color(0xFFF7F6FB))) {
                     Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -1174,7 +1223,18 @@ class MainActivity : ComponentActivity() {
                                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                     Text("MEINE FAHRT · FUSSWEG", style = MaterialTheme.typography.titleMedium,
                                         color = Color(0xFF49309B), fontWeight = FontWeight.Bold)
-                                    Text("🚶 Nur zu Fuß", style = MaterialTheme.typography.headlineMedium)
+                                    Row(verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.fillMaxWidth()) {
+                                        Text("🚶 Nur zu Fuß", style = MaterialTheme.typography.headlineMedium,
+                                            modifier = Modifier.weight(1f))
+                                        TextButton(onClick = {
+                                            voiceMuted = !voiceMuted
+                                            settings.edit().putBoolean("walking_voice_muted", voiceMuted).apply()
+                                            if (voiceMuted) speech[0]?.stop()
+                                        }, modifier = Modifier.testTag("walking_voice_toggle")) {
+                                            Text(if (voiceMuted) "🔇 Stumm" else "🔊 Ton an")
+                                        }
+                                    }
                                     Text("Ziel: $destination", style = MaterialTheme.typography.bodyMedium)
                                     Text("Fußroute: ca. ${route.totalMeters} m", style = MaterialTheme.typography.titleLarge)
                                     val next = navigationLocation?.let { WalkingNavigation.nextTurn(route, it) }
@@ -1449,7 +1509,18 @@ class MainActivity : ComponentActivity() {
                                             Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
                                                 Column(Modifier.fillMaxWidth().padding(12.dp),
                                                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                    Text("FUSSWEG-NAVIGATION · OSM", fontWeight = FontWeight.Bold)
+                                                    Row(verticalAlignment = Alignment.CenterVertically,
+                                                        modifier = Modifier.fillMaxWidth()) {
+                                                        Text("FUSSWEG-NAVIGATION · OSM", fontWeight = FontWeight.Bold,
+                                                            modifier = Modifier.weight(1f))
+                                                        TextButton(onClick = {
+                                                            voiceMuted = !voiceMuted
+                                                            settings.edit().putBoolean("walking_voice_muted", voiceMuted).apply()
+                                                            if (voiceMuted) speech[0]?.stop()
+                                                        }, modifier = Modifier.testTag("journey_walking_voice_toggle")) {
+                                                            Text(if (voiceMuted) "🔇 Stumm" else "🔊 Ton an")
+                                                        }
+                                                    }
                                                     val fix = navigationLocation
                                                     val route = walkingRoute
                                                     val next = if (fix != null && route != null)
