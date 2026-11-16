@@ -301,7 +301,8 @@ object MvvJourneyRepository {
         callback: (Result<ResolvedJourney>) -> Unit,
         preference: RoutePreference = RoutePreference(),
         arrivalByMillis: Long? = null,
-        departureAtMillis: Long? = null
+        departureAtMillis: Long? = null,
+        startNowMillis: Long? = null
     ) {
         Thread {
             try {
@@ -324,7 +325,8 @@ object MvvJourneyRepository {
                     val alternate = request(origin, coordinates, "coord", arrivalByMillis, directOnly = true, departureAtMillis = departureAtMillis)
                     trips = filterJourneys(parseTrips(alternate, walkingKmh), preference)
                 }
-                trips = if (arrivalByMillis != null) selectAppointmentJourneys(trips, arrivalByMillis) else trips.take(3)
+                trips = if (arrivalByMillis != null) selectAppointmentJourneys(trips, arrivalByMillis)
+                    else (if (startNowMillis != null) reachableNowJourneys(trips, startNowMillis) else trips).take(3)
                 val destination = StopCandidate(coordinates, first.getAddressLine(0) ?: address, 0)
                 callback(Result.success(ResolvedJourney(trips, destination)))
             } catch (e: Exception) { callback(Result.failure(e)) }
