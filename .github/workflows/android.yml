@@ -16,10 +16,11 @@ on:
         options:
           - fast
           - release
-# All workflow runs (including manual release tests) share one global group.
+# Separate event/ref runs so pushes cannot cancel manual release verification.
+# Only supersede older branch push runs; never cancel tag or manual release runs.
 concurrency:
-  group: single-active-ci
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/v') }}
 
 permissions:
   contents: read
