@@ -17,12 +17,22 @@ object CurrentLocationRepository {
         context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
         context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
-    private fun isFreshFix(fix: Location, maxAgeMillis: Long = LocationFreshness.MAX_AGE_MILLIS): Boolean =
-        if (fix.elapsedRealtimeNanos > 0L)
-            LocationFreshness.isFreshElapsed(fix.elapsedRealtimeNanos,
-                SystemClock.elapsedRealtimeNanos(), maxAgeMillis)
-        else LocationFreshness.isFresh(fix.time, System.currentTimeMillis()) &&
-            System.currentTimeMillis() - fix.time <= maxAgeMillis
+    fun ageMillis(fix: Location, nowElapsedNanos: Long = SystemClock.elapsedRealtimeNanos(),
+        nowWallMillis: Long = System.currentTimeMillis()): Long? =
+        if (fix.elapsedRealtimeNanos > 0L) {
+            LocationFreshness.elapsedAgeMillis(fix.elapsedRealtimeNanos, nowElapsedNanos)
+        } else {
+            LocationFreshness.wallAgeMillis(fix.time, nowWallMillis)
+        }
+
+    fun isFreshFix(fix: Location, maxAgeMillis: Long = LocationFreshness.MAX_AGE_MILLIS): Boolean =
+        ageMillis(fix)?.let { it <= maxAgeMillis } ?: false
+
+    /** Prefer monotonic timestamps when both fixes have them. */
+    fun isNewer(fix: Location, previous: Location): Boolean =
+        if (fix.elapsedRealtimeNanos > 0L && previous.elapsedRealtimeNanos > 0L)
+            fix.elapsedRealtimeNanos > previous.elapsedRealtimeNanos
+        else fix.time > previous.time
 
     fun request(context: Context, onResult: (Location?) -> Unit) {
         if (!hasPermission(context)) {
@@ -101,7 +111,7 @@ object CurrentLocationRepository {
                 manager.getLastKnownLocation(provider)
             }.getOrNull()
         }.filter { isFreshFix(it, 30_000L)
-        }.maxByOrNull { it.time }
+        }.minByOrNull { ageMillis(it) ?: Long.MAX_VALUE }
         if (cached != null) onResult(cached)
         val stop: () -> Unit = { manager.removeUpdates(listener) }
         return stop
