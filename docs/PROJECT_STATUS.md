@@ -78,3 +78,12 @@ Keine erfundenen CI-Ergebnisse oder pauschale „fertig“-Meldung.
 und neun offenen Issues am 16.11.2026. Nachfolgende Commits/Issues können
 diesen Snapshot überholen und müssen vor der nächsten Arbeit erneut
 abgeglichen werden.
+
+## GPS-Reparaturrunde – 16.11.2026
+
+- Commits `fb2e5e7`, `aa01800`, `dff574f`, `db0ab74` direkt nach `main`.
+- `CurrentLocationRepository`: Alter von GPS-Fixes bevorzugt über `elapsedRealtimeNanos`, Wall-Clock nur als Fallback; Reihenfolge nach monotonic timestamp, Cache-Fix-Auswahl nach tatsächlichem Alter.
+- `MainActivity`: Navigation-Freshness, Status und GPS-Debug-Heartbeat verwenden die gemeinsame Altersprüfung statt eigener Wall-Clock-Vergleiche.
+- `LocationFreshnessTest`: zusätzliche Grenz-/Rücksprungtests.
+- **Verifikation:** CI-Lauf für HEAD prüfen; kein S25-Praxistest, kein GPS-Replay und keine visuelle Freigabe behauptet. Issue #6 bleibt offen bis zur Geräteabnahme und weiteren GPS-Zustandstests.
+- **Nächster Schritt:** CI prüfen, GPS-Debug-Export im realen Fußweg testen, Schwankungen/Accuracy/Provider-Wechsel anhand Log reproduzieren und danach gezielt korrigieren.
