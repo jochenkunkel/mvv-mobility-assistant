@@ -34,6 +34,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import de.mvv.mobility.data.CurrentLocationRepository
@@ -157,6 +163,30 @@ class MainActivity : ComponentActivity() {
                     var addressSuggestions by remember { mutableStateOf<List<String>>(emptyList()) }
                     var lookupStatus by remember { mutableStateOf("") }
                     var lookupRequest by remember { mutableIntStateOf(0) }
+                    val destinationFocus = LocalFocusManager.current
+                    LaunchedEffect(confirmedDestination) {
+                        val query = confirmedDestination.trim()
+                        if (query.length < 3 || lookupStatus.startsWith("✓")) return@LaunchedEffect
+                        delay(550L)
+                        lookupRequest++
+                        val requestId = lookupRequest
+                        lookupStatus = "Adresse wird geprüft …"
+                        DestinationLookup.search(this@MainActivity, query) { results ->
+                            if (requestId == lookupRequest && confirmedDestination.trim() == query) {
+                                addressSuggestions = results.take(4)
+                                when (results.size) {
+                                    0 -> lookupStatus = "Kein Treffer – bitte Adresse präzisieren"
+                                    1 -> {
+                                        confirmedDestination = results.first()
+                                        addressSuggestions = emptyList()
+                                        lookupStatus = "✓ Ziel automatisch geprüft"
+                                    }
+                                    else -> lookupStatus = "Passendes Ziel auswählen"
+                                }
+                            }
+                        }
+                    }
+
                     LaunchedEffect(journeyTimingMode, appointment?.startMillis, appointment?.location) {
                         val calendarDestination = appointment?.location?.trim().orEmpty()
                         if (!fixture && journeyTimingMode == "calendar" && calendarDestination.isNotBlank()) {
@@ -676,47 +706,53 @@ class MainActivity : ComponentActivity() {
                         }
                         OutlinedTextField(
                             value = confirmedDestination,
-                            onValueChange = { lookupRequest++; confirmedDestination = it; addressSuggestions = emptyList(); lookupStatus = "" },
+                            onValueChange = {
+                                lookupRequest++
+                                confirmedDestination = it
+                                addressSuggestions = emptyList()
+                                lookupStatus = ""
+                            },
                             label = { Text("Zieladresse") },
                             placeholder = { Text("Ort oder Adresse eingeben") },
                             singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = { destinationFocus.clearFocus() }),
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = {
+                                        destinationFocus.clearFocus()
+                                        val query = confirmedDestination.trim()
+                                        if (query.isNotBlank()) {
+                                            lookupRequest++
+                                            val requestId = lookupRequest
+                                            addressSuggestions = emptyList()
+                                            lookupStatus = "Adresse wird geprüft …"
+                                            DestinationLookup.search(this@MainActivity, query) { results ->
+                                                if (requestId == lookupRequest) {
+                                                    addressSuggestions = results.take(4)
+                                                    when (results.size) {
+                                                        0 -> lookupStatus = "Kein Treffer – bitte Adresse präzisieren"
+                                                        1 -> {
+                                                            confirmedDestination = results.first()
+                                                            addressSuggestions = emptyList()
+                                                            lookupStatus = "✓ Ziel geprüft"
+                                                        }
+                                                        else -> lookupStatus = "Passendes Ziel auswählen"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    enabled = confirmedDestination.isNotBlank(),
+                                    modifier = Modifier.testTag("setup_destination_lookup")
+                                ) {
+                                    Icon(Icons.Default.Check, contentDescription = "Zieladresse prüfen",
+                                        tint = if (lookupStatus.startsWith("✓")) Color(0xFF237A45)
+                                            else MaterialTheme.colorScheme.primary)
+                                }
+                            },
                             modifier = Modifier.fillMaxWidth().testTag("setup_destination_input")
                         )
-                        Row(Modifier.fillMaxWidth().testTag("destination_status_row"),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween) {
-                            Row(verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(if (lookupStatus.startsWith("✓")) "✓" else "?",
-                                    color = if (lookupStatus.startsWith("✓")) Color(0xFF237A45)
-                                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontWeight = FontWeight.Bold)
-                                Text(if (lookupStatus.startsWith("✓")) "Ziel geprüft"
-                                    else if (confirmedDestination.isNotBlank()) "Ziel eingetragen"
-                                    else "Ziel fehlt", style = MaterialTheme.typography.labelMedium)
-                            }
-                            TextButton(
-                                onClick = {
-                                    val query = confirmedDestination.trim().ifBlank { appointment?.location.orEmpty() }
-                                    lookupRequest++
-                                    val requestId = lookupRequest
-                                    addressSuggestions = emptyList()
-                                    lookupStatus = "Adresse wird geprüft …"
-                                    DestinationLookup.search(this@MainActivity, query) { results ->
-                                        if (requestId == lookupRequest) {
-                                            addressSuggestions = results
-                                            lookupStatus = if (results.isEmpty()) "Kein eindeutiger Treffer"
-                                                else "Treffer auswählen"
-                                        }
-                                    }
-                                },
-                                enabled = confirmedDestination.isNotBlank() || !appointment?.location.isNullOrBlank(),
-                                modifier = Modifier.testTag("setup_destination_lookup")
-                            ) { Text("Prüfen ↻", style = MaterialTheme.typography.labelMedium) }
-                        }
-                        if (lookupStatus.isNotBlank() && !lookupStatus.startsWith("✓")) {
-                            Text(lookupStatus, style = MaterialTheme.typography.labelSmall)
-                        }
                         addressSuggestions.take(4).forEach { suggestion ->
                             TextButton(
                                 onClick = {
@@ -724,9 +760,16 @@ class MainActivity : ComponentActivity() {
                                     confirmedDestination = suggestion
                                     addressSuggestions = emptyList()
                                     lookupStatus = "✓ Ziel übernommen"
+                                    destinationFocus.clearFocus()
                                 },
                                 modifier = Modifier.fillMaxWidth().testTag("setup_destination_suggestion")
                             ) { Text(suggestion) }
+                        }
+                        if (lookupStatus.isNotBlank()) {
+                            Text(lookupStatus,
+                                color = if (lookupStatus.startsWith("✓")) Color(0xFF237A45)
+                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.labelSmall)
                         }
                         Row(Modifier.fillMaxWidth().testTag("setup_location_status"),
                             verticalAlignment = Alignment.CenterVertically,
