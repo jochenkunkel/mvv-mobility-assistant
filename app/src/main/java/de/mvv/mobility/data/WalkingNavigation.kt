@@ -77,18 +77,9 @@ object WalkingNavigation {
     }
 
     fun nextTurn(route: WalkingRoute, position: Location): Pair<WalkingTurn, Int>? {
-        val turns = route.turns
-        if (turns.isEmpty()) return null
-        // Progress by proximity to turn points; avoid showing a fake precise instruction
-        // when the GPS fix is inaccurate.
+        // Never present a precise maneuver from an inaccurate or off-route GPS fix.
         if (position.hasAccuracy() && position.accuracy > 60f) return null
-        val distances = turns.map {
-            val results = FloatArray(1)
-            Location.distanceBetween(position.latitude, position.longitude, it.latitude, it.longitude, results)
-            results[0].toInt()
-        }
-        val nearest = distances.indices.minByOrNull { distances[it] } ?: return null
-        val next = if (distances[nearest] < 25 && nearest < turns.lastIndex) nearest + 1 else nearest
-        return turns[next] to distances[next]
+        return RouteProgress.nextTurn(route, position.latitude, position.longitude)
     }
+
 }
