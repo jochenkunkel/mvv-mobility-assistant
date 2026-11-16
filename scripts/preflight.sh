@@ -1,18 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Cheap deterministic checks; execute before Gradle or emulator startup.
+# Keep preflight deterministic and independent of the Android SDK.
 for script in scripts/*.sh; do
+  echo "Checking shell syntax: $script"
   bash -n "$script"
 done
-python3 - <<'PY'
-from pathlib import Path
-for path in Path("scripts").glob("*.sh"):
-    text = path.read_text()
-    parts = text.split("<<'PY'\n")
-    for index, part in enumerate(parts[1:], 1):
-        source = part.split("\nPY\n", 1)[0]
-        if "\nPY\n" not in part:
-            raise SystemExit(f"Unterminated Python heredoc: {path}")
-        compile(source, f"{path}:python-{index}", "exec")
-print("PASS: shell syntax and embedded Python syntax")
-PY
+# Compile standalone Python tools. Embedded heredocs are checked by bash -n
+# for shell syntax; Python syntax is exercised by the integration test stage.
+for script in scripts/*.py; do
+  echo "Checking Python syntax: $script"
+  python3 -m py_compile "$script"
+done
+echo "PASS: shell and Python syntax"
