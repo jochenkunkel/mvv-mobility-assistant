@@ -689,13 +689,13 @@ class MainActivity : ComponentActivity() {
                                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                         // GPS describes location freshness only, never MVV real-time departures.
                                         val gpsLabel = when {
-                                            usableLocation != null -> "GPS"
+                                            usableLocation != null -> "GPS LIVE"
                                             locationPermissionGranted -> "GPS …"
                                             else -> "GPS AUS"
                                         }
                                         val gpsColor = when {
                                             usableLocation != null -> Color(0xFF247A43)
-                                            locationPermissionGranted -> Color(0xFF8A641B)
+                                            locationPermissionGranted -> Color(0xFF6B7280)
                                             else -> Color(0xFFB3261E)
                                         }
                                         Row(Modifier.fillMaxWidth(),
