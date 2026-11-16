@@ -26,7 +26,11 @@ android {
         }
     }
     buildTypes {
+        getByName("debug") {
+            buildConfigField("boolean", "ENABLE_MVV_DEBUG_EXPORT", "true")
+        }
         getByName("release") {
+            buildConfigField("boolean", "ENABLE_MVV_DEBUG_EXPORT", "false")
             isMinifyEnabled = false
             if (!releaseKeystore.isNullOrBlank()) {
                 signingConfig = signingConfigs.getByName("stableRelease")
@@ -38,7 +42,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
     testOptions { unitTests.isReturnDefaultValues = true }
 }
 dependencies {
