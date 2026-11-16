@@ -256,6 +256,7 @@ class MainActivity : ComponentActivity() {
                         latitude = 48.137154
                         longitude = 11.576124
                     } else null) }
+                    val walkedTrack = remember { mutableStateListOf<Pair<Double, Double>>() }
                     var locationStatus by remember { mutableStateOf("Noch kein Standort abgerufen") }
                     var locationPermissionGranted by remember {
                         mutableStateOf(CurrentLocationRepository.hasPermission(this@MainActivity))
@@ -386,6 +387,21 @@ class MainActivity : ComponentActivity() {
                                         !substantiallyWorse
                                     if (acceptable) {
                                         location = found
+                                        if ((walkingOnlyDashboard || walkingNavigationOpen) &&
+                                            found.hasAccuracy() && found.accuracy <= 35f) {
+                                            val previousPoint = walkedTrack.lastOrNull()
+                                            val distance = previousPoint?.let { point ->
+                                                val from = Location("track").apply {
+                                                    latitude = point.first
+                                                    longitude = point.second
+                                                }
+                                                from.distanceTo(found)
+                                            }
+                                            if (distance == null || distance in 3f..60f) {
+                                                walkedTrack.add(found.latitude to found.longitude)
+                                                if (walkedTrack.size > 1500) walkedTrack.removeAt(0)
+                                            }
+                                        }
                                         locationClock = now
                                         locationStatus = "✓ Standort aktualisiert"
                                     } else {
@@ -1412,7 +1428,7 @@ class MainActivity : ComponentActivity() {
                                             shape = RoundedCornerShape(14.dp),
                                             color = Color.White
                                         ) {
-                                            WalkingMiniMap(route, location)
+                                            WalkingMiniMap(route, location, walkedTrack)
                                         }
                                     }
                                     Text("Karte: © OpenStreetMap-Mitwirkende · Violett: Fußweg · Standort violett",
@@ -1701,7 +1717,7 @@ class MainActivity : ComponentActivity() {
                                                                 .testTag("journey_walking_osm_minimap"),
                                                                 shape = RoundedCornerShape(14.dp),
                                                                 color = Color(0xFFF2EFFA)) {
-                                                                WalkingMiniMap(route, location)
+                                                                WalkingMiniMap(route, location, walkedTrack)
                                                             }
                                                         }
                                                     }
