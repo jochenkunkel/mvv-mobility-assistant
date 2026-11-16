@@ -487,10 +487,27 @@ class MainActivity : ComponentActivity() {
                             Text("Wohin?", style = MaterialTheme.typography.titleMedium)
                             TextButton(
                                 onClick = {
+                                    val home = homeAddress.trim()
                                     lookupRequest++
-                                    confirmedDestination = homeAddress.trim()
+                                    val requestId = lookupRequest
+                                    confirmedDestination = home
                                     addressSuggestions = emptyList()
-                                    lookupStatus = "Zuhause übernommen · bitte prüfen"
+                                    lookupStatus = "Zuhause wird automatisch geprüft …"
+                                    DestinationLookup.search(this@MainActivity, home) { results ->
+                                        if (requestId == lookupRequest && confirmedDestination == home) {
+                                            when (results.size) {
+                                                0 -> lookupStatus = "Zuhause konnte nicht eindeutig geprüft werden. Bitte Adresse kontrollieren."
+                                                1 -> {
+                                                    confirmedDestination = results.first()
+                                                    lookupStatus = "✓ Zuhause automatisch geprüft"
+                                                }
+                                                else -> {
+                                                    addressSuggestions = results
+                                                    lookupStatus = "Mehrere Adressen gefunden – bitte passende auswählen."
+                                                }
+                                            }
+                                        }
+                                    }
                                 },
                                 enabled = homeAddress.isNotBlank(),
                                 modifier = Modifier.testTag("setup_destination_home")
