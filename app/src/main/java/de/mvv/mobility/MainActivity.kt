@@ -218,6 +218,7 @@ class MainActivity : ComponentActivity() {
                     var expandedJourney by remember { mutableStateOf<Int?>(null) }
                     var dashboardJourney by remember { mutableStateOf<Int?>(null) }
                     var walkingRoute by remember { mutableStateOf<WalkingRoute?>(null) }
+                    var resolvedWalkingTarget by remember { mutableStateOf<Pair<String, de.mvv.mobility.data.StopPosition>?>(null) }
                     var walkingOnlyFallback by remember { mutableStateOf(false) }
                     var walkingOnlyDashboard by remember { mutableStateOf(false) }
                     var walkingRouteStatus by remember { mutableStateOf("") }
@@ -889,6 +890,7 @@ class MainActivity : ComponentActivity() {
                         LaunchedEffect(destination, journeyTimingMode, searchTimeMillis, plannedArrival, arrivalBufferMinutes, routeFilterMode, routeFilterQuery, walkingSpeed) {
                             searchGeneration++
                             journeyLoading = false
+                            if (resolvedWalkingTarget?.first != destination) resolvedWalkingTarget = null
                         }
                         val startWalkingFallback: (String) -> Unit = { reason ->
                             val start = usableLocation
@@ -899,10 +901,12 @@ class MainActivity : ComponentActivity() {
                                 val walkingId = ++walkingRequestId
                                 walkingRouteStatus = "Fußweg zum Ziel wird berechnet …"
                                 routeStatus = reason
-                                WalkingNavigation.fetch(this@MainActivity, start, destination) { walkResult ->
+                                WalkingNavigation.fetch(this@MainActivity, start, destination,
+                                    resolvedWalkingTarget?.takeIf { it.first == destination }?.second) { walkResult ->
                                     if (walkingId == walkingRequestId && walkingOnlyFallback) {
                                         walkingRoute = walkResult.getOrNull()
-                                        walkingRouteStatus = walkResult.exceptionOrNull()?.localizedMessage ?: ""
+                                        walkingRouteStatus = walkResult.exceptionOrNull()?.localizedMessage
+                                            ?: if (walkResult.getOrNull()?.estimatedDestination == true) "⚠ Zielposition anhand des Namens geschätzt – Karte prüfen" else ""
                                     }
                                 }
                             } else {
@@ -933,6 +937,7 @@ class MainActivity : ComponentActivity() {
                                         journeyLoading = false
                                         result.fold(
                                             onSuccess = {
+                                                it.destinationCoordinates?.let { point -> resolvedWalkingTarget = destination to point }
                                                 journeys = if (journeyTimingMode == "now") reachableNowJourneys(it.options, nowDepartureMillis ?: System.currentTimeMillis()) else it.options
                                                 if (journeys.isEmpty()) {
                                                     startWalkingFallback("Keine aktuell noch erreichbare ÖPNV-Verbindung. Bitte Suche erneut starten oder Fußweg zum Ziel prüfen.")
@@ -945,7 +950,8 @@ class MainActivity : ComponentActivity() {
                                                     walkingNavigationOpen = false
                                                     val walkingId = ++walkingRequestId
                                                     walkingRouteStatus = "Fußweg zum Ziel wird berechnet …"
-                                                    WalkingNavigation.fetch(this@MainActivity, start, destination) { walkResult ->
+                                                    WalkingNavigation.fetch(this@MainActivity, start, destination,
+                                    resolvedWalkingTarget?.takeIf { it.first == destination }?.second) { walkResult ->
                                                         if (walkingId == walkingRequestId &&
                                                             requestId == searchGeneration && walkingOnlyFallback) {
                                                             walkingRoute = walkResult.getOrNull()
@@ -1106,6 +1112,7 @@ class MainActivity : ComponentActivity() {
                                             journeyLoading = false
                                             result.fold(
                                                 onSuccess = {
+                                                    it.destinationCoordinates?.let { point -> resolvedWalkingTarget = destination to point }
                                                     journeys = it.options
                                                     if (it.options.isEmpty()) {
                                                         walkingOnlyFallback = true
@@ -1114,7 +1121,8 @@ class MainActivity : ComponentActivity() {
                                                         val walkingId = ++walkingRequestId
                                                         walkingRouteStatus = "Fußweg zum Ziel wird berechnet …"
                                                         routeStatus = "Keine passende ÖPNV-Verbindung. Fußweg zum Ziel wird geprüft."
-                                                        WalkingNavigation.fetch(this@MainActivity, start, destination) { walkResult ->
+                                                        WalkingNavigation.fetch(this@MainActivity, start, destination,
+                                    resolvedWalkingTarget?.takeIf { it.first == destination }?.second) { walkResult ->
                                                             if (walkingId == walkingRequestId && walkingOnlyFallback) {
                                                                 walkingRoute = walkResult.getOrNull()
                                                                 walkingRouteStatus = walkResult.exceptionOrNull()?.localizedMessage ?: ""
@@ -1127,7 +1135,8 @@ class MainActivity : ComponentActivity() {
                                                         walkingNavigationOpen = false
                                                         val walkingId = ++walkingRequestId
                                                         walkingRouteStatus = "Fußweg zum Ziel wird berechnet …"
-                                                        WalkingNavigation.fetch(this@MainActivity, start, destination) { walkResult ->
+                                                        WalkingNavigation.fetch(this@MainActivity, start, destination,
+                                    resolvedWalkingTarget?.takeIf { it.first == destination }?.second) { walkResult ->
                                                             if (walkingId == walkingRequestId &&
                                                                 requestId == searchGeneration && walkingOnlyFallback) {
                                                                 walkingRoute = walkResult.getOrNull()
@@ -1388,10 +1397,13 @@ class MainActivity : ComponentActivity() {
                                                     walkingRoute = null
                                                     walkingNavigationOpen = true
                                                     walkingRouteStatus = "Fußweg zum Ziel wird berechnet …"
-                                                    WalkingNavigation.fetch(this@MainActivity, start, finalWalkingDestination) { result ->
+                                                    WalkingNavigation.fetch(this@MainActivity, start, finalWalkingDestination,
+                                                        resolvedWalkingTarget?.takeIf { it.first == finalWalkingDestination }?.second
+                                                            ?: chosen.steps.lastOrNull()?.toStop) { result ->
                                                         if (walkingRequestId == requestId) {
                                                             walkingRoute = result.getOrNull()
-                                                            walkingRouteStatus = result.exceptionOrNull()?.localizedMessage ?: ""
+                                                            walkingRouteStatus = result.exceptionOrNull()?.localizedMessage
+                                                                ?: if (result.getOrNull()?.estimatedDestination == true) "⚠ Zielposition anhand des Namens geschätzt – Karte prüfen" else ""
                                                         }
                                                     }
                                                 },
@@ -1424,11 +1436,10 @@ class MainActivity : ComponentActivity() {
                                                     if (walkingRequestId == requestId) {
                                                         walkingRoute = result.getOrNull()
                                                         walkingRouteStatus = result.exceptionOrNull()?.localizedMessage
-                                                            ?: if (stop == null) "⚠ Position anhand des Haltestellennamens geschätzt – Karte prüfen" else ""
+                                                            ?: if (result.getOrNull()?.estimatedDestination == true) "⚠ Position anhand des Haltestellennamens geschätzt – Karte prüfen" else ""
                                                     }
                                                 }
-                                                if (stop != null) WalkingNavigation.fetch(start, stop, onRoute)
-                                                else WalkingNavigation.fetch(this@MainActivity, start, fallbackName!!, onRoute)
+                                                WalkingNavigation.fetch(this@MainActivity, start, fallbackName.orEmpty(), stop, onRoute)
                                             }, enabled = usableLocation != null && (stop != null || boarding.from.isNotBlank()),
                                                 modifier = Modifier.fillMaxWidth()) {
                                                 Text("🚶 Zum MVV-Einstiegspunkt navigieren")
@@ -1472,6 +1483,8 @@ class MainActivity : ComponentActivity() {
                                                         }
                                                     }
                                                     if (route != null) {
+                                                        if (route.estimatedDestination) Text("⚠ Zielposition geschätzt (Namenssuche) – Karte und Einstieg prüfen",
+                                                            color = MaterialTheme.colorScheme.error)
                                                         Text("Route: ca. ${route.totalMeters} m · GPS aktualisiert die Entfernung",
                                                             style = MaterialTheme.typography.labelSmall)
                                                         Text("Karte: © OpenStreetMap-Mitwirkende · Violett: Fußweg · Blau: Position",
