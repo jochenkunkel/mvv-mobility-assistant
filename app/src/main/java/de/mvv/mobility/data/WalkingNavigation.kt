@@ -10,7 +10,8 @@ import kotlin.math.*
 
 data class WalkingTurn(val instruction: String, val arrow: String, val latitude: Double,
     val longitude: Double, val distanceMeters: Int)
-data class WalkingRoute(val turns: List<WalkingTurn>, val totalMeters: Int, val path: List<Pair<Double, Double>> = emptyList())
+data class WalkingRoute(val turns: List<WalkingTurn>, val totalMeters: Int, val path: List<Pair<Double, Double>> = emptyList(),
+    val destination: StopPosition? = null)
 
 /** OSRM foot routing; never substitute a straight-line route for missing turn data. */
 object WalkingNavigation {
@@ -50,6 +51,28 @@ object WalkingNavigation {
                     connection.inputStream.bufferedReader().use { it.readText() }
                 } finally { connection.disconnect() }
                 parse(body)
+            }
+            android.os.Handler(android.os.Looper.getMainLooper()).post { callback(result) }
+        }.start()
+    }
+
+    /** Route directly to the EFA endpoint; never re-geocode a stop name. */
+    fun fetch(origin: Location, stop: StopPosition, callback: (Result<WalkingRoute>) -> Unit) {
+        Thread {
+            val result = runCatching {
+                val url = URL("https://routing.openstreetmap.de/routed-foot/route/v1/driving/" +
+                    "${origin.longitude},${origin.latitude};${stop.longitude},${stop.latitude}" +
+                    "?overview=full&geometries=geojson&steps=true")
+                val connection = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 8000
+                    readTimeout = 8000
+                    setRequestProperty("User-Agent", "MeinWeg2/0.2 Android foot navigation")
+                }
+                val body = try {
+                    check(connection.responseCode in 200..299) { "Routingdienst nicht erreichbar" }
+                    connection.inputStream.bufferedReader().use { it.readText() }
+                } finally { connection.disconnect() }
+                parse(body).copy(destination = stop)
             }
             android.os.Handler(android.os.Looper.getMainLooper()).post { callback(result) }
         }.start()
