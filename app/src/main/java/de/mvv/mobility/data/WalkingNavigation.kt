@@ -18,7 +18,7 @@ object WalkingNavigation {
         Thread {
             val result = runCatching {
                 @Suppress("DEPRECATION")
-                val matches = Geocoder(context).getFromLocationName("$stopName, München, Deutschland", 3)
+                val matches = Geocoder(context).getFromLocationName(MobilityProviderConfig.geocodingQuery(stopName), 3)
                     ?: emptyList()
                 val destination = matches.firstOrNull()
                     ?: error("Haltestelle konnte nicht lokalisiert werden")
