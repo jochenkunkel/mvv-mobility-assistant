@@ -26,4 +26,13 @@ class LocationFreshnessTest {
     @Test fun unsetTimestampIsRejected() {
         assertFalse(LocationFreshness.isFresh(0L, now))
     }
+    @Test fun monotonicFreshnessAcceptsBoundary() {
+        assertTrue(LocationFreshness.isFreshElapsed(1_000_000_000L, 121_000_000_000L))
+    }
+
+    @Test fun monotonicFreshnessRejectsOldAndFutureFixes() {
+        assertFalse(LocationFreshness.isFreshElapsed(1_000_000_000L, 121_001_000_000L))
+        assertFalse(LocationFreshness.isFreshElapsed(3_000_000_000L, 2_000_000_000L))
+    }
+
 }
