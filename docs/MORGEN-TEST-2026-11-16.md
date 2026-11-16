@@ -114,3 +114,8 @@ Diese Liste bündelt die noch offenen Punkte aus `IMPLEMENTATION-ROADMAP.md`, `C
 - Commits `e5c3c733`, `895d99cf`, `9ca3fc6b`: In debuggable APKs wird die letzte MVV-HTTP-Antwort (maximal 512 KB) nur im Arbeitsspeicher erfasst. Auf Verbindungen erscheint nach einer Anfrage die Aktion `🐞 MVV-Debugantwort speichern`; Androids CreateDocument-Auswahl speichert die Antwort als `meinweg-mvv-debug.json` an einem vom Nutzer gewählten Ort. Keine automatische Datei, keine Freigabe ohne Nutzeraktion; Release-App zeigt keinen Exportknopf.
 - Datenschutz: Rohantwort kann GPS-Koordinaten, Zieladresse und andere personenbezogene Daten enthalten. Vor dem Hochladen/Teilen prüfen und gegebenenfalls schwärzen. Die Datei wird nicht anonymisiert.
 - Tests offen: Android-Build, Export nach erfolgreicher Antwort und nach Parserfehler, Android-Dateiauswahl abbrechen, 512-KB-Grenze, Debug-Button in Release unsichtbar. Für die Parserreparatur eine anonymisierte echte JSON-Antwort verwenden.
+
+## 16.11.2026 – Fußweg als vollwertige „Meine Fahrt“
+- Screenshot 07:52: Fußweg-Fallback zeigt 198 m, aber keinen Einstieg ins Dashboard; GPS vorübergehend nicht aktuell.
+- Commit `1aba90d4`: Karte „Nur zu Fuß“ bietet „Als meine Fahrt öffnen“; neue Dashboard-Ansicht zeigt Ziel, OSM-Distanz, nächsten Abbiegehinweis bei frischem GPS und GPS-Fallback-Hinweis ohne Route zu verwerfen. Zurücknavigation zu Verbindungen.
+- Offene Abnahme: Build, Fußwegkarte→Dashboard, GPS-Ausfall und Wiederkehr, Zielwechsel während offener Fußwegfahrt, Neuplanung und Fahrtdashboard bei ÖPNV. Reine Fußwege aus erfolgreich geparsten MVV-Trips brauchen ggf. denselben expliziten Einstieg; aktuell ist der neue Knopf auf den OSM-Fallback begrenzt.
