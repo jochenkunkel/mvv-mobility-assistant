@@ -40,6 +40,13 @@ fun recommendedLeaveMillis(
     val start = when {
         firstWalking != null -> journeyClockMillis(firstWalking.departure, appointmentTargetMillis)
             ?: journeyClockMillis(journey.departure, appointmentTargetMillis)
+            // Some MVV responses omit the walking departure clock entirely.
+            // Use the first vehicle time minus the summed access legs instead of "–".
+            ?: firstVehicle?.let { vehicle ->
+                journeyClockMillis(vehicle.departure, appointmentTargetMillis)?.minus(
+                    journey.steps.takeWhile { it.walking }.sumOf { it.minutes.coerceAtLeast(0) } * 60_000L
+                )
+            }
         firstVehicle != null -> journeyClockMillis(firstVehicle.departure, appointmentTargetMillis)
             ?.minus(journey.walkingMinutes.coerceAtLeast(0) * 60_000L)
         else -> journeyClockMillis(journey.departure, appointmentTargetMillis)
