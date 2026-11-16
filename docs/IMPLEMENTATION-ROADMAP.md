@@ -1,5 +1,17 @@
 # Mein Weg 2.0 – Entwicklungs- und Freigabeplan
 
+> **Aktueller Abgleich (16.11.2026):** Die Phasenstände und die Tabelle unten sind
+> historische Planungs-Snapshots vom 15.11.2026, **kein aktueller Nachweis**
+> des Repository-Zustands. Inzwischen existieren OSRM-Fußwegrouting,
+> Abbiegeanweisungen, eine OSM-Minimap sowie erste Routengeometrie-Korrekturen
+> in `main` (Commits `f38ef6e` und `5a40a25`). Das ist **implementiert**,
+> aber ohne vollständige CI-, Screenshot- und Geräte-Abnahme **nicht freigegeben**.
+> Verbindliche offene Fehler und Abnahmekriterien stehen in
+> [CODE-REVIEW-2026-11-16.md](CODE-REVIEW-2026-11-16.md) und den
+> [GitHub-Issues](https://github.com/jochenkunkel/mvv-mobility-assistant/issues).
+> Insbesondere Phase 5 „echte Navigation offen“ bedeutet heute:
+> *Prototyp vorhanden, Zuverlässigkeit und Freigabe offen*.
+
 Stand: 15.11.2026. **Ausführungsplan** zum verbindlichen Anforderungskatalog [COCKPIT-V2-PLAN.md](COCKPIT-V2-PLAN.md). Dieser Plan dokumentiert Vorgehen und Abnahmekriterien, keine Zusage autonomer Hintergrundentwicklung.
 
 ## Ziel und Arbeitsregeln
