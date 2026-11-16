@@ -58,38 +58,46 @@ object CurrentLocationRepository {
             return {}
         }
         val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val provider = when {
-            manager.isProviderEnabled(LocationManager.GPS_PROVIDER) &&
-                context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ->
-                LocationManager.GPS_PROVIDER
-            manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
-            else -> null
-        }
-        if (provider == null) {
+        // Listen to GPS and network concurrently. GPS-only updates can pause for
+        // tens of seconds outdoors/near buildings even when network fixes exist.
+        val fine = context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED
+        val providers = listOfNotNull(
+            LocationManager.GPS_PROVIDER.takeIf { fine && manager.isProviderEnabled(it) },
+            LocationManager.NETWORK_PROVIDER.takeIf { manager.isProviderEnabled(it) }
+        )
+        if (providers.isEmpty()) {
             onResult(null)
             return {}
         }
-        val listener = LocationListener { location -> onResult(location) }
-        return try {
-            manager.requestLocationUpdates(provider, 5000L, 3f, listener, Looper.getMainLooper())
-            // Show a recent cached fix while awaiting the first fresh update.
-            @Suppress("DEPRECATION")
-            val cached = manager.getLastKnownLocation(provider)
-            if (cached != null && LocationFreshness.isFresh(cached.time, System.currentTimeMillis()) &&
-                System.currentTimeMillis() - cached.time < 30_000L) {
-                onResult(cached)
+        val listener = LocationListener { fix -> onResult(fix) }
+        val registered = mutableListOf<String>()
+        for (provider in providers) {
+            try {
+                manager.requestLocationUpdates(provider, 5000L, 3f, listener, Looper.getMainLooper())
+                registered.add(provider)
+            } catch (_: SecurityException) {
+                // A coarse-only permission must not break the other provider.
+            } catch (_: IllegalArgumentException) {
+                // Provider may have become unavailable between checks.
             }
-            val stop: () -> Unit = { manager.removeUpdates(listener) }
-            stop
-        } catch (_: SecurityException) {
-            onResult(null)
-            val stop: () -> Unit = {}
-            stop
-        } catch (_: IllegalArgumentException) {
-            onResult(null)
-            val stop: () -> Unit = {}
-            stop
         }
+        if (registered.isEmpty()) {
+            onResult(null)
+            return {}
+        }
+        // Prefer the newest sufficiently accurate cached fix across providers.
+        val cached = registered.mapNotNull { provider ->
+            runCatching {
+                @Suppress("DEPRECATION")
+                manager.getLastKnownLocation(provider)
+            }.getOrNull()
+        }.filter { LocationFreshness.isFresh(it.time, System.currentTimeMillis()) &&
+            System.currentTimeMillis() - it.time < 30_000L
+        }.maxByOrNull { it.time }
+        if (cached != null) onResult(cached)
+        val stop: () -> Unit = { manager.removeUpdates(listener) }
+        return stop
     }
 
 }
