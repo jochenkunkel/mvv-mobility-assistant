@@ -47,6 +47,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Guard workflow concurrency policy
+        run: python3 scripts/test-ci-concurrency.py
       - name: Check shell and embedded Python before any build (verbose diagnostics)
         run: |
           bash -x scripts/preflight.sh
