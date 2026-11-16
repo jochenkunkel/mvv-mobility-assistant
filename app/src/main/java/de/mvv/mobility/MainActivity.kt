@@ -134,6 +134,7 @@ class MainActivity : ComponentActivity() {
                             UpcomingAppointment("Testtermin $index", "Olympiapark München", fixtureBaseTime + index * 3600000L)
                         } else if (allowed) DeviceCalendarRepository.appointments(this, visibleAppointments) else emptyList()
                     }
+                    var arrivalBufferMinutes by remember { mutableIntStateOf(getPreferences(MODE_PRIVATE).getInt("arrival_buffer_minutes", 10).coerceIn(5, 60)) }
                     // The calendar must never influence "Jetzt" or "Geplant".
                     var journeyTimingMode by remember { mutableStateOf<String?>(null) }
                     var plannedArrival by remember { mutableStateOf(false) }
@@ -213,7 +214,7 @@ class MainActivity : ComponentActivity() {
                     var homeAddress by remember { mutableStateOf(settings.getString("home_address", "") ?: "") }
                     var homeSaved by remember { mutableStateOf(homeAddress.isNotBlank()) }
                     var languageChoice by remember { mutableStateOf(settings.getString("language_choice", "system") ?: "system") }
-                    var arrivalBufferMinutes by remember { mutableIntStateOf(settings.getInt("arrival_buffer_minutes", 10).coerceIn(5, 60)) }
+
                     var mvvCandidates by remember { mutableStateOf<List<MvvJourneyRepository.StopCandidate>>(emptyList()) }
                     var location by remember { mutableStateOf<Location?>(if (fixture) Location("test").apply {
                         latitude = 48.137154
