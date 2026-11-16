@@ -253,7 +253,8 @@ object MvvJourneyRepository {
         return results
     }
     data class StopCandidate(val id: String, val name: String, val quality: Int)
-    data class ResolvedJourney(val options: List<JourneyOption>, val destination: StopCandidate)
+    data class ResolvedJourney(val options: List<JourneyOption>, val destination: StopCandidate,
+        val destinationCoordinates: StopPosition? = null)
     class AmbiguousDestination(val candidates: List<StopCandidate>) :
         IllegalStateException("Mehrere MVV-Ziele gefunden. Bitte die passende Haltestelle auswählen.")
 
@@ -357,7 +358,7 @@ object MvvJourneyRepository {
                 trips = if (arrivalByMillis != null) selectAppointmentJourneys(trips, arrivalByMillis)
                     else (if (startNowMillis != null) reachableNowJourneys(trips, startNowMillis) else trips).take(3)
                 val destination = StopCandidate(coordinates, first.getAddressLine(0) ?: address, 0)
-                callback(Result.success(ResolvedJourney(trips, destination)))
+                callback(Result.success(ResolvedJourney(trips, destination, StopPosition(first.latitude, first.longitude))))
             } catch (e: Exception) { callback(Result.failure(e)) }
         }.start()
     }
