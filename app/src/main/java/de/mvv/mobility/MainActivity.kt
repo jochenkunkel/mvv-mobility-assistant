@@ -1162,28 +1162,102 @@ class MainActivity : ComponentActivity() {
                             (journeys.isEmpty() || bestTransitMinutes != null &&
                                 directWalkMinutes < bestTransitMinutes)
                         if (walkingOnlyFallback && (journeys.isEmpty() || walkingFaster)) {
-                            Card(modifier = Modifier.fillMaxWidth().testTag("walking_only_fallback")) {
-                                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Text(if (walkingFaster && journeys.isNotEmpty()) "🚶 Empfehlung: Zu Fuß schneller" else "🚶 Nur zu Fuß", style = MaterialTheme.typography.titleLarge)
-                                    if (directWalkMinutes != null) Text("Gehzeit ca. $directWalkMinutes Min." + (bestTransitMinutes?.let { " · ÖPNV ca. $it Min." } ?: ""))
-                                    Text("Fußweg als Alternative ab aktuellem Standort zum Ziel: $destination")
+                            Card(
+                                modifier = Modifier.fillMaxWidth().testTag("walking_only_fallback"),
+                                shape = RoundedCornerShape(22.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFECE7FF))
+                            ) {
+                                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                                    Text(if (walkingFaster && journeys.isNotEmpty())
+                                        "🚶 ZU FUSS SCHNELLER" else "🚶 FUSSWEG-ALTERNATIVE",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold, color = Color(0xFF49309B))
+                                    Row(verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        Text("🚶", style = MaterialTheme.typography.headlineLarge)
+                                        Column {
+                                            Text("Nur zu Fuß", style = MaterialTheme.typography.headlineSmall,
+                                                fontWeight = FontWeight.Bold)
+                                            Text("Direkt zum Ziel", style = MaterialTheme.typography.bodySmall,
+                                                color = Color(0xFF665B79))
+                                        }
+                                    }
+                                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        modifier = Modifier.fillMaxWidth()) {
+                                        Surface(shape = RoundedCornerShape(14.dp), color = Color.White,
+                                            modifier = Modifier.weight(1f)) {
+                                            Column(Modifier.padding(12.dp)) {
+                                                Text("◷  GEHZEIT", style = MaterialTheme.typography.labelSmall,
+                                                    color = Color(0xFF665B79))
+                                                Text(directWalkMinutes?.let { "$it Min." } ?: "–",
+                                                    style = MaterialTheme.typography.titleLarge,
+                                                    fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                        Surface(shape = RoundedCornerShape(14.dp), color = Color.White,
+                                            modifier = Modifier.weight(1f)) {
+                                            Column(Modifier.padding(12.dp)) {
+                                                Text("↗  STRECKE", style = MaterialTheme.typography.labelSmall,
+                                                    color = Color(0xFF665B79))
+                                                Text(walkingRoute?.let { "${it.totalMeters} m" } ?: "–",
+                                                    style = MaterialTheme.typography.titleLarge,
+                                                    fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                    }
+                                    if (bestTransitMinutes != null) {
+                                        Text("🚌 ÖPNV im Vergleich: ca. $bestTransitMinutes Min.",
+                                            style = MaterialTheme.typography.bodySmall)
+                                    }
+                                    Surface(shape = RoundedCornerShape(14.dp), color = Color.White,
+                                        modifier = Modifier.fillMaxWidth()) {
+                                        Column(Modifier.padding(14.dp),
+                                            verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                                            Text("📍 ZIEL", style = MaterialTheme.typography.labelSmall,
+                                                color = Color(0xFF665B79), fontWeight = FontWeight.Bold)
+                                            Text(destination, style = MaterialTheme.typography.bodyMedium,
+                                                maxLines = 3)
+                                        }
+                                    }
                                     if (walkingRoute != null) {
-                                        Text("Fußroute: ca. ${walkingRoute!!.totalMeters} m")
-                                        val next = navigationLocation?.let { WalkingNavigation.nextTurn(walkingRoute!!, it) }
-                                        if (next != null) {
-                                            Text("${next.first.arrow} ${next.first.instruction} · ${next.second} m",
-                                                style = MaterialTheme.typography.titleMedium)
-                                        } else Text("Für Abbiegehinweise wird ein aktueller GPS-Standort benötigt.")
+                                        val next = navigationLocation?.let {
+                                            WalkingNavigation.nextTurn(walkingRoute!!, it)
+                                        }
+                                        Surface(shape = RoundedCornerShape(14.dp),
+                                            color = Color(0xFFDCD2FB), modifier = Modifier.fillMaxWidth()) {
+                                            Row(Modifier.padding(14.dp),
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                                verticalAlignment = Alignment.CenterVertically) {
+                                                Text(next?.first?.arrow ?: "⌖",
+                                                    style = MaterialTheme.typography.headlineLarge,
+                                                    color = Color(0xFF49309B))
+                                                Column {
+                                                    Text("NÄCHSTER SCHRITT",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = Color(0xFF49309B))
+                                                    Text(next?.first?.instruction ?: "Warte auf GPS",
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        fontWeight = FontWeight.Bold)
+                                                    Text(next?.let { "In ${it.second} m" }
+                                                        ?: "Aktueller Standort erforderlich",
+                                                        style = MaterialTheme.typography.bodySmall)
+                                                }
+                                            }
+                                        }
                                         Button(
-                                            modifier = Modifier.fillMaxWidth().testTag("open_walking_only_dashboard"),
+                                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
+                                                .testTag("open_walking_only_dashboard"),
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5635B1)),
                                             onClick = {
                                                 walkingOnlyDashboard = true
                                                 walkingNavigationOpen = true
                                                 selectedTab = CockpitTab.JOURNEY
                                             }
-                                        ) { Text("🚶 Als meine Fahrt öffnen") }
+                                        ) { Text("🚶 Navigation starten  →") }
                                         Text("OSM-Fußwegführung ist experimentell. Bitte Weg und Ziel prüfen.",
-                                            style = MaterialTheme.typography.labelSmall)
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Color(0xFF665B79))
                                     } else {
                                         if (walkingRouteStatus.startsWith("Fußweg zum Ziel wird")) {
                                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
