@@ -654,13 +654,29 @@ class MainActivity : ComponentActivity() {
                         }
                         if (!settingsExpanded && (selectedTab == CockpitTab.CONNECTIONS || (fixture && !visualFixture))) {
                         Text("Verbindungen", style = MaterialTheme.typography.titleLarge)
-                        Button(
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("mvv_search_button"),
-                            shape = RoundedCornerShape(18.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5635B1)),
-                            enabled = usableLocation != null && destination.isNotBlank() && !journeyLoading && (routeFilterMode == RouteFilterMode.ANY || routeFilterQuery.isNotBlank()),
-                            onClick = searchConnections
-                        ) { Text(if (journeyLoading) "Suche läuft …" else "Verbindung finden") }
+                        // Start already launched the search before switching tabs. Do not
+                        // demand a second identical primary click on the results screen.
+                        // Keep an explicit retry action after completion or changed inputs.
+                        if (journeyLoading) {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth().testTag("mvv_search_loading"))
+                            Text("Verbindungen werden gesucht …", style = MaterialTheme.typography.labelMedium)
+                        } else if (routeStatus.isNotBlank() || journeys.isNotEmpty()) {
+                            TextButton(
+                                modifier = Modifier.testTag("mvv_search_button"),
+                                enabled = usableLocation != null && destination.isNotBlank() &&
+                                    (routeFilterMode == RouteFilterMode.ANY || routeFilterQuery.isNotBlank()),
+                                onClick = searchConnections
+                            ) { Text("↻ Verbindung erneut suchen") }
+                        } else {
+                            Button(
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("mvv_search_button"),
+                                shape = RoundedCornerShape(18.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5635B1)),
+                                enabled = usableLocation != null && destination.isNotBlank() &&
+                                    (routeFilterMode == RouteFilterMode.ANY || routeFilterQuery.isNotBlank()),
+                                onClick = searchConnections
+                            ) { Text("Verbindung finden") }
+                        }
                         mvvCandidates.forEach { candidate ->
                             OutlinedButton(
                                 modifier = Modifier.fillMaxWidth(),
