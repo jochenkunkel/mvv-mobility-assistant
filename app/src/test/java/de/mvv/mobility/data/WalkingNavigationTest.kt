@@ -17,6 +17,33 @@ class WalkingNavigationTest {
         assertEquals(100, route.turns[0].distanceMeters)
     }
 
+
+    @Test fun preservesGeoJsonFootPathCoordinatesInLatitudeLongitudeOrder() {
+        // OSRM GeoJSON uses [longitude, latitude], while Android Location uses latitude/longitude.
+        val json = """{"code":"Ok","routes":[{"distance":120.2,
+            "geometry":{"type":"LineString","coordinates":[[11.5001,48.1002],[11.5013,48.1014]]},
+            "legs":[{"steps":[
+                {"distance":120.2,"maneuver":{"type":"depart","modifier":"straight","location":[11.5001,48.1002]}}
+            ]}]}]}"""
+        val route = WalkingNavigation.parse(json)
+        assertEquals(120, route.totalMeters)
+        assertEquals(2, route.path.size)
+        assertEquals(48.1002, route.path[0].first, 0.0000001)
+        assertEquals(11.5001, route.path[0].second, 0.0000001)
+        assertEquals(48.1014, route.path[1].first, 0.0000001)
+        assertEquals(11.5013, route.path[1].second, 0.0000001)
+    }
+
+    @Test fun rejectsEmptyManeuverListInsteadOfDisplayingFakeRoute() {
+        val json = """{"code":"Ok","routes":[{"distance":0,"legs":[{"steps":[]}]}]}"""
+        try {
+            WalkingNavigation.parse(json)
+            throw AssertionError("A route without turn steps must be rejected")
+        } catch (expected: IllegalStateException) {
+            assertTrue(expected.message!!.contains("Keine Abbiegeanweisungen"))
+        }
+    }
+
     @Test fun rejectsMissingRoutes() {
         try {
             WalkingNavigation.parse("""{"code":"NoRoute","routes":[]}""")
