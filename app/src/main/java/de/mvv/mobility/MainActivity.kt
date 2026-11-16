@@ -202,8 +202,8 @@ class MainActivity : ComponentActivity() {
                         LocationFreshness.isFresh(it.time, locationClock)
                     }
                     val navigationLocation = usableLocation?.takeIf {
-                        fixture || (locationClock - it.time <= 20_000L &&
-                            (!it.hasAccuracy() || it.accuracy <= 60f))
+                        fixture || (locationClock - it.time <= 45_000L &&
+                            (!it.hasAccuracy() || it.accuracy <= 80f))
                     }
                     val locationAgeSeconds = location?.takeIf { !fixture && it.time > 0L }
                         ?.let { ((locationClock - it.time).coerceAtLeast(0L) / 1000L) }
@@ -876,7 +876,8 @@ class MainActivity : ComponentActivity() {
                                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                         // GPS describes location freshness only, never MVV real-time departures.
                                         val gpsLabel = when {
-                                            navigationLocation != null -> "GPS LIVE"
+                                            navigationLocation != null && (locationAgeSeconds ?: 0L) <= 15L -> "GPS LIVE"
+                                            navigationLocation != null -> "GPS ${locationAgeSeconds ?: 0}s · letzte Position"
                                             location != null -> "GPS ${locationAgeSeconds ?: 0}s"
                                             locationPermissionGranted && location != null -> "GPS ALT"
                                             locationPermissionGranted -> "GPS …"
