@@ -110,3 +110,9 @@ Heimadresse ist personenbezogen und wird lokal in App-Preferences gespeichert; a
 - **Wichtige Grenze:** Ein Wechsel der Stadt in der Konfiguration aktiviert **keine** Berlin-Unterstützung. Dafür braucht es einen echten BVG/VBB-Adapter, Geocoding-/Routingtests, regionale Tarif-/Zeitregeln und eigene Geräteabnahme. Der aktuelle MVV-Repository-Code ist noch nicht in ein Interface extrahiert.
 - **Reihenfolge:** Erst München stabilisieren (Busausstieg, Anschluss-Fußweg, reine Fußwege, CI, Geräteabnahme); danach Provider-Interface und MVV-Adapter schrittweise extrahieren; erst dann Berlin.
 - **Teststatus:** Diese Vorbereitungen sind committed, aber nicht als grüner Android-Build oder vollständig getestete Provider-Abstraktion bestätigt.
+
+### ADR-007 – Debug-Funktionen über zentrale Build-Konfiguration
+- **Status:** Vorbereitet, CI/Android-Build noch zu prüfen (16.11.2026).
+- **Entscheidung:** Debug-Export bleibt im Source Code und wird über die BuildConfig-Konstante `ENABLE_MVV_DEBUG_EXPORT` gesteuert; in `debug` true, in `release` false. Zusätzlich muss `BuildConfig.DEBUG` gelten.
+- **Umgesetzt:** `app/build.gradle.kts` aktiviert `buildConfig` und definiert beide Build-Typen; `MainActivity.kt` zeigt den Export nur bei aktivem Flag; `DebugResponseCapture.kt` prüft denselben Schutz bei Aufnahme und Abruf der Rohantwort. Commits `5f7d1117`, `a586f1eb`, `13ac8ed6`.
+- **Sicherheit:** Rohantwort enthält möglicherweise Standort- und Zielinformationen; keine automatische Übertragung und kein Release-Export. Nutzer exportiert über Android-Dateiauswahl. **Noch offen:** Build/Unit-Test und UI-Test für beide Varianten, Prüfung von gespeicherten Rohdaten und Exportformat.
