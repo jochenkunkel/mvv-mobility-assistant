@@ -12,6 +12,37 @@
 > Insbesondere Phase 5 „echte Navigation offen“ bedeutet heute:
 > *Prototyp vorhanden, Zuverlässigkeit und Freigabe offen*.
 
+## Aktueller Arbeitsstand und Chat-Übergabe (16.11.2026)
+
+**GitHub `main` ist die einzige verbindliche technische Quelle.** Andere Chats im
+Projekt können auf denselben Code und diese Dokumentation Bezug nehmen; es
+besteht jedoch **keine garantierte automatische Echtzeit-Synchronisation**
+ihrer Nachrichten, internen Pläne oder parallelen Änderungen. Vor Änderungen
+immer `main`, Issues und CI neu prüfen. Keine Chat-Aussage ersetzt einen
+Commit oder Testnachweis.
+
+**Nach dem ursprünglichen Audit auf `main` umgesetzt:**
+- NAV-01: routenrelative Abbiegeauswahl mit Regressionstests
+  (`f38ef6e`; Issue #2 geschlossen, Geräteabnahme weiterhin erforderlich).
+- NAV-02: Segmentprojektion für die Kartenrichtung samt Unit-Tests
+  (`5a40a25`; Issue #3 offen).
+- DOC-01: historische Roadmap als Snapshot gekennzeichnet
+  (`158a151`; Issue #10 offen).
+- CI-01: Android-Lint bei jedem Push/PR statt nur beim Release
+  (`fe7ee3b`; Issue #8 offen).
+- LOC-01: monotone GPS-Freshness für zwischengespeicherte Positionen und Tests
+  (`206e549`; Issue #6 offen).
+
+**Nicht als abgeschlossen bestätigt:** NAV-03 (#4), TIME-01 (#5),
+ARCH-01 (#7), TEST-01 (#9), PRIV-01 (#11), sowie die übrigen
+Abnahmekriterien der oben genannten Teilfixes. Der Code-Review vom
+16.11.2026 ist ein **historischer Audit-Befund**; seine damalige
+Prioritätenliste darf nicht ungeprüft als aktueller Ticketstatus gelesen werden.
+
+**Freigabestatus:** Für die oben genannten jüngsten Commits ist hier kein
+vollständiger grüner CI-Lauf, Emulator-Screenshotvergleich oder realer
+Gerätetest nachgewiesen. Deshalb keine pauschale Produktionsfreigabe.
+
 Stand: 15.11.2026. **Ausführungsplan** zum verbindlichen Anforderungskatalog [COCKPIT-V2-PLAN.md](COCKPIT-V2-PLAN.md). Dieser Plan dokumentiert Vorgehen und Abnahmekriterien, keine Zusage autonomer Hintergrundentwicklung.
 
 ## Ziel und Arbeitsregeln
