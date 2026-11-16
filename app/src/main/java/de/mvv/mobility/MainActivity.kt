@@ -44,6 +44,7 @@ import de.mvv.mobility.data.WalkingRoute
 import de.mvv.mobility.data.DeviceCalendarRepository
 import de.mvv.mobility.data.DestinationLookup
 import de.mvv.mobility.data.MvvJourneyRepository
+import de.mvv.mobility.data.isCurrentSearchResponse
 import de.mvv.mobility.data.JourneyOption
 import de.mvv.mobility.data.RouteFilterMode
 import de.mvv.mobility.data.RoutePreference
@@ -569,7 +570,7 @@ class MainActivity : ComponentActivity() {
                         Spacer(Modifier.height(1.dp).bringIntoViewRequester(connectionsAnchor))
                         }
                         val destination = confirmedDestination.trim().ifBlank { appointment?.location?.trim().orEmpty() }
-                        LaunchedEffect(destination, appointment?.startMillis, arrivalBufferMinutes, routeFilterMode, routeFilterQuery, walkingSpeed) {
+                        LaunchedEffect(destination, appointment?.startMillis, arrivalBufferMinutes, routeFilterMode, routeFilterQuery, walkingSpeed, usableLocation?.latitude, usableLocation?.longitude, usableLocation?.time) {
                             searchGeneration++
                             journeyLoading = false
                         }
@@ -588,7 +589,7 @@ class MainActivity : ComponentActivity() {
                                     routeStatus = "Testverbindung geladen"
                                 } else MvvJourneyRepository.searchAddress(this@MainActivity, start, destination, walkingSpeed, callback = { result ->
                                     runOnUiThread {
-                                        if (requestId != searchGeneration) return@runOnUiThread
+                                        if (!isCurrentSearchResponse(requestId, searchGeneration)) return@runOnUiThread
                                         journeyLoading = false
                                         result.fold(
                                             onSuccess = {
@@ -641,7 +642,7 @@ class MainActivity : ComponentActivity() {
                                     routeStatus = "Prüfe MVV-Haltestelle ${candidate.name} …"
                                     MvvJourneyRepository.search(start, destination, walkingSpeed, { result ->
                                         runOnUiThread {
-                                            if (requestId != searchGeneration) return@runOnUiThread
+                                            if (!isCurrentSearchResponse(requestId, searchGeneration)) return@runOnUiThread
                                             journeyLoading = false
                                             result.fold(
                                                 onSuccess = {
