@@ -35,9 +35,9 @@ class MvvSingleWalkingTripTest {
     }
 
     @Test fun multipleTripsArrayIsParsed() {
-        val response = walkingResponse.replace(
-            "\"trip\":{", "\"trip\":[{"
-        ).replace("\"type\":\"100\"}\n            }]\n          }}", "\"type\":\"100\"}\n            }]\n          }]}")
-        assertEquals(1, MvvJourneyRepository.parseTrips(response, 3f).size)
+        val root = org.json.JSONObject(walkingResponse)
+        val trip = root.getJSONObject("trips").getJSONObject("trip")
+        root.getJSONObject("trips").put("trip", org.json.JSONArray().put(trip))
+        assertEquals(1, MvvJourneyRepository.parseTrips(root.toString(), 3f).size)
     }
 }
