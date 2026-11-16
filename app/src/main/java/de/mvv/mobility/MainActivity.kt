@@ -1314,7 +1314,7 @@ class MainActivity : ComponentActivity() {
                                             shape = RoundedCornerShape(14.dp),
                                             color = Color.White
                                         ) {
-                                            WalkingMiniMap(route, navigationLocation)
+                                            WalkingMiniMap(route, location)
                                         }
                                     }
                                     Text("Karte: © OpenStreetMap-Mitwirkende · Violett: Fußweg · Standort violett",
@@ -1600,7 +1600,7 @@ class MainActivity : ComponentActivity() {
                                                                 .testTag("journey_walking_osm_minimap"),
                                                                 shape = RoundedCornerShape(14.dp),
                                                                 color = Color(0xFFF2EFFA)) {
-                                                                WalkingMiniMap(route, navigationLocation)
+                                                                WalkingMiniMap(route, location)
                                                             }
                                                         }
                                                     }
