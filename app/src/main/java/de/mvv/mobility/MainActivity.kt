@@ -129,6 +129,7 @@ class MainActivity : ComponentActivity() {
                     var expandedJourney by remember { mutableStateOf<Int?>(null) }
                     var dashboardJourney by remember { mutableStateOf<Int?>(null) }
                     var walkingRoute by remember { mutableStateOf<WalkingRoute?>(null) }
+                    var walkingOnlyFallback by remember { mutableStateOf(false) }
                     var walkingRouteStatus by remember { mutableStateOf("") }
                     var walkingNavigationOpen by remember { mutableStateOf(false) }
                     var walkingRequestId by remember { mutableIntStateOf(0) }
@@ -613,6 +614,8 @@ class MainActivity : ComponentActivity() {
                                 journeyLoading = true
                                 journeys = emptyList()
                                 mvvCandidates = emptyList()
+                                walkingOnlyFallback = false
+                                walkingNavigationOpen = false
                                 routeStatus = "MVV-Ziel wird geprüft …"
                                 if (fixture) {
                                     journeys = filterJourneys(MvvJourneyRepository.parseTrips("""{"trips":[{"legs":[{"origin":{"dateTime":{"hour":"09","minute":"10"}},"distance":300},{"transportation":{"number":"U3"},"destination":{"dateTime":{"hour":"09","minute":"30"}}}]}]}""", walkingSpeed), RoutePreference(routeFilterMode, routeFilterQuery)).take(3)
@@ -625,7 +628,23 @@ class MainActivity : ComponentActivity() {
                                         result.fold(
                                             onSuccess = {
                                                 journeys = it.options
-                                                routeStatus = if (it.options.isEmpty()) "Keine passende Verbindung innerhalb von zwei Stunden vor der gewünschten Ankunft gefunden." else "${it.options.size} passende Verbindungen nach ${it.destination.name} geladen"
+                                                if (it.options.isEmpty()) {
+                                                    walkingOnlyFallback = true
+                                                    walkingNavigationOpen = true
+                                                    walkingRoute = null
+                                                    val walkingId = ++walkingRequestId
+                                                    walkingRouteStatus = "Fußweg zum Ziel wird berechnet …"
+                                                    routeStatus = "Keine passende ÖPNV-Verbindung. Fußweg zum Ziel wird geprüft."
+                                                    WalkingNavigation.fetch(this@MainActivity, start, destination) { walkResult ->
+                                                        if (walkingId == walkingRequestId && walkingOnlyFallback) {
+                                                            walkingRoute = walkResult.getOrNull()
+                                                            walkingRouteStatus = walkResult.exceptionOrNull()?.localizedMessage ?: ""
+                                                        }
+                                                    }
+                                                } else {
+                                                    walkingOnlyFallback = false
+                                                    routeStatus = "${it.options.size} passende Verbindungen nach ${it.destination.name} geladen"
+                                                }
                                             },
                                             onFailure = {
                                                 if (it is MvvJourneyRepository.AmbiguousDestination) {
@@ -677,6 +696,29 @@ class MainActivity : ComponentActivity() {
                                 onClick = searchConnections
                             ) { Text("Verbindung finden") }
                         }
+                        if (walkingOnlyFallback) {
+                            Card(modifier = Modifier.fillMaxWidth().testTag("walking_only_fallback")) {
+                                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text("🚶 Nur zu Fuß", style = MaterialTheme.typography.titleLarge)
+                                    Text("Keine passende ÖPNV-Verbindung gefunden. Fußweg ab aktuellem Standort zum Ziel: $destination")
+                                    if (walkingRoute != null) {
+                                        Text("Fußroute: ca. ${walkingRoute!!.totalMeters} m")
+                                        val next = navigationLocation?.let { WalkingNavigation.nextTurn(walkingRoute!!, it) }
+                                        if (next != null) {
+                                            Text("${next.first.arrow} ${next.first.instruction} · ${next.second} m",
+                                                style = MaterialTheme.typography.titleMedium)
+                                        } else Text("Für Abbiegehinweise wird ein aktueller GPS-Standort benötigt.")
+                                        Text("OSM-Fußwegführung ist experimentell. Bitte Weg und Ziel prüfen.",
+                                            style = MaterialTheme.typography.labelSmall)
+                                    } else {
+                                        if (walkingRouteStatus.startsWith("Fußweg zum Ziel wird")) {
+                                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                                        }
+                                        Text(walkingRouteStatus.ifBlank { "Fußroute nicht verfügbar." })
+                                    }
+                                }
+                            }
+                        }
                         mvvCandidates.forEach { candidate ->
                             OutlinedButton(
                                 modifier = Modifier.fillMaxWidth(),
@@ -694,7 +736,23 @@ class MainActivity : ComponentActivity() {
                                             result.fold(
                                                 onSuccess = {
                                                     journeys = it.options
-                                                    routeStatus = "${it.options.size} Verbindungen nach ${it.destination.name} geladen"
+                                                    if (it.options.isEmpty()) {
+                                                        walkingOnlyFallback = true
+                                                        walkingNavigationOpen = true
+                                                        walkingRoute = null
+                                                        val walkingId = ++walkingRequestId
+                                                        walkingRouteStatus = "Fußweg zum Ziel wird berechnet …"
+                                                        routeStatus = "Keine passende ÖPNV-Verbindung. Fußweg zum Ziel wird geprüft."
+                                                        WalkingNavigation.fetch(this@MainActivity, start, destination) { walkResult ->
+                                                            if (walkingId == walkingRequestId && walkingOnlyFallback) {
+                                                                walkingRoute = walkResult.getOrNull()
+                                                                walkingRouteStatus = walkResult.exceptionOrNull()?.localizedMessage ?: ""
+                                                            }
+                                                        }
+                                                    } else {
+                                                        walkingOnlyFallback = false
+                                                        routeStatus = "${it.options.size} Verbindungen nach ${it.destination.name} geladen"
+                                                    }
                                                 },
                                                 onFailure = { routeStatus = "MVV-Abfrage fehlgeschlagen: ${it.localizedMessage}" }
                                             )
