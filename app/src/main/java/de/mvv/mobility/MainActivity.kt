@@ -174,9 +174,17 @@ class MainActivity : ComponentActivity() {
                             delay(15_000L)
                         }
                     }
+                    // Retain the last accepted fix for display, but never treat an old
+                    // position as live navigation input.
                     val usableLocation = if (fixture) location else location?.takeIf {
                         LocationFreshness.isFresh(it.time, locationClock)
                     }
+                    val navigationLocation = usableLocation?.takeIf {
+                        fixture || (locationClock - it.time <= 20_000L &&
+                            (!it.hasAccuracy() || it.accuracy <= 60f))
+                    }
+                    val locationAgeSeconds = location?.takeIf { !fixture && it.time > 0L }
+                        ?.let { ((locationClock - it.time).coerceAtLeast(0L) / 1000L) }
                     val effectiveLocationStatus = if (!fixture && location != null && usableLocation == null)
                         "Standort wird automatisch neu ermittelt …" else locationStatus
                     val lifecycleOwner = LocalLifecycleOwner.current
@@ -224,10 +232,20 @@ class MainActivity : ComponentActivity() {
                             locationStatus = "Standort wird laufend ermittelt …"
                             val stop = CurrentLocationRepository.observeForeground(this@MainActivity) { found ->
                                 if (found != null) {
-                                    location = found
-                                    locationClock = System.currentTimeMillis()
-                                    locationStatus = if (LocationFreshness.isFresh(found.time, locationClock))
-                                        "✓ Standort aktuell" else "Standort veraltet – bitte aktualisieren"
+                                    val now = System.currentTimeMillis()
+                                    val previous = location
+                                    // Ignore stale, out-of-order or implausibly inaccurate fixes.
+                                    // Do not overwrite a good fix with an older cached result.
+                                    val acceptable = LocationFreshness.isFresh(found.time, now) &&
+                                        (previous == null || found.time > previous.time) &&
+                                        (!found.hasAccuracy() || found.accuracy <= 100f)
+                                    if (acceptable) {
+                                        location = found
+                                        locationClock = now
+                                        locationStatus = "✓ Standort aktualisiert"
+                                    } else {
+                                        locationStatus = "GPS-Messung verworfen – letzte Position bleibt erhalten"
+                                    }
                                 } else {
                                     // Keep last fix through brief provider gaps; freshness still expires it.
                                     locationStatus = "GPS-Signal unterbrochen – letzte Position wird geprüft"
@@ -690,13 +708,14 @@ class MainActivity : ComponentActivity() {
                                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                         // GPS describes location freshness only, never MVV real-time departures.
                                         val gpsLabel = when {
-                                            usableLocation != null -> "GPS LIVE"
+                                            navigationLocation != null -> "GPS LIVE"
+                                            location != null -> "GPS ${locationAgeSeconds ?: 0}s"
                                             locationPermissionGranted && location != null -> "GPS ALT"
                                             locationPermissionGranted -> "GPS …"
                                             else -> "GPS AUS"
                                         }
                                         val gpsColor = when {
-                                            usableLocation != null -> Color(0xFF247A43)
+                                            navigationLocation != null -> Color(0xFF247A43)
                                             locationPermissionGranted -> Color(0xFF6B7280)
                                             else -> Color(0xFFB3261E)
                                         }
@@ -723,8 +742,8 @@ class MainActivity : ComponentActivity() {
                                         }
                                         val untilBus = boarding?.let { countdown(it.departure) }
                                         // OSRM step lengths approximate remaining walking distance during navigation.
-                                        val liveTurn = if (walkingNavigationOpen && usableLocation != null && walkingRoute != null)
-                                            WalkingNavigation.nextTurn(walkingRoute!!, usableLocation) else null
+                                        val liveTurn = if (walkingNavigationOpen && navigationLocation != null && walkingRoute != null)
+                                            WalkingNavigation.nextTurn(walkingRoute!!, navigationLocation!!) else null
                                         val remainingWalkMeters = liveTurn?.let { (turn, metersToTurn) ->
                                             val turns = walkingRoute!!.turns
                                             val index = turns.indexOf(turn)
@@ -844,7 +863,7 @@ class MainActivity : ComponentActivity() {
                                                 Column(Modifier.fillMaxWidth().padding(12.dp),
                                                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                                     Text("FUSSWEG-NAVIGATION · OSM", fontWeight = FontWeight.Bold)
-                                                    val fix = usableLocation
+                                                    val fix = navigationLocation
                                                     val route = walkingRoute
                                                     val next = if (fix != null && route != null)
                                                         WalkingNavigation.nextTurn(route, fix) else null
