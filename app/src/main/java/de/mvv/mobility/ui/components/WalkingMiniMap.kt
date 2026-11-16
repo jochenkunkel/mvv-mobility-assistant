@@ -58,19 +58,9 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, modifier: Modifier 
         // Route-forward fallback avoids noisy GPS direction at walking speed.
         val origin = position?.let { GeoPoint(it.latitude, it.longitude) }
             ?: routePoints.firstOrNull()
-        val routeHeading = if (origin != null && routePoints.size >= 2) {
-            val closest = (0 until routePoints.lastIndex).minByOrNull { index ->
-                val distances = FloatArray(1)
-                Location.distanceBetween(origin.latitude, origin.longitude,
-                    routePoints[index].latitude, routePoints[index].longitude, distances)
-                distances[0]
-            } ?: 0
-            val start = routePoints[closest]
-            val end = routePoints[closest + 1]
-            val a = Location("route").apply { latitude = start.latitude; longitude = start.longitude }
-            val b = Location("route").apply { latitude = end.latitude; longitude = end.longitude }
-            a.bearingTo(b)
-        } else null
+        val routeHeading = origin?.let {
+            de.mvv.mobility.data.RouteProgress.heading(route.path, it.latitude, it.longitude)
+        }
         val gpsHeading = position?.takeIf {
             it.hasBearing() && it.hasSpeed() && it.speed >= 1.2f &&
                 (!it.hasAccuracy() || it.accuracy <= 25f)
