@@ -86,6 +86,35 @@ fun selectAppointmentJourneys(options: List<JourneyOption>, arrivalByMillis: Lon
     ).take(maximumResults).map { it.first }
 }
 
+/**
+ * For "Jetzt starten": never recommend a journey whose initial walk must already
+ * have started. EFA sometimes returns connections departing before the request time.
+ * Compare the FIRST leg's departure, not just the first vehicle departure.
+ */
+fun reachableNowJourneys(options: List<JourneyOption>, nowMillis: Long,
+    minimumPreparationMillis: Long = 60_000L): List<JourneyOption> {
+    val zone = TimeZone.getTimeZone("Europe/Berlin")
+    return options.filter { trip ->
+        val first = trip.steps.firstOrNull() ?: return@filter false
+        val match = Regex("""^(\\d{1,2}):(\\d{2})$""").matchEntire(first.departure)
+            ?: return@filter false
+        val hour = match.groupValues[1].toInt()
+        val minute = match.groupValues[2].toInt()
+        if (hour !in 0..23 || minute !in 0..59) return@filter false
+        val calendar = java.util.Calendar.getInstance(zone).apply {
+            timeInMillis = nowMillis
+            set(java.util.Calendar.HOUR_OF_DAY, hour)
+            set(java.util.Calendar.MINUTE, minute)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        val firstDeparture = calendar.timeInMillis
+        // Midnight crossover: 00:xx after 23:xx, not yesterday's journey.
+        if (firstDeparture < nowMillis - 12 * 60 * 60_000L) calendar.add(java.util.Calendar.DAY_OF_MONTH, 1)
+        calendar.timeInMillis >= nowMillis + minimumPreparationMillis
+    }
+}
+
 object MvvJourneyRepository {
     private fun param(value: String) = URLEncoder.encode(value, "UTF-8")
     private fun JSONObject.text(key: String): String = optString(key).takeUnless { it == "null" }.orEmpty()
