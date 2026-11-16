@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- High-contrast, small-screen vector adaptation of the x-ray/plate motif. -->
+    <path android:fillColor="#45249A" android:pathData="M0,0h108v108h-108z"/>
+    <path android:fillColor="#352075" android:pathData="M55,0h53v108h-53z"/>
+    <!-- Humerus head and shaft -->
+    <path android:fillColor="#A7CFFF" android:pathData="M65,32 C52,28 46,39 50,48 L53,58 L50,93 L65,93 L66,57 C77,51 81,39 72,34 Z"/>
+    <path android:fillColor="#EAF6FF" android:pathData="M58,48 L62,48 L61,91 L55,91 Z"/>
+    <!-- Fixation plate and cross screws: visible at launcher size -->
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="4.1" android:strokeLineCap="round" android:fillColor="@android:color/transparent" android:pathData="M52,46 L53,89 M52,48 L73,34 M52,50 L75,42 M53,53 L71,48 M53,62 L65,60 M53,71 L65,69 M53,80 L65,78"/>
+    <path android:strokeColor="#C5E5FF" android:strokeWidth="2.2" android:strokeLineCap="round" android:fillColor="@android:color/transparent" android:pathData="M53,45 L67,35 M53,51 L68,44"/>
+    <!-- Navigation route -->
+    <path android:strokeColor="#77B8FF" android:strokeWidth="4" android:strokeLineCap="round" android:fillColor="@android:color/transparent" android:pathData="M12,91 C28,94 39,98 52,96 C69,96 79,79 93,72"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M93,60 C85,60 81,65 81,71 C81,77 93,89 93,89 C93,89 105,77 105,71 C105,65 101,60 93,60z"/>
+    <path android:fillColor="#45249A" android:pathData="M89,71a4,4 0,1 0,8 0a4,4 0,1 0,-8 0"/>
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.8" android:fillColor="@android:color/transparent" android:pathData="M10,79 L10,65 L16,65 L16,58 L22,58 L22,79 M24,79 L24,53 L31,53 L31,79 M33,79 L33,61 L41,61 L41,79 M9,79 L44,79 M27,58 L27,62 M27,67 L27,71"/>
+</vector>

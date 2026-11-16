@@ -128,3 +128,10 @@ concurrency:
 - **Zweck:** GitHub-Actions-Minuten sparen, ohne Workflows zu deaktivieren. Alle Jobs eines Workflow-Laufs werden gemeinsam abgebrochen; die Jobs innerhalb des neuesten Laufs dürfen weiterhin parallel laufen. Dies ist keine Garantie, dass zu jedem Zeitpunkt nur ein einzelner Job aktiv ist.
 - **Betrieb:** Für wichtige Releases keine neuen CI-Läufe auslösen, bis der Release-Lauf fertig ist. Abgebrochene Läufe können bei Bedarf manuell neu gestartet werden; der neueste Lauf erhält Vorrang. GitHub garantiert bei konkurrierenden Ereignissen keine FIFO-Reihenfolge.
 - **Prüfung:** Workflow-YAML in GitHub Actions und Abbruchverhalten mit zwei kurz aufeinanderfolgenden Läufen kontrollieren; nicht als bereits erfolgreich getestet ausgeben.
+
+### ADR-009 – Regionale Android-App-Icons (16.11.2026)
+- Ein einziger Build-Parameter `-PmeinWegRegion=munich|berlin|frankfurt` steuert **sowohl** das adaptive Launcher-Icon als auch `BuildConfig.MOBILITY_REGION` und damit `MobilityProviderConfig.region`.
+- Standard ist `munich`. Die drei Vektor-Iconvarianten verwenden das violette Design, das stilisierte Röntgen-Schulter-/Platten-/Schraubenmotiv und eine regionstypische Skyline (München/Frauenkirche, Berlin/Brandenburger Tor, Frankfurt/Skyline). Die Vektorgrafiken sind eine vereinfachte Android-Umsetzung des freigegebenen Bildkonzepts; nicht die fotorealistische PNG-Originalgrafik.
+- Das Launcher-Icon wird **zur Build-Zeit** ausgewählt. Eine Änderung der Region erfordert eine neu gebaute und installierte APK; Android erlaubt keinen zuverlässigen sofortigen Wechsel des App-Icons allein durch einen Laufzeit-Konfigurationswert.
+- **Funktionsgrenze:** Nur München/MVV ist implementiert. Berlin und Frankfurt sind vorbereitete Branding-/Regionsprofile ohne eigene ÖPNV-Provider-Adapter. Ein anderer Regions-Build ist **keine** funktionsfähige Berlin-/Frankfurt-Fahrplanauskunft; vor produktiver Verwendung muss ein passender Adapter implementiert werden.
+- Abnahme offen: Android-CI, Launcher-Icon auf Gerät und maskierte adaptive Icons, drei Gradle-Varianten, Provider-Abgrenzung.
