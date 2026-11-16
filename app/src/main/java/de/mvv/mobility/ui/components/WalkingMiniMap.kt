@@ -170,7 +170,7 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, modifier: Modifier 
         }
         route.destination?.let { stop ->
             val target = Marker(view).apply {
-                position = GeoPoint(stop.latitude, stop.longitude)
+                this.position = GeoPoint(stop.latitude, stop.longitude)
                 title = stop.platform?.let { "MVV-Einstieg · Steig $it" }
                     ?: "MVV-Einstieg · Steig nicht eindeutig"
                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
