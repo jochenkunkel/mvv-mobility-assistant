@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import de.mvv.mobility.data.WalkingRoute
@@ -24,13 +25,14 @@ import org.osmdroid.views.overlay.Polyline
 @Composable
 fun WalkingMiniMap(route: WalkingRoute, position: Location?, modifier: Modifier = Modifier) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val lastHeading = remember { mutableFloatStateOf(Float.NaN) }
     val map = remember {
         Configuration.getInstance().userAgentValue = context.packageName
         MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(false)
             setBuiltInZoomControls(false)
-            controller.setZoom(17.5)
+            controller.setZoom(17.7)
             minZoomLevel = 13.0
             maxZoomLevel = 20.0
         }
@@ -52,6 +54,43 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, modifier: Modifier 
                 outlinePaint.strokeWidth = 10f
                 outlinePaint.isAntiAlias = true
             })
+        }
+        // Route-forward fallback avoids noisy GPS direction at walking speed.
+        val origin = position?.let { GeoPoint(it.latitude, it.longitude) }
+            ?: routePoints.firstOrNull()
+        val routeHeading = if (origin != null && routePoints.size >= 2) {
+            val closest = (0 until routePoints.lastIndex).minByOrNull { index ->
+                val distances = FloatArray(1)
+                Location.distanceBetween(origin.latitude, origin.longitude,
+                    routePoints[index].latitude, routePoints[index].longitude, distances)
+                distances[0]
+            } ?: 0
+            val start = routePoints[closest]
+            val end = routePoints[closest + 1]
+            val a = Location("route").apply { latitude = start.latitude; longitude = start.longitude }
+            val b = Location("route").apply { latitude = end.latitude; longitude = end.longitude }
+            a.bearingTo(b)
+        } else null
+        val gpsHeading = position?.takeIf {
+            it.hasBearing() && it.hasSpeed() && it.speed >= 1.2f &&
+                (!it.hasAccuracy() || it.accuracy <= 25f)
+        }?.bearing
+        val proposed = gpsHeading ?: routeHeading ?: lastHeading.floatValue.takeUnless { it.isNaN() }
+        if (proposed != null) {
+            val previous = lastHeading.floatValue
+            val delta = if (previous.isNaN()) 180f else
+                kotlin.math.abs(((proposed - previous + 540f) % 360f) - 180f)
+            if (previous.isNaN() || delta > 12f) lastHeading.floatValue = proposed
+            view.setMapOrientation(-lastHeading.floatValue)
+        }
+        // Shift camera 70m forward so the current position sits below center.
+        val cameraPoint = origin?.let { point ->
+            val heading = lastHeading.floatValue.takeUnless { it.isNaN() } ?: 0f
+            val radians = Math.toRadians(heading.toDouble())
+            val latOffset = 70.0 * kotlin.math.cos(radians) / 111_320.0
+            val lonOffset = 70.0 * kotlin.math.sin(radians) /
+                (111_320.0 * kotlin.math.cos(Math.toRadians(point.latitude)).coerceAtLeast(0.1))
+            GeoPoint(point.latitude + latOffset, point.longitude + lonOffset)
         }
         val center = position?.let { GeoPoint(it.latitude, it.longitude) }
             ?: routePoints.firstOrNull()
@@ -80,7 +119,7 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, modifier: Modifier 
                     }
                     paint.setShadowLayer(2f, 0f, 1f, android.graphics.Color.WHITE)
                     canvas.drawPath(arrowPath, paint)
-                    rotation = position.bearing
+                    rotation = position.bearing - view.mapOrientation
                 } else {
                     canvas.drawCircle(28f, 28f, 16f, android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                         color = android.graphics.Color.WHITE
@@ -91,7 +130,7 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, modifier: Modifier 
             }
             view.overlays.add(arrow)
         }
-        if (center != null) view.controller.animateTo(center)
+        if (cameraPoint != null) view.controller.setCenter(cameraPoint)
         view.invalidate()
     })
 }
