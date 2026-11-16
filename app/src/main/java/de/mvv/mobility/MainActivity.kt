@@ -150,6 +150,7 @@ class MainActivity : ComponentActivity() {
                     var dashboardJourney by remember { mutableStateOf<Int?>(null) }
                     var walkingRoute by remember { mutableStateOf<WalkingRoute?>(null) }
                     var walkingOnlyFallback by remember { mutableStateOf(false) }
+                    var walkingOnlyDashboard by remember { mutableStateOf(false) }
                     var walkingRouteStatus by remember { mutableStateOf("") }
                     var walkingNavigationOpen by remember { mutableStateOf(false) }
                     var walkingRequestId by remember { mutableIntStateOf(0) }
@@ -738,6 +739,14 @@ class MainActivity : ComponentActivity() {
                                             Text("${next.first.arrow} ${next.first.instruction} · ${next.second} m",
                                                 style = MaterialTheme.typography.titleMedium)
                                         } else Text("Für Abbiegehinweise wird ein aktueller GPS-Standort benötigt.")
+                                        Button(
+                                            modifier = Modifier.fillMaxWidth().testTag("open_walking_only_dashboard"),
+                                            onClick = {
+                                                walkingOnlyDashboard = true
+                                                walkingNavigationOpen = true
+                                                selectedTab = CockpitTab.JOURNEY
+                                            }
+                                        ) { Text("🚶 Als meine Fahrt öffnen") }
                                         Text("OSM-Fußwegführung ist experimentell. Bitte Weg und Ziel prüfen.",
                                             style = MaterialTheme.typography.labelSmall)
                                     } else {
@@ -805,7 +814,39 @@ class MainActivity : ComponentActivity() {
                         }
                         if (!settingsExpanded && (selectedTab == CockpitTab.JOURNEY || (fixture && !visualFixture))) {
                         Text("Meine Fahrt", style = MaterialTheme.typography.titleLarge)
-                        if (dashboardJourney == null) TextButton(onClick = { selectedTab = CockpitTab.CONNECTIONS }) { Text("Verbindungen ansehen") }
+                        if (walkingOnlyDashboard && walkingRoute != null) {
+                            val route = walkingRoute!!
+                            Card(
+                                modifier = Modifier.fillMaxWidth().testTag("walking_only_dashboard"),
+                                shape = RoundedCornerShape(22.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFECE7FF))
+                            ) {
+                                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    Text("MEINE FAHRT · FUSSWEG", style = MaterialTheme.typography.titleMedium,
+                                        color = Color(0xFF49309B), fontWeight = FontWeight.Bold)
+                                    Text("🚶 Nur zu Fuß", style = MaterialTheme.typography.headlineMedium)
+                                    Text("Ziel: $destination", style = MaterialTheme.typography.bodyMedium)
+                                    Text("Fußroute: ca. ${route.totalMeters} m", style = MaterialTheme.typography.titleLarge)
+                                    val next = navigationLocation?.let { WalkingNavigation.nextTurn(route, it) }
+                                    if (next != null) {
+                                        Text(next.first.arrow, style = MaterialTheme.typography.displayLarge,
+                                            color = Color(0xFF49309B))
+                                        Text("${next.second} m", style = MaterialTheme.typography.headlineLarge,
+                                            fontWeight = FontWeight.Bold)
+                                        Text(next.first.instruction, style = MaterialTheme.typography.titleLarge)
+                                    } else {
+                                        Text("Aktueller GPS-Standort fehlt oder ist zu alt. Route bleibt erhalten; Abbiegehinweise warten auf GPS.")
+                                    }
+                                    Text("OSM-Fußwegführung ist experimentell. Weg und Ziel bitte prüfen.",
+                                        style = MaterialTheme.typography.labelSmall)
+                                    OutlinedButton(onClick = {
+                                        walkingOnlyDashboard = false
+                                        selectedTab = CockpitTab.CONNECTIONS
+                                    }) { Text("Zurück zu Verbindungen") }
+                                }
+                            }
+                        }
+                        if (dashboardJourney == null && !walkingOnlyDashboard) TextButton(onClick = { selectedTab = CockpitTab.CONNECTIONS }) { Text("Verbindungen ansehen") }
                         if (dashboardJourney != null) {
                             val chosen = journeys.getOrNull(dashboardJourney!!)
                             if (chosen != null) {
