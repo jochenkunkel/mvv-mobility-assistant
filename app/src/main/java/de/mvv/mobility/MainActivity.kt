@@ -43,6 +43,7 @@ import de.mvv.mobility.data.WalkingNavigation
 import de.mvv.mobility.data.WalkingRoute
 import de.mvv.mobility.data.DeviceCalendarRepository
 import de.mvv.mobility.data.DestinationLookup
+import de.mvv.mobility.data.GpsDebugRecorder
 import de.mvv.mobility.data.DebugResponseCapture
 import de.mvv.mobility.data.MvvJourneyRepository
 import de.mvv.mobility.data.isCurrentSearchResponse
@@ -75,6 +76,9 @@ class MainActivity : ComponentActivity() {
         val debugApk = BuildConfig.DEBUG && BuildConfig.ENABLE_MVV_DEBUG_EXPORT
         DebugResponseCapture.enabled = debugApk
         DebugResponseCapture.clear()
+        val gpsDebugEnabled = BuildConfig.DEBUG && BuildConfig.ENABLE_GPS_DEBUG_EXPORT
+        GpsDebugRecorder.enabled = gpsDebugEnabled
+        GpsDebugRecorder.clear()
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
@@ -92,6 +96,22 @@ class MainActivity : ComponentActivity() {
                                 }.onSuccess { debugExportStatus = "MVV-Debugantwort gespeichert." }
                                     .onFailure { debugExportStatus = "Export fehlgeschlagen: ${it.localizedMessage}" }
                             } else debugExportStatus = "Keine MVV-Antwort vorhanden."
+                        }
+                    }
+                    var gpsExportStatus by remember { mutableStateOf("") }
+                    val gpsExportLauncher = rememberLauncherForActivityResult(
+                        ActivityResultContracts.CreateDocument("application/json")
+                    ) { uri ->
+                        if (uri != null && gpsDebugEnabled) {
+                            val payload = GpsDebugRecorder.snapshot()
+                            if (payload != null) {
+                                runCatching {
+                                    contentResolver.openOutputStream(uri)?.use {
+                                        it.write(payload.toByteArray(Charsets.UTF_8))
+                                    } ?: error("Datei konnte nicht geöffnet werden")
+                                }.onSuccess { gpsExportStatus = "GPS-Protokoll gespeichert." }
+                                    .onFailure { gpsExportStatus = "GPS-Export fehlgeschlagen: ${it.localizedMessage}" }
+                            }
                         }
                     }
                     var allowed by remember { mutableStateOf(DeviceCalendarRepository.hasPermission(this)) }
@@ -207,6 +227,26 @@ class MainActivity : ComponentActivity() {
                     }
                     val locationAgeSeconds = location?.takeIf { !fixture && it.time > 0L }
                         ?.let { ((locationClock - it.time).coerceAtLeast(0L) / 1000L) }
+                    LaunchedEffect(gpsDebugEnabled, appForeground, walkingNavigationOpen, walkingOnlyDashboard) {
+                        if (gpsDebugEnabled && appForeground) {
+                            while (true) {
+                                val fix = location
+                                val now = System.currentTimeMillis()
+                                val age = fix?.let { now - it.time }
+                                val state = when {
+                                    fix == null -> "no_fix"
+                                    age == null || age < 0 -> "invalid_time"
+                                    age <= 15_000L && (!fix.hasAccuracy() || fix.accuracy <= 80f) -> "live"
+                                    age <= 45_000L && (!fix.hasAccuracy() || fix.accuracy <= 80f) -> "recent_not_live"
+                                    age <= LocationFreshness.MAX_AGE_MILLIS -> "not_navigation_fresh"
+                                    else -> "stale"
+                                }
+                                GpsDebugRecorder.event("navigation_heartbeat", fix, state,
+                                    walkingNavigationOpen || walkingOnlyDashboard, age)
+                                delay(5_000L)
+                            }
+                        }
+                    }
                     val effectiveLocationStatus = if (!fixture && location != null && usableLocation == null)
                         "Standort wird automatisch neu ermittelt …" else locationStatus
                     val lifecycleOwner = LocalLifecycleOwner.current
@@ -253,6 +293,21 @@ class MainActivity : ComponentActivity() {
                         if (!fixture && appForeground && locationPermissionGranted) {
                             locationStatus = "Standort wird laufend ermittelt …"
                             val stop = CurrentLocationRepository.observeForeground(this@MainActivity) { found ->
+                                if (gpsDebugEnabled) {
+                                    val now = System.currentTimeMillis()
+                                    val previous = location
+                                    val reason = when {
+                                        found == null -> "provider_no_fix"
+                                        !LocationFreshness.isFresh(found.time, now) -> "stale_or_future"
+                                        previous != null && found.time <= previous.time -> "out_of_order"
+                                        found.hasAccuracy() && found.accuracy > 100f -> "accuracy_over_100m"
+                                        else -> "accepted"
+                                    }
+                                    GpsDebugRecorder.event("provider_update", found, reason,
+                                        walkingNavigationOpen || walkingOnlyDashboard,
+                                        found?.let { now - it.time })
+                                }
+
                                 if (found != null) {
                                     val now = System.currentTimeMillis()
                                     val previous = location
@@ -774,6 +829,15 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             }
+                        }
+                        if (gpsDebugEnabled) {
+                            OutlinedButton(
+                                modifier = Modifier.fillMaxWidth().testTag("export_gps_debug"),
+                                onClick = { gpsExportLauncher.launch("meinweg-gps-debug.json") }
+                            ) { Text("📍 GPS-Debugprotokoll exportieren") }
+                            Text("GPS-Ereignisse werden nur bei geöffneter App im Arbeitsspeicher gesammelt. Export enthält genaue Standortkoordinaten.",
+                                style = MaterialTheme.typography.labelSmall)
+                            if (gpsExportStatus.isNotBlank()) Text(gpsExportStatus)
                         }
                         if (debugApk) {
                             OutlinedButton(
