@@ -41,6 +41,20 @@ internal object RouteProgress {
         return best
     }
 
+    /** Route tangent at the closest projected segment, in compass degrees. */
+    fun heading(path: List<Pair<Double, Double>>, latitude: Double, longitude: Double,
+        maxOffRouteMeters: Double = 45.0): Float? {
+        val projection = project(path, latitude, longitude) ?: return null
+        if (projection.lateralMeters > maxOffRouteMeters) return null
+        val start = path[projection.segmentIndex]
+        val end = path[projection.segmentIndex + 1]
+        val north = (end.first - start.first) * 111_320.0
+        val east = (end.second - start.second) * 111_320.0 *
+            cos(Math.toRadians(latitude))
+        if (hypot(north, east) < 0.01) return null
+        return ((Math.toDegrees(atan2(east, north)) + 360.0) % 360.0).toFloat()
+    }
+
     /** Returns the next route-ordered maneuver, or null if geometry cannot be trusted. */
     fun nextTurn(
         route: WalkingRoute,
