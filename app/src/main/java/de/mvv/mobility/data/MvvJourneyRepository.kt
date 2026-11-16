@@ -199,9 +199,9 @@ object MvvJourneyRepository {
     class AmbiguousDestination(val candidates: List<StopCandidate>) :
         IllegalStateException("Mehrere MVV-Ziele gefunden. Bitte die passende Haltestelle auswählen.")
 
-    private fun request(origin: Location, destination: String, type: String, arrivalByMillis: Long? = null, directOnly: Boolean = false): String {
+    private fun request(origin: Location, destination: String, type: String, arrivalByMillis: Long? = null, directOnly: Boolean = false, departureAtMillis: Long? = null): String {
         val originCoords = "${origin.longitude}:${origin.latitude}:WGS84"
-        val requested = Date(arrivalByMillis ?: System.currentTimeMillis())
+        val requested = Date(arrivalByMillis ?: departureAtMillis ?: System.currentTimeMillis())
         val berlin = TimeZone.getTimeZone("Europe/Berlin")
         val date = SimpleDateFormat("yyyyMMdd", Locale.GERMANY).apply { timeZone = berlin }.format(requested)
         val clock = SimpleDateFormat("HHmm", Locale.GERMANY).apply { timeZone = berlin }.format(requested)
@@ -271,7 +271,8 @@ object MvvJourneyRepository {
         walkingKmh: Float,
         callback: (Result<ResolvedJourney>) -> Unit,
         preference: RoutePreference = RoutePreference(),
-        arrivalByMillis: Long? = null
+        arrivalByMillis: Long? = null,
+        departureAtMillis: Long? = null
     ) {
         Thread {
             try {
@@ -288,10 +289,10 @@ object MvvJourneyRepository {
                 }
                 if (ambiguous) error("Mehrdeutige Zieladresse. Bitte vollständige Straße, Hausnummer und Ort angeben.")
                 val coordinates = "${first.longitude}:${first.latitude}:WGS84"
-                val response = request(origin, coordinates, "coord", arrivalByMillis)
+                val response = request(origin, coordinates, "coord", arrivalByMillis, departureAtMillis = departureAtMillis)
                 var trips = filterJourneys(parseTrips(response, walkingKmh), preference)
                 if (trips.isEmpty() && preference.mode == RouteFilterMode.ONLY_LINE_WITH_WALK) {
-                    val alternate = request(origin, coordinates, "coord", arrivalByMillis, directOnly = true)
+                    val alternate = request(origin, coordinates, "coord", arrivalByMillis, directOnly = true, departureAtMillis = departureAtMillis)
                     trips = filterJourneys(parseTrips(alternate, walkingKmh), preference)
                 }
                 trips = if (arrivalByMillis != null) selectAppointmentJourneys(trips, arrivalByMillis) else trips.take(3)
