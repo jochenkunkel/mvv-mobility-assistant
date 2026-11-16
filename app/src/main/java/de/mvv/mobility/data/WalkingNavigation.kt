@@ -10,7 +10,7 @@ import kotlin.math.*
 
 data class WalkingTurn(val instruction: String, val arrow: String, val latitude: Double,
     val longitude: Double, val distanceMeters: Int)
-data class WalkingRoute(val turns: List<WalkingTurn>, val totalMeters: Int)
+data class WalkingRoute(val turns: List<WalkingTurn>, val totalMeters: Int, val path: List<Pair<Double, Double>> = emptyList())
 
 /** OSRM foot routing; never substitute a straight-line route for missing turn data. */
 object WalkingNavigation {
@@ -24,7 +24,7 @@ object WalkingNavigation {
                     ?: error("Haltestelle konnte nicht lokalisiert werden")
                 val url = URL("https://routing.openstreetmap.de/routed-foot/route/v1/driving/" +
                     "${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}" +
-                    "?overview=false&steps=true")
+                    "?overview=full&geometries=geojson&steps=true")
                 val connection = (url.openConnection() as HttpURLConnection).apply {
                     connectTimeout = 8000
                     readTimeout = 8000
@@ -65,7 +65,15 @@ object WalkingNavigation {
             }
         }
         check(turns.isNotEmpty()) { "Keine Abbiegeanweisungen vorhanden" }
-        return WalkingRoute(turns, route.optDouble("distance", 0.0).roundToInt())
+        val path = mutableListOf<Pair<Double, Double>>()
+        val coordinates = route.optJSONObject("geometry")?.optJSONArray("coordinates")
+        if (coordinates != null) {
+            for (i in 0 until coordinates.length()) {
+                val point = coordinates.optJSONArray(i) ?: continue
+                if (point.length() >= 2) path.add(point.getDouble(1) to point.getDouble(0))
+            }
+        }
+        return WalkingRoute(turns, route.optDouble("distance", 0.0).roundToInt(), path)
     }
 
     fun nextTurn(route: WalkingRoute, position: Location): Pair<WalkingTurn, Int>? {
