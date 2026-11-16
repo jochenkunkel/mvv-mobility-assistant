@@ -2,6 +2,10 @@
 
 Android-App mit Kalenderterminen, automatischer Standortermittlung und Vordergrund-Aktualisierung, MVV-Tür-zu-Tür-Verbindungen, Linienfilter, Ankunftspuffer und Geh-Dashboard.
 
+## Aktueller Code-Review (16.11.2026)
+
+**[Quellcode-Audit, dokumentierte Inkonsistenzen und priorisierter Reparaturplan](docs/CODE-REVIEW-2026-11-16.md)**. Der Bericht trennt Codebefunde von Risiken und ungeprüften Geräte-/CI-Nachweisen. Insbesondere die Fußweg-Navigation ist **nicht für zuverlässige Abbiegeführung freigegeben**. Ältere Status- und Auditdateien bleiben als datierte historische Dokumente erhalten.
+
 ## Produktentscheidungen und Designziel
 
 Die begründeten Architektur-, UX- und Funktionsentscheidungen inklusive Umsetzungsstatus, Risiken und nächster Schritte stehen in [docs/DECISIONS.md](docs/DECISIONS.md). Maßstab ist die abgestimmte Drei-Screen-Designvorlage (Start, Verbindungen, Meine Fahrt) mit zusätzlichem Einstellungszugang. Ein erfolgreicher CI-Lauf belegt nicht automatisch visuelle Übereinstimmung. Die Sprachwahl ist derzeit nur vorbereitet; echte Übersetzungen folgen.
