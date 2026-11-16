@@ -879,7 +879,8 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                 }, preference = RoutePreference(routeFilterMode, routeFilterQuery), arrivalByMillis = arrivalBy,
-                                    departureAtMillis = if (journeyTimingMode == "planned" && !plannedArrival) plannedAtMillis else null)
+                                    departureAtMillis = if (journeyTimingMode == "planned" && !plannedArrival) plannedAtMillis else null,
+                                    startNowMillis = if (journeyTimingMode == "now") System.currentTimeMillis() else null)
                                 }
                         }
 
