@@ -61,15 +61,33 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, modifier: Modifier 
                 this.position = center
                 title = "Aktuelle Position"
                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                icon = android.graphics.drawable.GradientDrawable().apply {
-                    shape = android.graphics.drawable.GradientDrawable.OVAL
-                    setColor(android.graphics.Color.rgb(25, 117, 218))
-                    setStroke(5, android.graphics.Color.WHITE)
-                    setSize(38, 38)
+                // A directional triangle when the GPS bearing is trustworthy;
+                // a dot when stationary or no movement vector is available.
+                val moving = position.hasBearing() && position.hasSpeed() && position.speed > 0.4f
+                val bitmap = android.graphics.Bitmap.createBitmap(56, 56, android.graphics.Bitmap.Config.ARGB_8888)
+                val canvas = android.graphics.Canvas(bitmap)
+                val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                    color = android.graphics.Color.rgb(25, 117, 218)
+                    style = android.graphics.Paint.Style.FILL
                 }
-                if (position.hasBearing() && position.hasSpeed() && position.speed > 0.4f) {
+                if (moving) {
+                    val arrowPath = android.graphics.Path().apply {
+                        moveTo(28f, 5f)
+                        lineTo(48f, 48f)
+                        lineTo(28f, 37f)
+                        lineTo(8f, 48f)
+                        close()
+                    }
+                    paint.setShadowLayer(2f, 0f, 1f, android.graphics.Color.WHITE)
+                    canvas.drawPath(arrowPath, paint)
                     rotation = position.bearing
+                } else {
+                    canvas.drawCircle(28f, 28f, 16f, android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                        color = android.graphics.Color.WHITE
+                    })
+                    canvas.drawCircle(28f, 28f, 11f, paint)
                 }
+                icon = android.graphics.drawable.BitmapDrawable(context.resources, bitmap)
             }
             view.overlays.add(arrow)
         }
