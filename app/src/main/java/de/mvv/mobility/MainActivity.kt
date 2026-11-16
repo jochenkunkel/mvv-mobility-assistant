@@ -524,7 +524,10 @@ class MainActivity : ComponentActivity() {
                                             walkingOnlyDashboard = false
                                             walkingRoute = null
                                             routeStatus = ""
-                                            activeSetupStep = 0
+                                            activeSetupStep = if (mode == "now") 1 else 0
+                                        } else if (mode == "now") {
+                                            // Selecting "Jetzt" is already the user's confirmation.
+                                            activeSetupStep = 1
                                         }
                                     },
                                     modifier = Modifier.weight(1f).testTag("timing_$mode"),
@@ -627,7 +630,8 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         }
-                        if (journeyTimingMode != null && (journeyTimingMode != "calendar" || appointment != null) && !(fixture && !visualFixture)) {
+                        if (journeyTimingMode != null && journeyTimingMode != "now" &&
+                            (journeyTimingMode != "calendar" || appointment != null) && !(fixture && !visualFixture)) {
                             Button(onClick = { activeSetupStep = 1 }, modifier = Modifier.fillMaxWidth().testTag("setup_next_address")) {
                                 Text("Weiter · Start & Ziel →")
                             }
