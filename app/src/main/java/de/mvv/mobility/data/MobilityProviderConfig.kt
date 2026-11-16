@@ -27,5 +27,5 @@ object MobilityProviderConfig {
 
     /** Add an adapter for each new provider before enabling a new region. */
     fun geocodingQuery(place: String): String =
-        "$"+"{place.trim()}, $"+"{region.geocodingContext}"
+        "${place.trim()}, ${region.geocodingContext}"
 }
