@@ -121,3 +121,16 @@ Stand: 15.11.2026. **Ausführungsplan** zum verbindlichen Anforderungskatalog [C
 - **FEHLER BEHEBEN:** Fehler und konkrete Korrektur nennen; keine Freigabe.
 - **TESTVERSION BEREIT:** CI grün, Screenshots geprüft, APK-Artefakt verifiziert; gezielte manuelle Testfälle nennen.
 - Bei jeder Rückmeldung: Commit, CI-Status, tatsächlich umgesetzter Umfang und verbleibende Arbeit.
+
+## Aktueller Nachtrag – 16.11.2026, 17:22 MEZ
+
+> **Aktueller Stand statt historischer Momentaufnahme:** Die Phasenbeschreibungen und die Tabelle mit Stand 15.11.2026 oben bleiben als ursprüngliche Planung erhalten. Für den aktuellen Implementierungsstand sind [PROJECT_STATUS.md](PROJECT_STATUS.md), die neuesten Commits und die tatsächlichen GitHub-Actions-Läufe maßgeblich. Ein Commit belegt keine bestandene Prüfung.
+
+| Bereich | Im Code / Repository nachgewiesen | Noch nicht nachgewiesen / offen |
+|---|---|---|
+| Verbindung und Navigation (Phasen 3/5) | Fußweg-Alternativen in Verbindungskarten (`205c5475`); koordinatenorientierte Fußnavigation und Unsicherheitskennzeichnung laut aktuellem Projektstatus | Echte MVV-Einstiegskoordinate/Bussteig, End-to-End-Navigation auf Gerät, eindeutige Zielerkennung (Issue #4) |
+| GPS und Routenneuberechnung (Phase 5) | GPS-Filterung, Off-Route-Evidenz und Rerouting (`61b13706`); angenommener Track getrennt von Reroute (`9416b360`); Trackdarstellung (`685f7cee`) | Deterministische Regressionstests für GPS-Lücke, groben Netzwerk-Fix, Reroute und Track-Erhalt; Praxistest |
+| CI und Freigabe (Phase 6) | Neue CI-Diagnose- und Preflight-Fixes (`a8c9a656`, `af8de847`) | Erfolgreicher vollständiger Workflow auf aktuellem `main` nicht bestätigt; Lint, Emulator, MVV-Live-Probe und APK-Artefakt separat nachweisen (Issue #8) |
+| Dokumentationsqualität | Zentraler Status und Audit vorhanden | Veraltete Momentaufnahmen weiter eindeutig kennzeichnen und Phasen mit überprüfbaren Nachweisen aktualisieren (Issue #10) |
+
+**Nächste priorisierte Schritte:** (1) CI-Preflight auf `af8de847` anhand eines tatsächlichen Workflow-Laufs verifizieren, (2) GPS-/Reroute-Regressionstests ergänzen, (3) reale MVV-Haltestellenkoordinaten und Bussteigzuordnung testen, (4) S25-Abnahme und Freigabe-Gates. **APK-Freigabe weiterhin ausstehend.**
