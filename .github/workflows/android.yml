@@ -188,3 +188,34 @@ jobs:
             app/build/reports/androidTests/
           if-no-files-found: warn
           retention-days: 14
+
+  # A release run is accepted only when every required job succeeded.
+  # This job does not publish or authorize installation of an APK.
+  release-acceptance:
+    if: ${{ always() && ((github.event_name == 'workflow_dispatch' && inputs.test_level == 'release') || startsWith(github.ref, 'refs/tags/v')) }}
+    needs:
+      - preflight
+      - build-and-test
+      - emulator-smoke-test
+      - mvv-live-probe
+      - door-to-door-live-probe
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all release checks to succeed
+        env:
+          PREFLIGHT: ${{ needs.preflight.result }}
+          BUILD: ${{ needs.build-and-test.result }}
+          EMULATOR: ${{ needs.emulator-smoke-test.result }}
+          MVV: ${{ needs.mvv-live-probe.result }}
+          DOOR_TO_DOOR: ${{ needs.door-to-door-live-probe.result }}
+        run: |
+          failed=0
+          for job in PREFLIGHT BUILD EMULATOR MVV DOOR_TO_DOOR; do
+            result="${!job}"
+            echo "$job: $result"
+            if [[ "$result" != "success" ]]; then
+              echo "::error::$job did not succeed ($result)"
+              failed=1
+            fi
+          done
+          exit "$failed"
