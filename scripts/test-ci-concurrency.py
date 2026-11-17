@@ -34,4 +34,10 @@ assert build, "Build-and-test job missing"
 assert re.search(r"(?m)^    needs:\s*preflight\s*$", build.group(1)), (
     "APK build must depend on the guarded preflight job"
 )
+# The release emulator job must not bypass the same preflight protection.
+emulator = re.search(r"(?ms)^  emulator-smoke-test:\s*\n(.*?)(?=^  [a-zA-Z][\w-]*:|\Z)", source)
+assert emulator, "Release emulator smoke-test job missing"
+assert re.search(r"(?m)^    needs:\s*preflight\s*$", emulator.group(1)), (
+    "Release emulator smoke-test must depend on guarded preflight"
+)
 print("Android CI concurrency static regression guard passed")
