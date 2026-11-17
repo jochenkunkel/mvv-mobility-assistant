@@ -243,3 +243,12 @@ abgeglichen werden.
 - **CI-Evidenz:** Der historische Push-Lauf [44046946252](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44046946252) meldet `preflight=failure`, abhängiger Build `skipped`. Job-Schritte werden als leere Liste zurückgegeben; Logabruf scheitert. Commit-Status und PR-bezogene Workflow-Abfrage für `9e392fc` waren leer und sind **kein** Beleg über Push-Läufe. Der neue Commit `43e3768` ist **nicht** durch einen grünen CI-Lauf verifiziert.
 - **Lokale Einschränkung:** `git ls-remote` scheiterte mit `Could not resolve host: github.com`; keine lokale Ausführung der Repository-Tests möglich. Die neue Annotation ist noch nicht in GitHub Actions beobachtet. **Keine APK-Installationsfreigabe.**
 - **Nächster Schritt:** Actions-Push-Lauf für `43e3768` und dessen Preflight-Annotationen kontrollieren. Bei identischem Fehler den ersten fehlschlagenden Schritt isolieren; anschließend ausführbare Regressionstests für #13 und #14 umsetzen. Andere Projekt-Chats sind nicht vollständig live zugänglich; nur bereits dokumentierte Anforderungen wurden übernommen.
+
+
+## Entwicklungsabgleich – 17.11.2026, 21:23 MEZ
+
+- Vor Änderung letzter Commit auf `main`: `7800335`; offene Issues einschließlich #13 (Rotation) und #14 (Track-Verlust), keine offenen PRs. README, Roadmap, Preflight, Emulator-Test und Projektübergabe erneut gelesen.
+- **Umgesetzt:** `5df2a0f` ergänzt zwei Offline-Regressionstests für ausgeblendete/deaktivierte doppelte Tab-Labels; `ef14141` lässt `scripts/tap-emulator-navigation.py` solche Nodes überspringen, bevor Koordinaten gewählt werden. Bestehende XML-Dumps ohne diese Attribute bleiben kompatibel. Dies behebt keine GPS-/Rotationsfehler, sondern einen klar abgegrenzten Emulator-Testhelfer-Randfall.
+- **Tests:** Die neuen Tests sind im Repository, wurden in diesem Lauf nicht ausgeführt. Ein grüner CI-Lauf für den neuen HEAD ist nicht belegt. Historischer Preflight-Fehler in Actions-Lauf 44046946252; tatsächlicher neuer Push-Lauf und Job-Logs weiterhin gesondert prüfen. **Keine APK-Freigabe.**
+- **Projekt-Chats:** Bekannte Anforderungen zu GPS-Lücken, OSRM-Rerouting, Track-Erhalt und Rotation berücksichtigt; kein vollständiger Live-Zugriff auf andere Chats.
+- **Nächste Priorität:** `python3 scripts/test-ci-concurrency.py`, `bash -x scripts/preflight.sh` und `python3 -u scripts/test-emulator-navigation.py` auf demselben HEAD ausführen und Actions-Schritte prüfen; danach #13/#14 mit instrumentierten Zustands- und GPS-Replay-Tests bearbeiten.
