@@ -23,13 +23,13 @@ assert "!startsWith(github.ref, 'refs/tags/v')" in policy, "Version-tag runs mus
 assert "cancel-in-progress: true" not in block, "Unconditional cancellation forbidden"
 # A correct guard is ineffective if a workflow edit silently stops running it.
 # Require an explicit preflight step, rather than a mention in a comment.
-preflight = re.search(r"(?ms)^  preflight:\\s*\\n(.*?)(?=^  [a-zA-Z][\\w-]*:|\\Z)", source)
+preflight = re.search(r"(?ms)^  preflight:\s*\n(.*?)(?=^  [a-zA-Z][\w-]*:|\Z)", source)
 assert preflight, "Preflight job missing"
-assert re.search(r"(?m)^        run: python3 scripts/test-ci-concurrency\\.py\\s*$", preflight.group(1)), (
+assert re.search(r"(?m)^        run: python3 scripts/test-ci-concurrency\.py\s*$", preflight.group(1)), (
     "Concurrency guard must execute in the preflight job"
 )
 # Ensure the guarded preflight actually gates the APK-producing job.
-build = re.search(r"(?ms)^  build-and-test:\s*\n(.*?)(?=^  [a-zA-Z][\\w-]*:|\\Z)", source)
+build = re.search(r"(?ms)^  build-and-test:\s*\n(.*?)(?=^  [a-zA-Z][\w-]*:|\Z)", source)
 assert build, "Build-and-test job missing"
 assert re.search(r"(?m)^    needs:\s*preflight\s*$", build.group(1)), (
     "APK build must depend on the guarded preflight job"
