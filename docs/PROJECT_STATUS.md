@@ -252,3 +252,11 @@ abgeglichen werden.
 - **Tests:** Die neuen Tests sind im Repository, wurden in diesem Lauf nicht ausgeführt. Ein grüner CI-Lauf für den neuen HEAD ist nicht belegt. Historischer Preflight-Fehler in Actions-Lauf 44046946252; tatsächlicher neuer Push-Lauf und Job-Logs weiterhin gesondert prüfen. **Keine APK-Freigabe.**
 - **Projekt-Chats:** Bekannte Anforderungen zu GPS-Lücken, OSRM-Rerouting, Track-Erhalt und Rotation berücksichtigt; kein vollständiger Live-Zugriff auf andere Chats.
 - **Nächste Priorität:** `python3 scripts/test-ci-concurrency.py`, `bash -x scripts/preflight.sh` und `python3 -u scripts/test-emulator-navigation.py` auf demselben HEAD ausführen und Actions-Schritte prüfen; danach #13/#14 mit instrumentierten Zustands- und GPS-Replay-Tests bearbeiten.
+
+## Entwicklungsabgleich – 17.11.2026, 22:22 MEZ
+
+- **Repo:** Vor diesem Lauf war `d316e2d` der letzte sichtbare Commit auf `main`; README, Implementierungs-Roadmap, Preflight-/Emulator-Skripte und Android-Workflow geprüft. 11 offene Issues, keine offenen PRs. #13 (Rotation) und #14 (Trackverlust) weiterhin nicht behoben.
+- **Implementiert:** `bc290ff` ergänzt zwei ausführbare Offline-Regressionstests in `scripts/test-emulator-navigation.py`: ungültige Bounds beim ersten doppelten Navigationslabel dürfen einen späteren gültigen Treffer nicht verhindern; ausschließlich unsichtbare/deaktivierte Treffer müssen kontrolliert mit `ValueError` scheitern. Produktivcode, Signing und Secrets unverändert.
+- **Nachweise:** Die neuen Tests wurden in diesem Lauf **nicht ausgeführt**. Für `bc290ff` meldet die Commit-Status-Abfrage keine Checks und die PR-begrenzte Workflow-Abfrage keine Runs; das erlaubt keine Aussage über Push-CI. Historischer Run `44046946252`: Preflight `failure`, Build und Release-Jobs `skipped`; Schritte/Logs weiterhin nicht vorhanden. **Keine APK-Freigabe.**
+- **Projekt-Chats:** Sichtbarer Projektkontext zu GPS, OSRM, Rotation und Track berücksichtigt; vollständiger Live-Zugriff auf andere Chats nicht nachgewiesen.
+- **Nächste Priorität:** Tatsächlichen Push-Run/Preflight-Fehler samt Logs oder Annotationen ermitteln; danach ausführbare Tests und Fixes für #13/#14 statt weiterer reiner Planungsdokumentation. Lokal/CI: `python3 scripts/test-ci-concurrency.py && bash -x scripts/preflight.sh && python3 -u scripts/test-emulator-navigation.py`.
