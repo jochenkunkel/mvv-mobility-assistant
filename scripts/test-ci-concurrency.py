@@ -98,4 +98,11 @@ for index in range(5):
         values = ["success"] * 5
         values[index] = bad
         check_gate(tuple(values), False)
-print("Android CI release gate behavioral matrix passed (21 cases)")
+# Fail closed on unexpected values and on multiple simultaneous failures.
+for unexpected in ("neutral", "timed_out", "action_required", "stale", "SUCCESS", " success "):
+    for index in range(5):
+        values = ["success"] * 5
+        values[index] = unexpected
+        check_gate(tuple(values), False)
+check_gate(("failure", "cancelled", "skipped", "", "timed_out"), False)
+print("Android CI release gate behavioral matrix passed (52 cases)")
