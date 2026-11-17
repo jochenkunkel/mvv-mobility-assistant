@@ -187,3 +187,13 @@ abgeglichen werden.
 - **Ausführungsgrenze:** Lokaler `git ls-remote`-Versuch scheitert mit `Could not resolve host: github.com`. Daher weder Repository-Klon noch echte lokale Testausführung in diesem Lauf möglich. Das GitHub-Connector-Lesen funktioniert, aber es liefert keinen ausführbaren Checkout. **Keine APK-Freigabe.**
 - **Nächster risikoarmer Schritt:** GitHub-Actions-Run mit erreichbaren Logs öffnen; alternativ vollständigen Checkout in einer netzfähigen Umgebung bereitstellen und die drei Preflight-Befehle einzeln ausführen. Erst nach belegtem Fehler minimalen Fix plus Regressionstest auf `main` committen und den neuen Run prüfen. Anschließend #6 GPS-Lücken/Track-Erhalt und #3 Off-Route-Rerouting testen.
 - **Chat-Abgleich:** Nur die hier verfügbaren Projektkontexte und dokumentierten Anforderungen (GPS, Track, Satellitenstatus, Rerouting, Puffer, UI) berücksichtigt. Kein vollständiger Zugriff auf fremde Chatverläufe behauptet.
+
+
+## Automatischer Entwicklungsabgleich – 17.11.2026, 13:21 MEZ
+
+- **Repository:** Vor Änderung war `0d0f373` der neueste Commit; neun Issues offen (#3–#11), keine offenen PRs. README, Roadmap, CI-Workflow, Projektstatus und Preflight-Skripte geprüft.
+- **Verifizierter CI-Befund:** Push-Run [44046946252](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44046946252) für `dc87e65`: `preflight=failure`, übrige fünf Jobs `skipped`. Der Job-Endpunkt liefert keine einzelnen Steps. Ursache weiterhin unbekannt.
+- **Änderung:** Commit `d5948bb` trennt den bisherigen kombinierten Preflight-Schritt in zwei benannte Schritte (Shell-/Python-Syntax sowie Emulator-Navigationstest). Der Concurrency-Guard bleibt unverändert. Zweck: zukünftige Fehler auf einen konkreten Schritt eingrenzen, **kein behaupteter Fehlerfix**.
+- **Verifikation:** Neue Workflow-Datei nach Commit aus GitHub zurückgelesen. Lokaler Clone und damit Testausführung scheiterten weiterhin an `Could not resolve host: github.com`. Ein neuer Actions-Lauf und grüne Tests für `d5948bb` sind noch **nicht** nachgewiesen. **Keine APK-Freigabe.**
+- **Projekt-Chats:** Sichtbare bekannte Anforderungen (GPS-Lücken, Track-Erhalt, Rerouting, Satellitenstatus, UI) berücksichtigt; andere Chats nicht vollständig live abrufbar.
+- **Nächster Schritt:** Push-Run für `d5948bb` prüfen, den konkret fehlgeschlagenen Preflight-Schritt anhand GitHub-UI/Logs identifizieren, dann gezielt korrigieren und Regressionstest ausführen. Danach GPS-/OSM-Regressionen priorisieren.
