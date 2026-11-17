@@ -197,3 +197,12 @@ abgeglichen werden.
 - **Verifikation:** Neue Workflow-Datei nach Commit aus GitHub zurückgelesen. Lokaler Clone und damit Testausführung scheiterten weiterhin an `Could not resolve host: github.com`. Ein neuer Actions-Lauf und grüne Tests für `d5948bb` sind noch **nicht** nachgewiesen. **Keine APK-Freigabe.**
 - **Projekt-Chats:** Sichtbare bekannte Anforderungen (GPS-Lücken, Track-Erhalt, Rerouting, Satellitenstatus, UI) berücksichtigt; andere Chats nicht vollständig live abrufbar.
 - **Nächster Schritt:** Push-Run für `d5948bb` prüfen, den konkret fehlgeschlagenen Preflight-Schritt anhand GitHub-UI/Logs identifizieren, dann gezielt korrigieren und Regressionstest ausführen. Danach GPS-/OSM-Regressionen priorisieren.
+
+## Entwicklungsabgleich – 17.11.2026, 14:20 MEZ
+
+- `main` vor dem Lauf: `45a0f08`; neun offene Issues (#3–#11), keine offenen PRs. README, Roadmap, Workflow, Projektstatus und Preflight-Skripte erneut geprüft.
+- Der bislang konkret abrufbare Push-Run [44046946252](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44046946252) ist **rot**: `preflight=failure`, fünf weitere Jobs `skipped`. Für diesen Run liefert die GitHub-Anbindung weder Job-Schritte noch Logs. Die Commit-Workflow-Abfrage für `45a0f08` liefert keine Läufe, deckt Push-Runs aber nicht verlässlich ab; daraus folgt **kein** grüner Status.
+- Änderung `9d257ab`: `scripts/preflight.sh` meldet mit einem `ERR`-Trap bei einem fehlschlagenden Shell-/Python-Syntaxcheck künftig Befehlszeile, Zeilennummer und Exitcode. Kein Signing-/Secret-Eingriff; keine Änderung an Produktiv-App-Code. Die vorgeschaltete `test-ci-concurrency.py`-Prüfung wird davon nicht erfasst, da sie ein eigener Workflow-Schritt ist.
+- **Verifikation:** GitHub-Commit bestätigt. Lokale Ausführung/Android-Build durch DNS-Fehler (`Could not resolve host: github.com`) blockiert. Neuer Push-Run und vollständige sechs Release-Jobs nicht bestätigt. **Keine APK-Freigabe.**
+- **Nächster Schritt:** Frischen Push-Run von `9d257ab` prüfen, fehlgeschlagenen Preflight-Schritt identifizieren und Fehlerursache gezielt beheben. Danach GPS-Replay bei temporärem Provider-Ausfall, Track-Erhalt, Satellitenstatus und OSM-Routenfortschritt mit Regressionstests absichern.
+- Andere Projekt-Chats nicht vollständig live zugänglich; bekannte Anforderungen aus dem sichtbaren Projektkontext berücksichtigt, keine vollständige Synchronisierung behauptet.
