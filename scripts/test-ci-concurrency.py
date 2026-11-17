@@ -68,3 +68,34 @@ for job in required_jobs:
 assert '!= "success"' in release_block, "Release gate must reject non-success outcomes"
 assert 'exit "$failed"' in release_block, "Release gate must propagate failure to Actions"
 print("Android CI release acceptance static regression guard passed")
+
+# Behavioral regression: execute the release gate's real shell with synthetic job results.
+import os
+import subprocess
+
+run_match = re.search(
+    r"(?ms)^        run: \|\s*\n((?:^          .*\n|^\s*\n)*)",
+    release_block,
+)
+assert run_match, "Release gate shell step missing"
+shell = "\n".join(line[10:] if line.startswith("          ") else line
+                   for line in run_match.group(1).splitlines())
+keys = ("PREFLIGHT", "BUILD", "EMULATOR", "MVV", "DOOR_TO_DOOR")
+
+def check_gate(values, accepted):
+    env = os.environ.copy()
+    env.update(dict(zip(keys, values)))
+    outcome = subprocess.run(["bash", "-c", shell], env=env,
+                             capture_output=True, text=True)
+    assert (outcome.returncode == 0) == accepted, (
+        f"Release gate returned {outcome.returncode} for {values}: "
+        f"{outcome.stdout} {outcome.stderr}"
+    )
+
+check_gate(("success",) * 5, True)
+for index in range(5):
+    for bad in ("failure", "cancelled", "skipped", ""):
+        values = ["success"] * 5
+        values[index] = bad
+        check_gate(tuple(values), False)
+print("Android CI release gate behavioral matrix passed (21 cases)")
