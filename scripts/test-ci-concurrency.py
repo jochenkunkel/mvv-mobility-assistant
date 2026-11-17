@@ -41,3 +41,30 @@ assert re.search(r"(?m)^    needs:\s*preflight\s*$", emulator.group(1)), (
     "Release emulator smoke-test must depend on guarded preflight"
 )
 print("Android CI concurrency static regression guard passed")
+
+# Release acceptance must fail closed when any required job is not successful.
+release = re.search(r"(?ms)^  release-acceptance:\s*\n(.*?)(?=^  [a-zA-Z][\w-]*:|\Z)", source)
+assert release, "Release acceptance job missing"
+release_block = release.group(1)
+condition = re.search(r"(?m)^    if:\s*(.+)$", release_block)
+assert condition, "Release acceptance must have an explicit event condition"
+assert "always()" in condition.group(1), "Release gate must run even if dependencies fail"
+assert "inputs.test_level == 'release'" in condition.group(1), "Manual release runs must activate gate"
+assert "refs/tags/v" in condition.group(1), "Version-tag runs must activate gate"
+required_jobs = (
+    "preflight", "build-and-test", "emulator-smoke-test",
+    "mvv-live-probe", "door-to-door-live-probe",
+)
+needs = re.search(r"(?ms)^    needs:\s*\n((?:^      - .+\n)+)", release_block)
+assert needs, "Release gate must declare its dependencies"
+actual_jobs = re.findall(r"(?m)^      - ([\w-]+)\s*$", needs.group(1))
+assert set(actual_jobs) == set(required_jobs) and len(actual_jobs) == len(required_jobs), (
+    f"Release gate dependencies differ from required jobs: {actual_jobs}"
+)
+for job in required_jobs:
+    assert re.search(r"\$\{\{\s*needs\." + re.escape(job) + r"\.result\s*\}\}", release_block), (
+        f"Release gate must read {job} result"
+    )
+assert '!= "success"' in release_block, "Release gate must reject non-success outcomes"
+assert 'exit "$failed"' in release_block, "Release gate must propagate failure to Actions"
+print("Android CI release acceptance static regression guard passed")
