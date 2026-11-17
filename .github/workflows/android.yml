@@ -49,10 +49,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Guard workflow concurrency policy
         run: python3 scripts/test-ci-concurrency.py
-      - name: Check shell and embedded Python before any build (verbose diagnostics)
-        run: |
-          bash -x scripts/preflight.sh
-          python3 -u scripts/test-emulator-navigation.py
+      - name: Check shell and Python syntax before any build
+        run: bash -x scripts/preflight.sh
+      - name: Test emulator navigation helpers
+        run: python3 -u scripts/test-emulator-navigation.py
 
   build-and-test:
     needs: preflight
