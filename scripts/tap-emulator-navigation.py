@@ -11,6 +11,9 @@ def center_for_label(xml_text: str, label: str) -> tuple[int, int]:
     for node in root.iter("node"):
         if node.get("text") != label and node.get("content-desc") != label:
             continue
+        # UIAutomator may include off-screen or disabled duplicate tab labels.
+        if node.get("displayed") == "false" or node.get("enabled") == "false":
+            continue
         bounds = node.get("bounds", "")
         match = re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", bounds)
         if match:
