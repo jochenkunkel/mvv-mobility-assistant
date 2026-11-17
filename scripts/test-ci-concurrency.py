@@ -28,6 +28,27 @@ assert preflight, "Preflight job missing"
 assert re.search(r"(?m)^        run: python3 scripts/test-ci-concurrency\.py\s*$", preflight.group(1)), (
     "Concurrency guard must execute in the preflight job"
 )
+# Regression: keep the three preflight checks independently visible in Actions.
+# A combined shell command hides which stage failed when job logs are inaccessible.
+preflight_steps = preflight.group(1)
+required_preflight_commands = (
+    "python3 scripts/test-ci-concurrency.py",
+    "bash -x scripts/preflight.sh",
+    "python3 -u scripts/test-emulator-navigation.py",
+)
+positions = []
+for command in required_preflight_commands:
+    occurrences = list(re.finditer(
+        r"(?m)^        run:\s*" + re.escape(command) + r"\s*$",
+        preflight_steps,
+    ))
+    assert len(occurrences) == 1, (
+        f"Preflight must contain exactly one separate run step for {command}"
+    )
+    positions.append(occurrences[0].start())
+assert positions == sorted(positions), "Preflight steps must execute in the documented order"
+print("Android CI preflight step visibility regression guard passed")
+
 # Ensure the guarded preflight actually gates the APK-producing job.
 build = re.search(r"(?ms)^  build-and-test:\s*\n(.*?)(?=^  [a-zA-Z][\w-]*:|\Z)", source)
 assert build, "Build-and-test job missing"
