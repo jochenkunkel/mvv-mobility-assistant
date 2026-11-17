@@ -28,4 +28,10 @@ assert preflight, "Preflight job missing"
 assert re.search(r"(?m)^        run: python3 scripts/test-ci-concurrency\\.py\\s*$", preflight.group(1)), (
     "Concurrency guard must execute in the preflight job"
 )
+# Ensure the guarded preflight actually gates the APK-producing job.
+build = re.search(r"(?ms)^  build-and-test:\s*\n(.*?)(?=^  [a-zA-Z][\\w-]*:|\\Z)", source)
+assert build, "Build-and-test job missing"
+assert re.search(r"(?m)^    needs:\s*preflight\s*$", build.group(1)), (
+    "APK build must depend on the guarded preflight job"
+)
 print("Android CI concurrency static regression guard passed")
