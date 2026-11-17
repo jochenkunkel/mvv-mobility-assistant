@@ -24,6 +24,20 @@ class EmulatorNavigationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.center_for_label(xml, "Verbindungen")
 
+    def test_skips_hidden_duplicate_label(self):
+        xml = ('<hierarchy>'
+               '<node text="Verbindungen" displayed="false" bounds="[0,0][100,100]"/>'
+               '<node text="Verbindungen" displayed="true" bounds="[200,300][400,360]"/>'
+               '</hierarchy>')
+        self.assertEqual((300, 330), module.center_for_label(xml, "Verbindungen"))
+
+    def test_skips_disabled_duplicate_label(self):
+        xml = ('<hierarchy>'
+               '<node text="Start" enabled="false" bounds="[0,0][100,100]"/>'
+               '<node text="Start" enabled="true" bounds="[100,200][300,260]"/>'
+               '</hierarchy>')
+        self.assertEqual((200, 230), module.center_for_label(xml, "Start")
+
     def test_rejects_empty_bounds(self):
         xml = '<hierarchy><node text="Verbindungen" bounds="[100,200][100,260]"/></hierarchy>'
         with self.assertRaises(ValueError):
