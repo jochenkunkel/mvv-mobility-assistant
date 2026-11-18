@@ -127,3 +127,20 @@ for unexpected in ("neutral", "timed_out", "action_required", "stale", "SUCCESS"
         check_gate(tuple(values), False)
 check_gate(("failure", "cancelled", "skipped", "", "timed_out"), False)
 print("Android CI release gate behavioral matrix passed (52 cases)")
+
+# Diagnostic visibility regression: a failed preflight must leave actionable
+# evidence in the Actions summary without relaxing the build gate.
+assert re.search(r"(?m)^      - name: Summarize failing preflight checks\s*$", preflight_steps), (
+    "Preflight failure diagnostic step missing"
+)
+assert re.search(r"(?m)^        if: failure\(\)\s*$", preflight_steps), (
+    "Preflight diagnostics must execute after a failed check"
+)
+assert 'GITHUB_STEP_SUMMARY' in preflight_steps, (
+    "Preflight diagnostics must persist output in the Actions summary"
+)
+for command in required_preflight_commands:
+    assert preflight_steps.count("'" + command + "'") >= 1, (
+        f"Preflight failure diagnostic must re-run {command}"
+    )
+print("Android CI failure diagnostic visibility regression guard passed")
