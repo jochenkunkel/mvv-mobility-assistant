@@ -8,11 +8,15 @@ import xml.etree.ElementTree as ET
 
 def center_for_label(xml_text: str, label: str) -> tuple[int, int]:
     root = ET.fromstring(xml_text)
-    for node in root.iter("node"):
+    def eligible(node, ancestors_visible=True):
+        visible = ancestors_visible and node.get("displayed") != "false" and node.get("enabled") != "false"
+        if node.tag == "node" and visible:
+            yield node
+        for child in node:
+            yield from eligible(child, visible)
+
+    for node in eligible(root):
         if node.get("text") != label and node.get("content-desc") != label:
-            continue
-        # UIAutomator may include off-screen or disabled duplicate tab labels.
-        if node.get("displayed") == "false" or node.get("enabled") == "false":
             continue
         bounds = node.get("bounds", "")
         match = re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", bounds)
