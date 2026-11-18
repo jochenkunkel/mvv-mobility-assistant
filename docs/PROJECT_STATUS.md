@@ -367,3 +367,13 @@ Keine erfundenen CI-Ergebnisse oder pauschale „fertig“-Meldung.
 - **Kleine Korrektur:** `d92373b` behandelt in der Emulator-Navigationszielsuche zusätzlich Androids `visible-to-user="false"` und Groß-/Kleinschreibungsvarianten von `displayed`/`enabled`. `2316363` ergänzt zwei passende Offline-Regressionstests. Keine Änderungen an App-GPS, Routing oder Signing; diese Bugs bleiben offen.
 - **CI-Grenze:** Der ältere Workflow-Lauf [#404](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44179252791) hat einen fehlgeschlagenen `preflight`-Job und übersprungene Build-Jobs. Der Abruf des Preflight-Joblogs (`134378837918`) scheiterte; damit ist die konkrete Fehlerzeile nicht belegt. Der Commit-Workflow-Connector erfasst nur PR-Läufe, nicht zuverlässig Push-Läufe. **Neue Tests nicht ausgeführt, kein grüner Build nachgewiesen, keine APK-Installationsfreigabe.**
 - **Nächste Aktion:** Aktuellen Push-Lauf samt Jobschritten/Logs oder Step Summary abrufen und zuerst den tatsächlich fehlgeschlagenen Preflight-Befehl reparieren. Danach instrumentierte Rotationstests (#13) und deterministische GPS-/Rerouting-Tracktests (#14) implementieren. Andere Chats sind nicht vollständig live einsehbar; keine Chat-Synchronisierung behauptet.
+
+
+## Automatischer Entwicklungsabgleich – 18.11.2026, 23:18 MEZ
+
+- **Repository:** vor der Änderung HEAD `ae27c1a`; README, Implementierungs-Roadmap, zentraler Status, Rotations-/GPS-Testplan, CI-Workflow, Preflight-Skripte und letzte Commits geprüft. 11 offene Issues, keine offenen PRs.
+- **Fix:** `5ba377e` normalisiert Leerzeichen vor/nach den Android-UI-Hierarchieattributen `displayed`, `visible-to-user` und `enabled`. Dadurch können Werte wie `" FALSE "` nicht als sichtbar/aktiv durchrutschen. Produktivnavigation unverändert.
+- **Regressionen:** `296efce` ergänzt zwei Python-Tests für unsichtbare doppelte Labels und deaktivierte Elterncontainer mit Whitespace. Tests sind committed, aber in diesem Lauf nicht ausgeführt.
+- **CI-Nachweis:** Die commitbezogene Workflow-Abfrage für `296efce` liefert keine PR-Läufe und ist kein Beleg für Push-CI. Der ältere Lauf 44179252791 hat `preflight=failure`, `build-and-test=skipped`; keine Aussage über neuen HEAD. Keine APK-Installationsfreigabe.
+- **Chat-Abgleich:** Bekannte Anforderungen aus Main/Schedule (Rotation #13, GPS-Spur #14, Rerouting, MVV) berücksichtigt; vollständige Live-Einsicht in alle Chats nicht möglich.
+- **Nächster Schritt:** Neue Python-Tests und alle drei Preflight-Schritte tatsächlich ausführen, Push-Workflow-ID und Fehlerausgabe beschaffen. Anschließend #13/#14 mit deterministischen Android-/GPS-Regressionen bearbeiten.
