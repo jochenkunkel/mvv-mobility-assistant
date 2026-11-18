@@ -9,9 +9,9 @@ import xml.etree.ElementTree as ET
 def center_for_label(xml_text: str, label: str) -> tuple[int, int]:
     root = ET.fromstring(xml_text)
     def eligible(node, ancestors_visible=True):
-        visible = (ancestors_visible and node.get("displayed", "").lower() != "false"
-                   and node.get("visible-to-user", "").lower() != "false"
-                   and node.get("enabled", "").lower() != "false")
+        visible = (ancestors_visible and node.get("displayed", "").strip().lower() != "false"
+                   and node.get("visible-to-user", "").strip().lower() != "false"
+                   and node.get("enabled", "").strip().lower() != "false")
         if node.tag == "node" and visible:
             yield node
         for child in node:
