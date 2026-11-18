@@ -113,6 +113,21 @@ class EmulatorNavigationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.center_for_label(xml, "Start")
 
+    def test_rejects_whitespace_padded_false_visibility(self):
+        xml = ('<hierarchy><node visible-to-user=" FALSE ">'
+               '<node text="Start" bounds="[0,0][100,100]"/>'
+               '</node><node text="Start" displayed=" false " bounds="[100,0][200,100]"/>'
+               '<node text="Start" bounds="[200,300][400,360]"/>'
+               '</hierarchy>')
+        self.assertEqual((300, 330), module.center_for_label(xml, "Start"))
+
+    def test_whitespace_padded_disabled_parent_fails_closed(self):
+        xml = ('<hierarchy><node enabled=" false ">'
+               '<node content-desc="Meine Fahrt" bounds="[0,0][100,100]"/>'
+               '</node></hierarchy>')
+        with self.assertRaises(ValueError):
+            module.center_for_label(xml, "Meine Fahrt")
+
     def test_rejects_empty_bounds(self):
         xml = '<hierarchy><node text="Verbindungen" bounds="[100,200][100,260]"/></hierarchy>'
         with self.assertRaises(ValueError):
