@@ -98,6 +98,21 @@ class EmulatorNavigationTests(unittest.TestCase):
         with self.assertRaises(Exception):
             module.center_for_label('<hierarchy><node text="Start"', "Start")
 
+    def test_skips_android_visible_to_user_false_parent(self):
+        xml = ('<hierarchy><node visible-to-user="false">'
+               '<node text="Verbindungen" bounds="[0,0][100,100]"/>'
+               '</node><node text="Verbindungen" bounds="[200,300][400,360]"/>'
+               '</hierarchy>')
+        self.assertEqual((300, 330), module.center_for_label(xml, "Verbindungen"))
+
+    def test_rejects_uppercase_false_visibility_and_enabled(self):
+        xml = ('<hierarchy><node displayed="False">'
+               '<node text="Start" bounds="[0,0][100,100]"/>'
+               '</node><node text="Start" enabled="FALSE" bounds="[100,0][200,100]"/>'
+               '</hierarchy>')
+        with self.assertRaises(ValueError):
+            module.center_for_label(xml, "Start")
+
     def test_rejects_empty_bounds(self):
         xml = '<hierarchy><node text="Verbindungen" bounds="[100,200][100,260]"/></hierarchy>'
         with self.assertRaises(ValueError):
