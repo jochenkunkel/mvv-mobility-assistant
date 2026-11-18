@@ -76,10 +76,7 @@ Für jede Änderung: **Commit/Dateien**, **Testbefehl + echtes Ergebnis**,
 **Issue-Status**, **bekannte Risiken** und **nächster Schritt** festhalten.
 Keine erfundenen CI-Ergebnisse oder pauschale „fertig“-Meldung.
 
-**Stand dieses Eintrags:** Basierend auf dem in GitHub gelesenen `main`
-und neun offenen Issues am 16.11.2026. Nachfolgende Commits/Issues können
-diesen Snapshot überholen und müssen vor der nächsten Arbeit erneut
-abgeglichen werden.
+**Historischer Eintrag (16.11.2026):** Der damalige Abgleich erfasste neun offene Issues. Dieser Wert ist überholt; beim erneuten Abgleich am 18.11.2026 waren elf Issues offen (siehe aktuelle Tickettabelle oben). Alte Statusabschnitte sind datierte Momentaufnahmen und dürfen nicht als aktuelle Freigabe oder aktueller Issue-Zähler interpretiert werden.
 
 ## GPS-Reparaturrunde – 16.11.2026
 
@@ -354,3 +351,12 @@ abgeglichen werden.
 - **CI-Nachweis:** `fetch_commit_workflow_runs` für `49da9b1` liefert `[]`, filtert aber PR-getriggerte Läufe; **kein Beleg** für Push-Buildzustand. Der Workflow enthält drei getrennte Preflight-Schritte und einen Fehlerdiagnose-Summary-Step. Die konkrete erste Fehlerausgabe bleibt unzugänglich; keine Tests ausgeführt und keine APK-Freigabe.
 - **Projektkontext:** Bekannte Main-/Schedule-Anforderungen zu GPS-Lücken, Rerouting, dunkellila Track und Rotation sind als #13/#14 und in der Regressionstestmatrix abgebildet. Kein vollständiger Live-Zugriff auf andere Projekt-Chats nachgewiesen.
 - **Nächste technische Aktion:** Aktuellen Actions-Push-Lauf und dessen Preflight-Summary abrufen oder auf Checkout desselben SHA `python3 scripts/test-ci-concurrency.py`, `bash -x scripts/preflight.sh`, `python3 -u scripts/test-emulator-navigation.py` ausführen. Danach reproduzierten Fehler minimal beheben; #13/#14 als ausführbare Tests umsetzen. Keine Änderung an Signing oder Secrets.
+
+
+## Automatischer Entwicklungsabgleich – 18.11.2026, 21:15 MEZ
+
+- **Repository:** Neuester vor diesem Lauf ermittelter Commit `f3877c1` auf `main`; elf offene Issues, keine offenen PRs. README, Roadmap, ADR, GPS-/Rotations-Testmatrix, Preflight und Android-Workflow erneut gelesen.
+- **Dokumentationskorrektur:** Den widersprüchlichen historischen Hinweis „neun offene Issues“ explizit als überholten Snapshot gekennzeichnet; keine Änderung an App- oder Signing-Code.
+- **CI-Nachweisgrenze:** Die kombinierte Commit-Status-Abfrage für `f3877c1` liefert keine Statusmeldungen. Das ist **kein** Beweis für einen erfolgreichen oder fehlgeschlagenen Push-Workflow. Aktuelle Push-Joblogs wurden nicht eingesehen; die drei Preflight-Befehle wurden in diesem Lauf nicht ausgeführt. Kein grüner Build und keine APK-Freigabe.
+- **Projektkontext:** Bekannte Fehler #13 (Rotation) und #14 (GPS-Spur) bleiben offen; vollständiger Zugriff auf andere Chatverläufe ist nicht nachgewiesen.
+- **Nächster konkreter Schritt:** Preflight-Befehle auf dem exakten `main`-Checkout ausführen bzw. Actions-Push-Joblog beschaffen, danach erste reproduzierbare Ursache beheben. Anschließend instrumentierten Activity-Recreation-Test und GPS-Track-State-Regression für #13/#14 implementieren.
