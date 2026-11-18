@@ -53,6 +53,31 @@ class EmulatorNavigationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.center_for_label(xml, "Meine Fahrt")
 
+    def test_skips_label_inside_hidden_parent(self):
+        xml = ('<hierarchy>'
+               '<node displayed="false" bounds="[0,0][500,500]">'
+               '<node text="Verbindungen" displayed="true" bounds="[0,0][100,100]"/>'
+               '</node>'
+               '<node text="Verbindungen" bounds="[200,300][400,360]"/>'
+               '</hierarchy>')
+        self.assertEqual((300, 330), module.center_for_label(xml, "Verbindungen"))
+
+    def test_skips_label_inside_disabled_parent(self):
+        xml = ('<hierarchy>'
+               '<node enabled="false" bounds="[0,0][500,500]">'
+               '<node text="Meine Fahrt" bounds="[0,0][100,100]"/>'
+               '</node>'
+               '<node text="Meine Fahrt" bounds="[300,400][500,480]"/>'
+               '</hierarchy>')
+        self.assertEqual((400, 440), module.center_for_label(xml, "Meine Fahrt"))
+
+    def test_fails_when_only_matching_label_has_hidden_parent(self):
+        xml = ('<hierarchy><node displayed="false">'
+               '<node text="Start" bounds="[0,0][100,100]"/>'
+               '</node></hierarchy>')
+        with self.assertRaises(ValueError):
+            module.center_for_label(xml, "Start")
+
     def test_rejects_empty_bounds(self):
         xml = '<hierarchy><node text="Verbindungen" bounds="[100,200][100,260]"/></hierarchy>'
         with self.assertRaises(ValueError):
