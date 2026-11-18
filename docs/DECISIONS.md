@@ -117,17 +117,17 @@ Heimadresse ist personenbezogen und wird lokal in App-Preferences gespeichert; a
 - **Umgesetzt:** `app/build.gradle.kts` aktiviert `buildConfig` und definiert beide Build-Typen; `MainActivity.kt` zeigt den Export nur bei aktivem Flag; `DebugResponseCapture.kt` prüft denselben Schutz bei Aufnahme und Abruf der Rohantwort. Commits `5f7d1117`, `a586f1eb`, `13ac8ed6`.
 - **Sicherheit:** Rohantwort enthält möglicherweise Standort- und Zielinformationen; keine automatische Übertragung und kein Release-Export. Nutzer exportiert über Android-Dateiauswahl. **Noch offen:** Build/Unit-Test und UI-Test für beide Varianten, Prüfung von gespeicherten Rohdaten und Exportformat.
 
-### ADR-008 – Globale GitHub-Actions-Serialisierung (16.11.2026)
-- **Beschlossen:** Alle Workflow-Dateien unter `.github/workflows/*.yml` verwenden auf oberster Ebene exakt dieselbe Concurrency-Konfiguration:
+### ADR-008 – CI-Konkurrenz nach Ereignis und Ref (16.11.2026; korrigiert 18.11.2026)
+- **Aktuelle Entscheidung:** Die ursprüngliche globale Gruppe `single-active-ci` mit bedingungslosem Abbruch ist **historisch und überholt**. Sie darf nicht wiederhergestellt werden, weil sie laufende manuelle Prüfungen und signierte Releases unterbrechen könnte. Siehe [CI-CONCURRENCY-CURRENT.md](CI-CONCURRENCY-CURRENT.md).
+- **Implementierter Stand in `.github/workflows/android.yml`:**
 ```yaml
 concurrency:
-  group: single-active-ci
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/v') }}
 ```
-- **Geltungsbereich:** `android.yml` (Build, Unit-Tests, Lint, Emulator-/Live-Tests, manuelle Tests) und `release.yml` (signierte Release-Artefakte). Alle Trigger, Branches und Workflow-Namen teilen eine einzige Gruppe; ein neuer Lauf kann einen älteren laufenden oder wartenden Lauf ersetzen. **Auch laufende Release-Tests und signierte Release-Builds werden abgebrochen.**
-- **Zweck:** GitHub-Actions-Minuten sparen, ohne Workflows zu deaktivieren. Alle Jobs eines Workflow-Laufs werden gemeinsam abgebrochen; die Jobs innerhalb des neuesten Laufs dürfen weiterhin parallel laufen. Dies ist keine Garantie, dass zu jedem Zeitpunkt nur ein einzelner Job aktiv ist.
-- **Betrieb:** Für wichtige Releases keine neuen CI-Läufe auslösen, bis der Release-Lauf fertig ist. Abgebrochene Läufe können bei Bedarf manuell neu gestartet werden; der neueste Lauf erhält Vorrang. GitHub garantiert bei konkurrierenden Ereignissen keine FIFO-Reihenfolge.
-- **Prüfung:** Workflow-YAML in GitHub Actions und Abbruchverhalten mit zwei kurz aufeinanderfolgenden Läufen kontrollieren; nicht als bereits erfolgreich getestet ausgeben.
+- **Wirkung:** Nur ältere gewöhnliche Branch-Push-Läufe derselben Workflow-/Ereignis-/Ref-Gruppe können ersetzt werden. PR-, Tag- und manuelle Läufe werden durch diese Regel nicht aktiv abgebrochen. Es ist **keine** globale Serialisierung aller Jobs oder Workflows.
+- **Geltungsgrenze:** Die Aussage ist anhand des Android-Workflow-Quelltexts geprüft. Für `release.yml` sind eigene Concurrency- und Freigaberegeln gesondert zu verifizieren; keine workflowübergreifende Release-Garantie aus der Android-Regel ableiten.
+- **Abnahme offen:** `python3 scripts/test-ci-concurrency.py` sowie Preflight und Android-CI auf identischem HEAD ausführen, echte Push-Läufe samt Run-ID prüfen und kontrollierte Abbruch-/Nicht-Abbruch-Szenarien testen. Quelltextprüfung ist kein erfolgreicher CI-Nachweis.
 
 ### ADR-009 – Regionale Android-App-Icons (16.11.2026)
 - Ein einziger Build-Parameter `-PmeinWegRegion=munich|berlin|frankfurt` steuert **sowohl** das adaptive Launcher-Icon als auch `BuildConfig.MOBILITY_REGION` und damit `MobilityProviderConfig.region`.
