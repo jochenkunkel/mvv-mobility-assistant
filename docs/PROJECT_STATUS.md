@@ -1,6 +1,6 @@
 # MeinWeg2 – zentraler Projektstatus
 
-**Stand:** 16.11.2026 · **Verbindliche Codebasis:** GitHub `main`
+**Stand:** 18.11.2026, 20:22 MEZ (Repository-Abgleich) · **Verbindliche Codebasis:** GitHub `main`
 
 > **Startpunkt für alle Chats/Agenten:** Diese Datei zuerst lesen, anschließend
 > `main`, offene GitHub-Issues und CI-Läufe live abgleichen. Diese Datei ist
@@ -42,7 +42,7 @@ sind datierte Befunde, keine aktuelle Build-Freigabe.
 **Geschlossen:** #2 NAV-01 (Codefix integriert; reale Navigationsabnahme
 weiterhin wichtig).
 
-**Offen (9):**
+**Offen (11; Abgleich 18.11.2026):**
 
 | Ticket | Thema | Nächste konkrete Arbeit |
 | --- | --- | --- |
@@ -55,18 +55,20 @@ weiterhin wichtig).
 | #9 TEST-01 | UI-Qualität | Golden Screenshots und Geräte-Matrix einführen |
 | #10 DOC-01 | Dokumentation | Weitere Statusdateien und Aussagen gegen Code/CI abgleichen |
 | #11 PRIV-01 | OSM/Datenschutz | Nutzungsrichtlinien, Attribution, Standortübertragung dokumentieren |
+| #13 BUG | Bildschirmrotation | Aktive Route, Konfiguration und Navigation bei Activity-Recreation erhalten; instrumentierten Test ergänzen |
+| #14 BUG | GPS-Trackverlust | Akzeptierte GPS-Spur bei Aussetzern, Rerouting und Rotation erhalten; deterministische Regressionstests ergänzen |
 
 Issue-Übersicht: https://github.com/jochenkunkel/mvv-mobility-assistant/issues
 
 ## Nächste Schritte (priorisiert)
 
-1. CI von `main` prüfen, insbesondere neue Lint-Pflicht und GPS-Tests;
-   Fehler sofort reparieren.
-2. #4: Einstiegshaltestelle anhand der tatsächlich ausgewählten MVV-Etappe
+1. Aktuellen Push-Actions-Lauf von `main` samt Preflight-Einzelschritten verifizieren; ersten tatsächlich fehlgeschlagenen Befehl reproduzieren und reparieren. Die commitbezogene Connector-Abfrage erfasst nur PR-Läufe.
+2. #13 und #14: Regressionstests und anschließend gezielte Lifecycle-/GPS-Track-Fixes gemäß `docs/REGRESSION-ROTATION-GPS.md`.
+3. #4: Einstiegshaltestelle anhand der tatsächlich ausgewählten MVV-Etappe
    bestimmen; Geocoding-Fallback nicht als exakte Haltestelle ausgeben.
-3. #5 und #6: Zeit-/GPS-Korrektheit einschließlich Randfalltests.
-4. #3 und #9: Minikarten-Ausrichtung und visuelle Geräte-Abnahme.
-5. #8, #7, #11, #10: CI, Architektur, Datenschutz und Dokumentation.
+4. #5 und #6: Zeit-/GPS-Korrektheit einschließlich Randfalltests.
+5. #3 und #9: Minikarten-Ausrichtung und visuelle Geräte-Abnahme.
+6. #8, #7, #11, #10: CI, Architektur, Datenschutz und Dokumentation.
 
 ## Abnahme und Aktualisierungsprotokoll
 
@@ -344,3 +346,11 @@ abgeglichen werden.
 - **Projekt-Chats:** Anforderungen aus den zugänglichen Projektkontexten Main/Schedule (GPS-Aussetzer, verschwindender violetter Track, Rotation, Rerouting) mit #13/#14 abgeglichen; kein vollständiger Live-Zugriff auf alle Chatverläufe behauptet.
 - **Nächste ausführbare Schritte:** (1) Aktuellen Push-Actions-Lauf mit Preflight-Step-Ausgabe beschaffen oder die drei Kommandos auf Checkout von `main` ausführen; den **ersten reproduzierten** Fehler reparieren. (2) #13: Activity-Recreation-Test für ausgewählte Route und Einstellungen. (3) #14: reinen State-Test für akzeptierten GPS-Track über Aussetzer, Reroute und Rotation. Details und Abnahmekriterien in `docs/REGRESSION-ROTATION-GPS.md`.
 - **Freigabe:** Kein neuer Test-/Emulator-/Gerätenachweis; keine APK-Installationsfreigabe.
+
+
+## Entwicklungsabgleich – 18.11.2026, 20:22 MEZ
+
+- **GitHub-Baseline:** Neuester über Commit-Suche sichtbarer `main`-Commit `49da9b1956f58dbaa38ccccdc1737b77e8338abb`; elf offene Issues (#3–#11, #13, #14), keine offenen PRs. README, Status, ADRs, Android-Workflow und Rotations-/GPS-Testmatrix erneut gelesen. Die bisher veraltete Kopfzeile, Ticketzahl und Prioritäten oben wurden auf diesen Abgleich korrigiert.
+- **CI-Nachweis:** `fetch_commit_workflow_runs` für `49da9b1` liefert `[]`, filtert aber PR-getriggerte Läufe; **kein Beleg** für Push-Buildzustand. Der Workflow enthält drei getrennte Preflight-Schritte und einen Fehlerdiagnose-Summary-Step. Die konkrete erste Fehlerausgabe bleibt unzugänglich; keine Tests ausgeführt und keine APK-Freigabe.
+- **Projektkontext:** Bekannte Main-/Schedule-Anforderungen zu GPS-Lücken, Rerouting, dunkellila Track und Rotation sind als #13/#14 und in der Regressionstestmatrix abgebildet. Kein vollständiger Live-Zugriff auf andere Projekt-Chats nachgewiesen.
+- **Nächste technische Aktion:** Aktuellen Actions-Push-Lauf und dessen Preflight-Summary abrufen oder auf Checkout desselben SHA `python3 scripts/test-ci-concurrency.py`, `bash -x scripts/preflight.sh`, `python3 -u scripts/test-emulator-navigation.py` ausführen. Danach reproduzierten Fehler minimal beheben; #13/#14 als ausführbare Tests umsetzen. Keine Änderung an Signing oder Secrets.
