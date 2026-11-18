@@ -53,6 +53,34 @@ jobs:
         run: bash -x scripts/preflight.sh
       - name: Test emulator navigation helpers
         run: python3 -u scripts/test-emulator-navigation.py
+      # Diagnostic only: preserve the failing preflight gate, but expose which
+      # command fails even when GitHub's job log download is unavailable.
+      - name: Summarize failing preflight checks
+        if: failure()
+        shell: bash
+        run: |
+          echo '## Preflight failure diagnostics' >> "$GITHUB_STEP_SUMMARY"
+          if [[ ! -f scripts/preflight.sh ]]; then
+            echo 'Checkout or workspace unavailable; scripts/preflight.sh missing.' | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          commands=(
+            'python3 scripts/test-ci-concurrency.py'
+            'bash -x scripts/preflight.sh'
+            'python3 -u scripts/test-emulator-navigation.py'
+          )
+          for command in "${commands[@]}"; do
+            echo "### $command" >> "$GITHUB_STEP_SUMMARY"
+            echo "\$ $command"
+            if timeout 90s bash -c "$command" > /tmp/mw2-preflight-output.txt 2>&1; then
+              echo 'PASS' >> "$GITHUB_STEP_SUMMARY"
+            else
+              result=$?
+              echo "FAIL (exit $result)" >> "$GITHUB_STEP_SUMMARY"
+              echo "::error title=Preflight diagnostic::Failed: $command (exit $result)"
+            fi
+            tail -n 25 /tmp/mw2-preflight-output.txt | tee -a "$GITHUB_STEP_SUMMARY"
+          done
 
   build-and-test:
     needs: preflight
