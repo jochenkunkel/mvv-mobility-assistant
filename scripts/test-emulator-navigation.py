@@ -78,6 +78,26 @@ class EmulatorNavigationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.center_for_label(xml, "Start")
 
+    def test_hidden_parent_blocks_content_description_target(self):
+        xml = ('<hierarchy><node displayed="false">'
+               '<node content-desc="Meine Fahrt" bounds="[0,0][100,100]"/>'
+               '</node>'
+               '<node content-desc="Meine Fahrt" bounds="[200,300][400,360]"/>'
+               '</hierarchy>')
+        self.assertEqual((300, 330), module.center_for_label(xml, "Meine Fahrt"))
+
+    def test_disabled_grandparent_blocks_nested_target(self):
+        xml = ('<hierarchy><node enabled="false"><node enabled="true">'
+               '<node text="Start" bounds="[0,0][100,100]"/>'
+               '</node></node>'
+               '<node text="Start" bounds="[100,200][300,260]"/>'
+               '</hierarchy>')
+        self.assertEqual((200, 230), module.center_for_label(xml, "Start"))
+
+    def test_malformed_xml_fails_without_tap_target(self):
+        with self.assertRaises(Exception):
+            module.center_for_label('<hierarchy><node text="Start"', "Start")
+
     def test_rejects_empty_bounds(self):
         xml = '<hierarchy><node text="Verbindungen" bounds="[100,200][100,260]"/></hierarchy>'
         with self.assertRaises(ValueError):
