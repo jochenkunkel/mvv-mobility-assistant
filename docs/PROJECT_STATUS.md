@@ -7,6 +7,14 @@
 > eine Übergabe und kein Ersatz für den tatsächlichen Repository-Status.
 
 
+## Automatischer Entwicklungsabgleich – 19.11.2026, 07:20 MEZ
+
+- **Live-Abgleich:** GitHub-Suche meldet HEAD `bc654330be22094bd6d95e8ded4351d9296a0171` (Testvertrag), weiterhin elf offene Issues (#3–#11, #13, #14). README, `docs/IMPLEMENTATION-ROADMAP.md`, `docs/DECISIONS.md`, `docs/REGRESSION-ROTATION-GPS.md`, `MainActivity.kt` und `.github/workflows/android.yml` erneut gelesen. Die GitHub-Commit-Status-Abfrage für `bc65433` lieferte `statuses: []`; daraus folgt **keine** Aussage über den tatsächlichen Push-Actions-Lauf.
+- **Neu präzisierter CI-Befund:** Der normale Push durchläuft `preflight` und `build-and-test` mit JVM-Tests, Debug-APK und Lint. Der Job `emulator-smoke-test` einschließlich `:app:connectedDebugAndroidTest` läuft **nur** bei einem Tag `v*` oder manuellem `workflow_dispatch` mit `test_level=release`. Ein erfolgreicher gewöhnlicher Push könnte deshalb den geforderten `ActivityScenario.recreate()`-Instrumentierungstest **nicht** bestätigen. Dies ist ein konkreter Nachweis-/Gate-Unterschied, kein beobachteter Testfehler.
+- **Arbeitspaket für #13:** Erst einen isolierten Android-Instrumentierungstest mit `ActivityScenario.recreate()` und deterministischer Navigation-Fixture implementieren; dann mit `workflow_dispatch(test_level=release)` oder lokalem Emulator tatsächlich ausführen. Vorhandene `remember`-Zustände sind nach Activity-Recreation nicht garantiert erhalten. Danach Lifecycle-StateHolder und erneute Tests. **Nicht** auf eine gewöhnliche Push-CI als ausreichende Abnahme verweisen.
+- **Arbeitspaket für #14:** GPS-Track als unabhängige Zustandsquelle von OSRM-Route und UI-Layer testen; A/B/C → Fix-Lücke → D, Reroute und stale Callback. Erst mit bestandenem Emulatorlauf und realem S25-Nachweis schließen.
+- **Ausführungsgrenze dieses Laufs:** Kein Android-SDK-/Emulator-Testlauf und keine vollständige Actions-Push-Run-Liste verfügbar; daher kein grüner Build, keine APK-Installationsfreigabe. Keine neuen, vollständig verifizierten Anforderungen aus anderen Projekt-Chats; zugänglicher Verlauf deckt Rotation, GPS-Aussetzer und Rerouting ab.
+
 ## Automatischer Abgleich – 19.11.2026, 01:17 MEZ
 
 - **Verifizierter HEAD vor diesem Eintrag:** `d931e1bc2db3fdcc2a4934b2ebe50e35dc57cb92` (neue Offline-Testsuite für Emulator-Navigationsziele). Die neue Suite `scripts/test-emulator-navigation.py` wurde im Repository gelesen: 18 Testmethoden; sie wird im `preflight`-Job nach Shell-/Python-Syntaxprüfung ausgeführt. **18 vorhandene Tests sind keine 18 bestandenen Tests.**
