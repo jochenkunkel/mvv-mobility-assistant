@@ -7,6 +7,14 @@
 > eine Übergabe und kein Ersatz für den tatsächlichen Repository-Status.
 
 
+## CI-Befund – 19.11.2026, 08:17 MEZ (verifiziert)
+
+- **HEAD vor diesem Eintrag:** `1a2a2bc5e7a425ae3107ac48ce5e1c2a53f677f4`. GitHub Actions **Push-Lauf #438**, Run-ID `44471413554`, vom 19.11.2026 07:20 MEZ: **completed/failure**. Beleg: https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44471413554 . Damit ist die frühere Aussage „Push-Läufe nicht einsehbar“ überholt: Die Actions-Run-Liste ist über den GitHub-Connector erreichbar.
+- **Jobs:** `preflight` (Job-ID `135381540317`) **failure**; `build-and-test`, `emulator-smoke-test`, `mvv-live-probe`, `door-to-door-live-probe` und `release-acceptance` **skipped**. Der Workflow ist also tatsächlich rot, nicht nur unbestätigt. Aus den übersprungenen Jobs kann keine APK-Freigabe abgeleitet werden.
+- **Diagnosegrenze:** GitHub-Job-Schritt-Abfrage liefert `steps: []`; Joblog-Abruf scheitert mit HTTP 404 / `BlobNotFound`. Welcher einzelne Preflight-Schritt fehlschlug, ist **nicht** nachgewiesen. Der Lauf wurde rund drei Sekunden nach Start abgeschlossen; daraus allein keine Ursache ableiten. Keine blinde Änderung an Produktivcode oder CI.
+- **Nächster konkreter Schritt:** Über die GitHub-Actions-Weboberfläche Run #438 / Job `preflight` einschließlich Step Summary und Checks-Annotationen öffnen; bei weiterhin fehlenden Logs einen neuen manuellen Diagnose-Lauf mit zugänglichen Logs auslösen. Alternativ den exakten HEAD auschecken und `python3 scripts/test-ci-concurrency.py`, `bash -x scripts/preflight.sh`, `python3 -u scripts/test-emulator-navigation.py` einzeln mit Exitcode ausführen. **Erst den ersten fehlgeschlagenen Befehl isolieren, dann reparieren und erneut CI prüfen.** #13/#14 bleiben danach die nächsten Codeprioritäten.
+- **Chat-Abgleich:** Bekannte Main-/Schedule-Meldungen zu Rotation, GPS-Spur und Rerouting bleiben relevant; kein vollständiger Live-Zugriff auf alle Chatnachrichten behauptet.
+
 ## Automatischer Entwicklungsabgleich – 19.11.2026, 07:20 MEZ
 
 - **Live-Abgleich:** GitHub-Suche meldet HEAD `bc654330be22094bd6d95e8ded4351d9296a0171` (Testvertrag), weiterhin elf offene Issues (#3–#11, #13, #14). README, `docs/IMPLEMENTATION-ROADMAP.md`, `docs/DECISIONS.md`, `docs/REGRESSION-ROTATION-GPS.md`, `MainActivity.kt` und `.github/workflows/android.yml` erneut gelesen. Die GitHub-Commit-Status-Abfrage für `bc65433` lieferte `statuses: []`; daraus folgt **keine** Aussage über den tatsächlichen Push-Actions-Lauf.
