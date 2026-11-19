@@ -401,3 +401,11 @@ Keine erfundenen CI-Ergebnisse oder pauschale „fertig“-Meldung.
 - **CI-Nachweis:** Die commitbezogene Workflow-Abfrage für `296efce` liefert keine PR-Läufe und ist kein Beleg für Push-CI. Der ältere Lauf 44179252791 hat `preflight=failure`, `build-and-test=skipped`; keine Aussage über neuen HEAD. Keine APK-Installationsfreigabe.
 - **Chat-Abgleich:** Bekannte Anforderungen aus Main/Schedule (Rotation #13, GPS-Spur #14, Rerouting, MVV) berücksichtigt; vollständige Live-Einsicht in alle Chats nicht möglich.
 - **Nächster Schritt:** Neue Python-Tests und alle drei Preflight-Schritte tatsächlich ausführen, Push-Workflow-ID und Fehlerausgabe beschaffen. Anschließend #13/#14 mit deterministischen Android-/GPS-Regressionen bearbeiten.
+
+## Automatischer Entwicklungsabgleich – 19.11.2026, 05:23 MEZ
+
+- **HEAD vor Änderung:** `78ea9e0`; elf offene Issues, keine offenen PRs. README, Projektstatus, Rotations-/GPS-Regressionstestplan, Workflow und MainActivity-State gelesen.
+- **Arbeitspaket:** `docs/ACTIVITY-RECREATION-STATE-CONTRACT.md` neu angelegt (Commit `ac9b3e6`): konkrete Eigentümer-/Lebensdauer-Matrix für Routen, Track, Auswahl, Einstellungen und asynchrone Callbacks; atomarer ViewModel-Migrationsplan und reproduzierbare `ActivityScenario.recreate()`-Abnahme. Warnung vor inkonsistentem `rememberSaveable`-Teilfix.
+- **Tests/CI:** Keine Tests ausgeführt. Commit-Statusabfrage für `78ea9e0` lieferte keine Statuschecks; Push-Actions-Lauf nicht nachgewiesen. Keine APK-Freigabe.
+- **Nächster Schritt:** Instrumentierten roten Rotationstest auf Basis des neuen Vertrags implementieren; danach zusammenhängenden Navigationszustand in ViewModel auslagern, GPS-/Rerouting-Regressionen nachziehen.
+- **Chats:** Bekannte Meldungen aus Main/Schedule berücksichtigt; kein vollständiger Live-Zugriff auf alle Chats.
