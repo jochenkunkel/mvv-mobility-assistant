@@ -7,6 +7,13 @@
 > eine Übergabe und kein Ersatz für den tatsächlichen Repository-Status.
 
 
+## Entwicklungsabgleich – 19.11.2026, 22:21 MEZ
+
+- **Verifizierter letzter Commit auf main:** [`32a0f09`](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/32a0f09d17195074c48f8e5eb7285320e4e3b645). Der neue [Lifecycle-/GPS-Codebefund](LIFECYCLE-GPS-CODE-AUDIT-2026-11-19.md) ist jetzt die konkrete Arbeitsgrundlage für #13 (Rotation) und #14 (Spurverlust). Die Diagnose trennt produktiven `remember`-Navigationszustand von separat zurückgesetzten GPS-Debugdaten; sie ist noch **kein Laufzeitnachweis**.
+- **Offene Arbeit:** elf Issues (#3–#11, #13, #14), keine offenen PRs. README, Roadmap und Architekturentscheidungen abgeglichen; historische Roadmap-Phasen sind nicht als aktuelle Abnahme zu lesen. Andere Projekt-Chats sind nicht vollständig live zugänglich.
+- **CI-Beleg:** Push-Lauf [#439](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44478458530) mit `preflight=failure`, Folgejobs übersprungen; Step-Abfrage leer und Joblogs nicht abrufbar. Für `32a0f09` liegt hier kein bestätigter grüner Push-Lauf vor. Kein Test-/APK-Freigabenachweis.
+- **Nächste Implementierung:** zuerst Preflight-Exitcode durch getrennte lokale Ausführung der drei dokumentierten Befehle isolieren. Parallel als kleines, testbares Paket für #13 einen instrumentierten `ActivityScenario.recreate()`-Test mit **nichtleerem** Navigations-/GPS-Fixture anlegen; danach State-Owner-Fix. Für #14 GPS-Fix-Lücke und verspätete Reroute-Antworten getrennt prüfen. Keine ungetestete Änderung an Signing oder Secrets.
+
 ## CI-Folgeprüfung – 19.11.2026, 09:25 MEZ
 
 - Der nach Commit `b3cefa5` gestartete [Push-Lauf #439](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44478458530) ist ebenfalls **completed/failure**: `preflight` Job-ID `135404600838` fehlgeschlagen; `build-and-test`, Emulator und Live-Probes wurden übersprungen. Dies bestätigt eine weiterhin bestehende CI-Blockade, **nicht** die Ursache.
