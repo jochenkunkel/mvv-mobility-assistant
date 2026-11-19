@@ -1,10 +1,19 @@
 # MeinWeg2 – zentraler Projektstatus
 
-**Stand:** 18.11.2026, 20:22 MEZ (Repository-Abgleich) · **Verbindliche Codebasis:** GitHub `main`
+**Stand:** 19.11.2026, 01:17 MEZ (Repository-Abgleich) · **Verbindliche Codebasis:** GitHub `main`
 
 > **Startpunkt für alle Chats/Agenten:** Diese Datei zuerst lesen, anschließend
 > `main`, offene GitHub-Issues und CI-Läufe live abgleichen. Diese Datei ist
 > eine Übergabe und kein Ersatz für den tatsächlichen Repository-Status.
+
+
+## Automatischer Abgleich – 19.11.2026, 01:17 MEZ
+
+- **Verifizierter HEAD vor diesem Eintrag:** `d931e1bc2db3fdcc2a4934b2ebe50e35dc57cb92` (neue Offline-Testsuite für Emulator-Navigationsziele). Die neue Suite `scripts/test-emulator-navigation.py` wurde im Repository gelesen: 18 Testmethoden; sie wird im `preflight`-Job nach Shell-/Python-Syntaxprüfung ausgeführt. **18 vorhandene Tests sind keine 18 bestandenen Tests.**
+- **Live-Issues:** #3–#11 sowie #13 und #14 (11 offene Tickets). #13 und #14 bleiben ohne nachgewiesene Lifecycle-/Track-Regressionstests offen.
+- **CI-Beleggrenze:** Die Commit-Status-Abfrage für `d931e1b` lieferte `statuses: []`. Dies ist **kein** grüner Build; der Connector für commitbezogene Workflow-Läufe berücksichtigt nur PR-Ereignisse, nicht zuverlässig Push-Läufe. Aktuelle Push-Joblogs und tatsächliche Preflight-Ausgabe fehlen. Keine APK-Installationsfreigabe.
+- **Konkreter nächster Schritt (ausführbar):** `python3 -u scripts/test-emulator-navigation.py`, `python3 scripts/test-ci-concurrency.py`, `bash -x scripts/preflight.sh` in einem Checkout von genau `d931e1b` ausführen; Exitcodes und erste fehlerhafte Zeile festhalten. Anschließend Push-Actions-Lauf für diesen SHA über die Actions-Run-Liste (nicht PR-Commit-Lookup) prüfen. Erst danach gezielte Reparatur statt weiterer rein dokumentarischer Änderungen.
+- **Chat-Grenze:** Die bekannten Anforderungen aus Main/Schedule zu GPS-Aussetzern, Rerouting, Rotation und Trackdarstellung sind bereits in #13/#14 und `docs/REGRESSION-ROTATION-GPS.md` enthalten. Kein vollständiger Live-Zugriff auf alle Projekt-Chats nachgewiesen.
 
 ## Ziel und Arbeitsweise
 
