@@ -7,6 +7,13 @@
 > eine Übergabe und kein Ersatz für den tatsächlichen Repository-Status.
 
 
+## CI-Folgeprüfung – 19.11.2026, 09:25 MEZ
+
+- Der nach Commit `b3cefa5` gestartete [Push-Lauf #439](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44478458530) ist ebenfalls **completed/failure**: `preflight` Job-ID `135404600838` fehlgeschlagen; `build-and-test`, Emulator und Live-Probes wurden übersprungen. Dies bestätigt eine weiterhin bestehende CI-Blockade, **nicht** die Ursache.
+- Erneute Abfrage der Job-Schritte: `steps: []`. Joblog-Download: HTTP 404 `BlobNotFound` (19.11.2026, 09:25 MEZ). Die erste fehlerhafte Aktion ist weiterhin unbekannt; weder Checkout- noch Skriptfehler sind damit bewiesen.
+- Statische Quellprüfung: `scripts/test-ci-concurrency.py`, `scripts/preflight.sh`, `scripts/test-emulator-navigation.py` und die Workflow-Definition sind vorhanden. Die Prüfschritte dürfen nicht als bestanden gelten, da keine Ausführung nachgewiesen ist.
+- **Nächster ausführbarer Schritt:** Den Checkout des aktuellen HEAD in einer Umgebung mit GitHub-Zugriff herstellen und die drei Preflight-Kommandos separat mit Exitcode ausführen. Falls GitHub-Actions-Webansicht zugänglich wird, den **ersten fehlgeschlagenen Step** von Run #439 und dessen Annotation auslesen. Nur danach gezielt fixen und Push-CI erneut prüfen. Keine Signing-Änderung und keine APK-Freigabe.
+
 ## CI-Befund – 19.11.2026, 08:17 MEZ (verifiziert)
 
 - **HEAD vor diesem Eintrag:** `1a2a2bc5e7a425ae3107ac48ce5e1c2a53f677f4`. GitHub Actions **Push-Lauf #438**, Run-ID `44471413554`, vom 19.11.2026 07:20 MEZ: **completed/failure**. Beleg: https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44471413554 . Damit ist die frühere Aussage „Push-Läufe nicht einsehbar“ überholt: Die Actions-Run-Liste ist über den GitHub-Connector erreichbar.
