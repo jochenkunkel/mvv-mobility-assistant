@@ -36,3 +36,15 @@ Run targeted JVM tests, then `gradle --no-daemon :app:testDebugUnitTest :app:lin
 2. Fix #13 state survival without changing signing or unrelated routing.
 3. Extract accepted trace state from OSRM reroute state and cover #14 with deterministic tests.
 4. Validate on emulator and S25; close each issue only when its acceptance criteria have evidence.
+
+## Deterministic lifecycle test harness (19.11.2026)
+
+Before implementing the production state-holder, introduce a debug-only test seam that can seed a **non-empty** selected journey, walking route and accepted GPS track without calendar, network or device GPS dependencies. The test must not rely on a screenshot fixture that bypasses actual navigation state. Inject immutable snapshot values and stable IDs, then assert all of the following around `ActivityScenario.recreate()`:
+
+- **Before:** selected tab = Meine Fahrt; selected journey ID and route geometry match the fixture; accepted track contains three ordered points A/B/C; last accepted fix and computed route progress are recorded.
+- **After:** same tab, selected journey ID, route geometry, track point count/order and progress; no extra location sampling or OSRM request caused solely by recreation. A new legitimate fix D may append exactly once.
+- **Failure isolation:** assert model snapshots independently of the UI and then assert the dashboard path is actually rendered. A model-only pass does not close #14; a visible line alone does not prove the accepted track survived.
+- **Async race:** arrange reroute request R1 before recreation and R2 after it; deliver R1 last. The old callback must not replace R2 or erase A/B/C. Repeat for failed and empty reroute responses.
+- **Process death:** test separately from configuration recreation. Persist only explicitly chosen durable preferences and define a visible recovery state for navigation if its in-memory session cannot be restored.
+
+**Implementation caution:** `rememberSaveable` alone is not sufficient for `JourneyOption`, `WalkingRoute` and the GPS trace. Avoid storing unbounded tracks in Android's saved-instance-state Bundle. Prefer a lifecycle-aware navigation session/state-holder with bounded storage and explicit restoration semantics; keep the planned OSRM polyline separate from the accepted traveled trace. Tests above are **specified, not implemented or passed**.
