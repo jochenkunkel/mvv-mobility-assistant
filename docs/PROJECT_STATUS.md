@@ -14,6 +14,14 @@
 - **CI-Beleg:** Push-Lauf [#439](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44478458530) mit `preflight=failure`, Folgejobs übersprungen; Step-Abfrage leer und Joblogs nicht abrufbar. Für `32a0f09` liegt hier kein bestätigter grüner Push-Lauf vor. Kein Test-/APK-Freigabenachweis.
 - **Nächste Implementierung:** zuerst Preflight-Exitcode durch getrennte lokale Ausführung der drei dokumentierten Befehle isolieren. Parallel als kleines, testbares Paket für #13 einen instrumentierten `ActivityScenario.recreate()`-Test mit **nichtleerem** Navigations-/GPS-Fixture anlegen; danach State-Owner-Fix. Für #14 GPS-Fix-Lücke und verspätete Reroute-Antworten getrennt prüfen. Keine ungetestete Änderung an Signing oder Secrets.
 
+## Entwicklungsabgleich – 19.11.2026, 23:20 MEZ
+
+- **HEAD verifiziert:** `e185c1141e07c2a9d45d2482893f653b1a14b9bb` (vorher `32a0f09`), keine neueren Commits in der Repository-Suche. Der vorherige 22:21-Eintrag nennt noch den Parent-Commit und ist insofern historisch; `e185c11` hat diesen Status bereits ergänzt.
+- **Issues/PRs:** weiterhin elf offene Issues (#3–#11, #13, #14), keine offenen PRs. README, Roadmap, ADRs, CI-Workflow, drei Preflight-Skripte und Lifecycle-/GPS-Audit erneut gegen `main` abgeglichen.
+- **Konkrete CI-Diagnose aus Quellprüfung:** `scripts/test-ci-concurrency.py` enthält nicht nur statische Guards, sondern eine verhaltensbasierte Release-Gate-Matrix mit **52 Fällen**. Die drei unabhängigen Preflight-Kommandos sind im Workflow vorhanden. Das ist **kein Ausführungsnachweis**; der bisherige fehlgeschlagene Push-Lauf #439 bleibt die letzte hier belegte Jobdiagnose. `fetch_commit_workflow_runs` erfasst nur PR-Events und kann den Push-Status von `e185c11` nicht bestätigen.
+- **Kritische Test-Grenze:** Ein normaler Push führt `connectedDebugAndroidTest` nicht aus. Ein `ActivityScenario.recreate()`-Test für #13 darf erst nach einem echten Emulatorlauf über manuelles `test_level=release` oder Versionstag als bestanden gelten. #14 zusätzlich mit GPS-Fix-Lücke und verspäteter Reroute-Antwort prüfen.
+- **Nächster ausführbarer Schritt:** Mit erreichbarem Checkout die drei Preflight-Kommandos einzeln ausführen, Exitcodes sichern und den ersten Fehler beheben; danach nichtleere Rotation-Fixture implementieren. Keine Änderungen an Signing/Secrets, kein grüner Build oder APK-Freigabe ohne Nachweis. Andere Projekt-Chats sind nicht vollständig live lesbar.
+
 ## CI-Folgeprüfung – 19.11.2026, 09:25 MEZ
 
 - Der nach Commit `b3cefa5` gestartete [Push-Lauf #439](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44478458530) ist ebenfalls **completed/failure**: `preflight` Job-ID `135404600838` fehlgeschlagen; `build-and-test`, Emulator und Live-Probes wurden übersprungen. Dies bestätigt eine weiterhin bestehende CI-Blockade, **nicht** die Ursache.
