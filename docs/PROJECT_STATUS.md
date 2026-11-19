@@ -23,6 +23,13 @@
 - **Priorisierte Reparatur:** (1) Sobald DNS/Checkout funktioniert, exakt `b35bc1b` auschecken, `python3 scripts/test-ci-concurrency.py`, `bash -x scripts/preflight.sh`, `python3 -u scripts/test-emulator-navigation.py` mit Exitcodes ausführen. (2) Für #13 Activity-/Navigation-State-Eigentümer identifizieren und `ActivityScenario.recreate()`-Regression anlegen. (3) Für #14 GPS-Track unabhängig von der OSRM-Route mit synthetischen Fix-Lücken und Reroute prüfen. **Kein ungetesteter Produktivcode-Fix und keine APK-Freigabe.**
 - **Projekt-Chats:** Bekannte Anforderungen aus Main/Schedule sind durch #13/#14 und `docs/REGRESSION-ROTATION-GPS.md` abgedeckt; keine vollständige Live-Synchronisierung behauptet.
 
+## Automatischer Entwicklungsabgleich – 19.11.2026, 04:19 MEZ
+
+- **Codebefund für #13/#14 (statisch verifiziert):** `MainActivity.kt` hält `journeys` (Zeile 219), `dashboardJourney` (221), `walkingRoute` (222), `walkedTrack` (259) und `selectedTab` (423) ausschließlich in `remember`-Zustand. Diese Zustände überstehen eine reguläre Activity-Neuerstellung durch Bildschirmrotation nicht. Der Track wird als `mutableStateListOf` ebenfalls neu initialisiert. Das erklärt den gemeldeten Rotationsverlust auf Codeebene; ein Gerätetest steht aus. `walkingRoute` und `walkedTrack` sind außerdem unterschiedliche Zustände; die tatsächliche UI-Zeichnung und ihre Lebensdauer müssen separat geprüft werden.
+- **Konkretes nächstes Arbeitspaket:** Zunächst einen instrumentierten `ActivityScenario.recreate()`-Test für aktive Navigation mit Route und Track schreiben (rot vor Fix). Danach Zustand in einen Activity-übergreifenden ViewModel-StateHolder auslagern; einfache Eingaben mit `rememberSaveable` sichern, komplexe Routen-/Trackobjekte nicht blind in Bundle serialisieren. Danach GPS-Aussetzer, Rerouting und die sichtbare Pfadlinie getrennt testen. Kein ungeprüfter Umbau von `MainActivity`.
+- **CI-Grenze:** Die 18 Emulator-Navigationstests sind im Quellcode vorhanden, aber nicht in diesem Lauf ausgeführt. Push-Actions-Status und APK bleiben ungeprüft. Kein grüner Build behauptet.
+- **Chats:** Die aus dem zugänglichen Verlauf bekannten Meldungen zu Rotation und dunkellila Track entsprechen #13/#14; kein vollständiger Live-Zugriff auf alle anderen Projekt-Chats.
+
 ## Ziel und Arbeitsweise
 
 Android-Mobilitätsassistent für München mit Kalender-/GPS-Start, MVV-Verbindungen,
