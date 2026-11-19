@@ -1,6 +1,6 @@
 # MeinWeg2 – zentraler Projektstatus
 
-**Stand:** 19.11.2026, 01:17 MEZ (Repository-Abgleich) · **Verbindliche Codebasis:** GitHub `main`
+**Stand:** 19.11.2026, 02:25 MEZ (Repository-Abgleich) · **Verbindliche Codebasis:** GitHub `main`
 
 > **Startpunkt für alle Chats/Agenten:** Diese Datei zuerst lesen, anschließend
 > `main`, offene GitHub-Issues und CI-Läufe live abgleichen. Diese Datei ist
@@ -14,6 +14,14 @@
 - **CI-Beleggrenze:** Die Commit-Status-Abfrage für `d931e1b` lieferte `statuses: []`. Dies ist **kein** grüner Build; der Connector für commitbezogene Workflow-Läufe berücksichtigt nur PR-Ereignisse, nicht zuverlässig Push-Läufe. Aktuelle Push-Joblogs und tatsächliche Preflight-Ausgabe fehlen. Keine APK-Installationsfreigabe.
 - **Konkreter nächster Schritt (ausführbar):** `python3 -u scripts/test-emulator-navigation.py`, `python3 scripts/test-ci-concurrency.py`, `bash -x scripts/preflight.sh` in einem Checkout von genau `d931e1b` ausführen; Exitcodes und erste fehlerhafte Zeile festhalten. Anschließend Push-Actions-Lauf für diesen SHA über die Actions-Run-Liste (nicht PR-Commit-Lookup) prüfen. Erst danach gezielte Reparatur statt weiterer rein dokumentarischer Änderungen.
 - **Chat-Grenze:** Die bekannten Anforderungen aus Main/Schedule zu GPS-Aussetzern, Rerouting, Rotation und Trackdarstellung sind bereits in #13/#14 und `docs/REGRESSION-ROTATION-GPS.md` enthalten. Kein vollständiger Live-Zugriff auf alle Projekt-Chats nachgewiesen.
+
+## Automatischer Abgleich – 19.11.2026, 02:25 MEZ
+
+- **HEAD:** `b35bc1b435a9fa1bcb97f97faa725dfd227156e4`; Issue-Suche bestätigt #3–#11, #13, #14 (11 offene). Die aktuelle CI-Konfiguration hat drei separate Preflight-Schritte und eine diagnostische Fehlerzusammenfassung.
+- **Gezielte Quellprüfung:** `scripts/test-emulator-navigation.py` enthält 18 `unittest`-Methoden; `scripts/tap-emulator-navigation.py` berücksichtigt die Sichtbarkeit und Aktivierung der gesamten Vorfahrenkette und verwirft ungültige Rechtecke. Dies ist eine **statische Codeprüfung**, kein Testlauf.
+- **Reproduzierbare Infrastrukturblockade:** `git ls-remote https://github.com/jochenkunkel/mvv-mobility-assistant.git HEAD` im Ausführungscontainer scheiterte mit `Could not resolve host: github.com` (Exit 128). Damit kein Checkout und keine lokalen Ausführungen von Preflight, Gradle oder Tests. Die GitHub-Connector-Abfrage erlaubt zwar Dateilesen, bietet hier aber keine verlässliche Liste der Push-Workflow-Runs; der konkrete erste fehlgeschlagene Preflight-Befehl ist weiterhin **nicht belegt**.
+- **Priorisierte Reparatur:** (1) Sobald DNS/Checkout funktioniert, exakt `b35bc1b` auschecken, `python3 scripts/test-ci-concurrency.py`, `bash -x scripts/preflight.sh`, `python3 -u scripts/test-emulator-navigation.py` mit Exitcodes ausführen. (2) Für #13 Activity-/Navigation-State-Eigentümer identifizieren und `ActivityScenario.recreate()`-Regression anlegen. (3) Für #14 GPS-Track unabhängig von der OSRM-Route mit synthetischen Fix-Lücken und Reroute prüfen. **Kein ungetesteter Produktivcode-Fix und keine APK-Freigabe.**
+- **Projekt-Chats:** Bekannte Anforderungen aus Main/Schedule sind durch #13/#14 und `docs/REGRESSION-ROTATION-GPS.md` abgedeckt; keine vollständige Live-Synchronisierung behauptet.
 
 ## Ziel und Arbeitsweise
 
