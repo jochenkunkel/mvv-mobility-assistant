@@ -7,6 +7,13 @@
 > eine Übergabe und kein Ersatz für den tatsächlichen Repository-Status.
 
 
+## Entwicklungsabgleich – 20.11.2026, 08:18 MEZ
+
+- **HEAD vor diesem Eintrag:** [`4e34c09`](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/4e34c099bfb4c4563175982a806a19bc51637c8d). GitHub-Commit-Suche: keine neueren Commits; elf offene Issues (#3–#11, #13, #14), keine offenen PRs. README, Roadmap, Entscheidungen, Rotation-/GPS-Testmatrix, Android-Workflow und Diagnoseworkflow erneut gelesen.
+- **Präzisierung des Diagnose-Gates:** Der unabhängige Diagnoseworkflow wird bei Pushes auf `main` nur durch Änderungen an `.github/workflows/preflight-diagnostics.yml`, `.github/workflows/android.yml` oder `scripts/**` ausgelöst; der jüngste reine Runbook-Commit `4e34c09` löst ihn **nicht** aus. Ein früherer Trigger-Commit `ee0e59e` ist vorhanden, aber ein tatsächlicher Diagnose-Lauf ist hier nicht nachgewiesen. Der verfügbare GitHub-Connector stellt in diesem Lauf keine allgemeine Actions-Run-Liste oder Workflow-Dispatch-Aktion bereit; eine Commit-Run-Abfrage ist auf PR-Ereignisse beschränkt. Daher **keine Aussage über einen aktuellen Diagnose-Lauf oder grünen Push-Build**.
+- **Nächste ausführbare Aktion:** Neueste [Diagnose-Läufe](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/workflows/preflight-diagnostics.yml) über die Actions-Webansicht/geeignete API abrufen. Falls keiner existiert, den Diagnoseworkflow manuell starten. `results.txt` und `check-N.log` lesen, erste nichtnull Exitcode-Ursache isolieren, gezielt beheben. Keine erneuten ungezielten CI-Dokumentationscommits als Ersatz für die Diagnose.
+- **Danach:** #13 instrumentierten `ActivityScenario.recreate()`-Test mit nichtleerer Navigation/GPS-Fixture implementieren und im Emulator ausführen; #14 GPS-Track/Reroute-Race-Regression. Keine Signing-/Secret-Änderung, keine APK-Freigabe. Bekannte Main-/Schedule-Meldungen bleiben berücksichtigt; vollständiger Live-Zugriff auf fremde Chatverläufe nicht nachgewiesen.
+
 ## Entwicklungsabgleich – 20.11.2026, 02:22 MEZ
 
 - **Repository:** GitHub-Commit-Suche: letzter Commit `2596a249f3855354a3938bbf64d7dc54ff9c841a`; elf offene Issues (#3–#11, #13, #14), keine offenen PRs. README, Roadmap, Entscheidungen, Lifecycle-/GPS-Audit und CI-Workflow samt drei Preflight-Skripten erneut gelesen. Keine neue belegte Anforderung aus vollständig zugänglichen Projekt-Chats; Chat-Live-Synchronisation nicht verfügbar.
