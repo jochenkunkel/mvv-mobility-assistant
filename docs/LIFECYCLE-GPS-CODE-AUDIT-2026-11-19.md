@@ -1,6 +1,6 @@
 # Lifecycle-/GPS-Codebefund – 19.11.2026, 21:21 MEZ
 
-**Status:** Statische Quellprüfung von `app/src/main/java/de/mvv/mobility/MainActivity.kt` auf `main` (HEAD vor dieser Dokumentation: `84bfac880bb9e1e70e95c378bc4e0da77e477195`). Keine Laufzeitreproduktion, kein bestandener Test. Zugehörige Issues: [#13](../issues/13) und [#14](../issues/14).
+**Status:** Statische Quellprüfung von `app/src/main/java/de/mvv/mobility/MainActivity.kt` auf `main` (HEAD vor dieser Dokumentation: `84bfac880bb9e1e70e95c378bc4e0da77e477195`). Keine Laufzeitreproduktion, kein bestandener Test. Zugehörige Issues: [#13](https://github.com/jochenkunkel/mvv-mobility-assistant/issues/13) und [#14](https://github.com/jochenkunkel/mvv-mobility-assistant/issues/14).
 
 ## Direkt nachprüfbare Beobachtungen
 
