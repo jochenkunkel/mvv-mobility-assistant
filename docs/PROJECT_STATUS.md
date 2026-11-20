@@ -7,6 +7,13 @@
 > eine Übergabe und kein Ersatz für den tatsächlichen Repository-Status.
 
 
+## Entwicklungsabgleich – 20.11.2026, 02:22 MEZ
+
+- **Repository:** GitHub-Commit-Suche: letzter Commit `2596a249f3855354a3938bbf64d7dc54ff9c841a`; elf offene Issues (#3–#11, #13, #14), keine offenen PRs. README, Roadmap, Entscheidungen, Lifecycle-/GPS-Audit und CI-Workflow samt drei Preflight-Skripten erneut gelesen. Keine neue belegte Anforderung aus vollständig zugänglichen Projekt-Chats; Chat-Live-Synchronisation nicht verfügbar.
+- **CI:** Erneut direkt abgefragter [Push-Lauf #439](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44478458530): `preflight=failure`, sämtliche Folgejobs `skipped`. Der Connector liefert `steps:null` und `logs_url:null`; **kein einzelner fehlerhafter Befehl identifizierbar**. Der Workflow enthält drei getrennte Preflight-Steps und einen `if: failure()`-Diagnoseschritt. Die vorhandenen Prüfskripte wurden statisch kontrolliert; das ist kein Ausführungsnachweis.
+- **Präzisierter Diagnosepfad:** Zuerst in GitHub Actions den Job auf Runner-/Checkout-Startfehler, fehlende Runner-Zuteilung oder Ausführungsfehler untersuchen; diese Möglichkeiten sind **Hypothesen, keine Befunde**. Wenn Steps/Logs weiter fehlen, in einem erreichbaren Checkout exakt `python3 scripts/test-ci-concurrency.py`, `bash -x scripts/preflight.sh` und `python3 -u scripts/test-emulator-navigation.py` einzeln ausführen und Exitcode + stderr sichern. Bei vollständig fehlender Jobinitialisierung zunächst Actions-/Runner-Zugriff klären, nicht wahllos Python/Android-Code verändern.
+- **Anschließend:** #13 mit nichtleerer `ActivityScenario.recreate()`-Fixture, #14 mit GPS-Fix-Lücke und verspätetem Reroute-Ergebnis. Normale Push-CI reicht für Instrumentierung nicht aus; Emulator-Release-Test erforderlich. **Kein neuer grüner Build, keine APK-Freigabe.**
+
 ## Entwicklungsabgleich – 19.11.2026, 22:21 MEZ
 
 - **Verifizierter letzter Commit auf main:** [`32a0f09`](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/32a0f09d17195074c48f8e5eb7285320e4e3b645). Der neue [Lifecycle-/GPS-Codebefund](LIFECYCLE-GPS-CODE-AUDIT-2026-11-19.md) ist jetzt die konkrete Arbeitsgrundlage für #13 (Rotation) und #14 (Spurverlust). Die Diagnose trennt produktiven `remember`-Navigationszustand von separat zurückgesetzten GPS-Debugdaten; sie ist noch **kein Laufzeitnachweis**.
