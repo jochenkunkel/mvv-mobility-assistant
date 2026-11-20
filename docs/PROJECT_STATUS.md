@@ -7,6 +7,13 @@
 > eine Übergabe und kein Ersatz für den tatsächlichen Repository-Status.
 
 
+## Entwicklungsabgleich – 20.11.2026, 12:19 MEZ
+
+- **Live-Repository:** HEAD vor der Änderung `e80fd9b`; elf offene Issues (#3–#11, #13, #14), keine offenen PRs. README, Roadmap, Entscheidungen, Regressionstestmatrix, CI-Workflow und Diagnose-Runbook geprüft. Vollständige Live-Inhalte anderer Projekt-Chats nicht verfügbar; bekannte Main-/Schedule-Fehler zu Rotation, GPS-Spur und Rerouting bleiben maßgeblich.
+- **Konkretes Testpaket:** `scripts/test-ci-concurrency.py` prüft jetzt zusätzlich den **unabhängigen** Diagnoseworkflow: manueller Dispatch, Trigger bei Skriptänderungen, alle drei separaten Checks, Timeout, Exitcode-Datei, Artefakt-Upload trotz Fehler und Aufbewahrungsdauer. Commits `868f906` (Guard) und `1280bab` (Korrektur der Regex-Escapes). Diese statischen Assertions schützen vor stillen Diagnose-Regressionen; sie beweisen **keine** tatsächliche Workflow-Ausführung.
+- **CI-Beleg:** Run [#439](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44478458530) weiterhin `preflight=failure`, fünf Jobs übersprungen. Erneuter Logabruf: 404 `BlobNotFound` (20.11.2026, 12:19 MEZ). Keine Artefakte in #439; commitbezogene PR-Run-Abfrage für `868f906` leer, damit Push-CI **unbekannt**. Die neue Testdatei wurde noch nicht in einer ausführbaren Checkout-Umgebung getestet.
+- **Nächste Priorität:** Diagnoseworkflow-Lauf/Artefakte aus Actions beschaffen, den ersten echten Fehler beheben und den neuen statischen Guard ausführen. Anschließend #13 Activity-Recreation-Test mit nichtleerem Track, dann #14 Track-/Reroute-Races. Keine APK-Freigabe.
+
 ## Entwicklungsabgleich – 20.11.2026, 08:18 MEZ
 
 - **HEAD vor diesem Eintrag:** [`4e34c09`](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/4e34c099bfb4c4563175982a806a19bc51637c8d). GitHub-Commit-Suche: keine neueren Commits; elf offene Issues (#3–#11, #13, #14), keine offenen PRs. README, Roadmap, Entscheidungen, Rotation-/GPS-Testmatrix, Android-Workflow und Diagnoseworkflow erneut gelesen.
