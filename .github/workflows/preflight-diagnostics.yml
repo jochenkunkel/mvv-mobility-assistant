@@ -1,5 +1,13 @@
 name: Preflight diagnostics (manual, no APK)
+# Run automatically when diagnostics or their inputs change; manual reruns remain available.
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/preflight-diagnostics.yml'
+      - '.github/workflows/android.yml'
+      - 'scripts/**'
   workflow_dispatch:
 
 permissions:
