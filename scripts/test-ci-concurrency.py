@@ -150,10 +150,10 @@ print("Android CI failure diagnostic visibility regression guard passed")
 diagnostic_path = workflow.parent / "preflight-diagnostics.yml"
 assert diagnostic_path.is_file(), "Independent preflight diagnostics workflow missing"
 diagnostic = diagnostic_path.read_text(encoding="utf-8")
-assert re.search(r"(?m)^  workflow_dispatch:\\s*$", diagnostic), (
+assert re.search(r"(?m)^  workflow_dispatch:\s*$", diagnostic), (
     "Preflight diagnostics must remain manually dispatchable"
 )
-assert re.search(r"(?m)^      - 'scripts/\\*\\*'\\s*$", diagnostic), (
+assert re.search(r"(?m)^      - 'scripts/\*\*'\s*$", diagnostic), (
     "Script changes must trigger independent preflight diagnostics"
 )
 for command in required_preflight_commands:
@@ -162,7 +162,7 @@ for command in required_preflight_commands:
     )
 assert "timeout 120s bash -c" in diagnostic, "Diagnostics must bound individual checks"
 assert "preflight-diagnostics/results.txt" in diagnostic, "Diagnostics must persist exit codes"
-assert re.search(r"(?m)^        if: always\\(\\)\\s*$", diagnostic), (
+assert re.search(r"(?m)^        if: always\(\)\s*$", diagnostic), (
     "Diagnostic artifact upload must run even after failed checks"
 )
 assert "actions/upload-artifact@v4" in diagnostic, (
