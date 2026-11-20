@@ -144,3 +144,29 @@ for command in required_preflight_commands:
         f"Preflight failure diagnostic must re-run {command}"
     )
 print("Android CI failure diagnostic visibility regression guard passed")
+
+# Protect the independent no-APK diagnostic path against accidental removal.
+# This is a source-level contract, not proof that GitHub ran the workflow.
+diagnostic_path = workflow.parent / "preflight-diagnostics.yml"
+assert diagnostic_path.is_file(), "Independent preflight diagnostics workflow missing"
+diagnostic = diagnostic_path.read_text(encoding="utf-8")
+assert re.search(r"(?m)^  workflow_dispatch:\\s*$", diagnostic), (
+    "Preflight diagnostics must remain manually dispatchable"
+)
+assert re.search(r"(?m)^      - 'scripts/\\*\\*'\\s*$", diagnostic), (
+    "Script changes must trigger independent preflight diagnostics"
+)
+for command in required_preflight_commands:
+    assert diagnostic.count("'" + command + "'") == 1, (
+        f"Diagnostic workflow must execute exactly once: {command}"
+    )
+assert "timeout 120s bash -c" in diagnostic, "Diagnostics must bound individual checks"
+assert "preflight-diagnostics/results.txt" in diagnostic, "Diagnostics must persist exit codes"
+assert re.search(r"(?m)^        if: always\\(\\)\\s*$", diagnostic), (
+    "Diagnostic artifact upload must run even after failed checks"
+)
+assert "actions/upload-artifact@v4" in diagnostic, (
+    "Diagnostic logs must be uploaded as an artifact"
+)
+assert "retention-days: 14" in diagnostic, "Diagnostic artifact retention must be explicit"
+print("Independent preflight diagnostics source contract passed")
