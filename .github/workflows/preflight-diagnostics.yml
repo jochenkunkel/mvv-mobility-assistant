@@ -1,0 +1,57 @@
+name: Preflight diagnostics (manual, no APK)
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record runner and checkout state
+        shell: bash
+        run: |
+          mkdir -p preflight-diagnostics
+          {
+            echo "commit=$GITHUB_SHA"
+            echo "runner=$RUNNER_OS"
+            echo "python=$(python3 --version 2>&1)"
+            echo "bash=$BASH_VERSION"
+            echo "checkout=$(test -f scripts/preflight.sh && echo present || echo missing)"
+          } | tee preflight-diagnostics/environment.txt
+      - name: Run all three checks independently and retain exit codes
+        shell: bash
+        run: |
+          set +e
+          commands=(
+            'python3 scripts/test-ci-concurrency.py'
+            'bash -x scripts/preflight.sh'
+            'python3 -u scripts/test-emulator-navigation.py'
+          )
+          failed=0
+          for index in "${!commands[@]}"; do
+            command="${commands[$index]}"
+            log="preflight-diagnostics/check-$((index+1)).log"
+            echo "Running: $command"
+            timeout 120s bash -c "$command" > "$log" 2>&1
+            code=$?
+            echo "$command => exit $code" | tee -a preflight-diagnostics/results.txt
+            echo "### $command (exit $code)" >> "$GITHUB_STEP_SUMMARY"
+            tail -n 40 "$log" | tee -a "$GITHUB_STEP_SUMMARY"
+            if (( code != 0 )); then
+              echo "::error title=Preflight check $((index+1))::Exit code $code: $command"
+              failed=1
+            fi
+          done
+          exit "$failed"
+      - name: Upload diagnostics even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflight-diagnostics
+          path: preflight-diagnostics/
+          if-no-files-found: warn
+          retention-days: 14
