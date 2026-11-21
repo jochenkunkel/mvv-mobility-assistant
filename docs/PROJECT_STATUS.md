@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 21.11.2026, 15:21 MEZ
+
+- Repository vor Änderung: `8b82c75`; elf offene Issues (#3–#11, #13, #14), keine offenen PRs. README, Implementierungsroadmap, ADRs, Status, Android-CI und Diagnoseworkflow geprüft. Keine neue verifizierte Anforderung aus fremden Chats; vollständiger Live-Zugriff auf Main/Schedule fehlt.
+- **Kleines CI-Härtungspaket:** `preflight` hatte im Gegensatz zum separaten Diagnosejob kein Job-Timeout. In `.github/workflows/android.yml` wurde `timeout-minutes: 10` ergänzt (Commit `a455a2f`). Dies begrenzt Hänger, **behebt aber nicht** die unbekannte Ursache des bisherigen Preflight-Fehlschlags.
+- **CI-Beleg:** Der erneut abgefragte Android-Lauf #452 (20.11.2026) zeigt `preflight=failure`, alle fünf Folgejobs `skipped`, keine Einzelschritte. Keine ausgeführten lokalen Tests; ein grüner Lauf für `a455a2f` ist nicht bestätigt. Keine APK-Freigabe.
+- **Nächster Schritt:** Aktuellen Push-Run und unabhängige Diagnoseartefakte beschaffen, reale Exitcodes isolieren, erst dann Fehlerfix; danach #13 Rotation und #14 GPS-Track mit Emulator-Regressionstests.
+
 # MeinWeg2 – zentraler Projektstatus
 
 ## Entwicklungsabgleich – 21.11.2026, 05:23 MEZ (Actions-API direkt)
