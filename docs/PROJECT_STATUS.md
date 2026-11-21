@@ -1,5 +1,13 @@
 # MeinWeg2 – zentraler Projektstatus
 
+## Entwicklungsabgleich – 21.11.2026, 05:23 MEZ (Actions-API direkt)
+
+- **HEAD:** `727c8269fe63cdc744d128585a4cc54540993e56`; elf offene Issues (#3–#11, #13, #14), keine offenen PRs. README, Roadmap, Projektstatus, CI-Workflow und Diagnose-Runbook abgeglichen.
+- **Wichtige neue Evidenz:** Die allgemeine GitHub-Actions-REST-Liste ist über den GitHub-Connector tatsächlich abrufbar. Der neueste geprüfte Android-Push-Lauf ist **[#452](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44752622034)**, gestartet 20.11.2026 14:21 UTC für HEAD `727c826`, **completed/failure**. Job `preflight` (ID `136344098872`) = **failure**, alle fünf abhängigen Jobs = **skipped**. Die Job-API liefert `steps: []`; keine Artefakte. Der direkte Joblog-Abruf ergab am 21.11.2026 04:23 UTC erneut **404 BlobNotFound**. Der einzelne fehlgeschlagene Befehl ist damit **nicht belegt**. Der bisher zitierte Lauf #439 ist **nicht mehr der neueste belegte Lauf**.
+- **Blockade und nächster Schritt:** Die Diagnose-Workflow-Run-Liste unter `/actions/workflows/preflight-diagnostics.yml/runs` war über den Connector nicht abrufbar; daher keinen Diagnoselauf behaupten. Zunächst Workflow-ID über `/actions/workflows` ermitteln und Läufe über numerische ID abrufen. Wenn weiterhin keine brauchbaren Logs/Artefakte vorliegen, die drei Preflight-Kommandos im Checkout des HEAD separat mit Exitcodes ausführen und den konkreten Fehler beheben. Danach #13 (Activity-Recreation/Track) und #14 (GPS-Spur/Rerouting-Races) testen.
+- **Freigabe:** Keine Tests in diesem Lauf ausgeführt; Android-CI rot, keine APK-Freigabe. Kein Signing-/Secrets-Eingriff. Andere Chats nicht vollständig live zugänglich.
+
+
 **Stand:** 19.11.2026, 02:25 MEZ (Repository-Abgleich) · **Verbindliche Codebasis:** GitHub `main`
 
 > **Startpunkt für alle Chats/Agenten:** Diese Datei zuerst lesen, anschließend
