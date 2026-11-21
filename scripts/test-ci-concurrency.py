@@ -25,6 +25,11 @@ assert "cancel-in-progress: true" not in block, "Unconditional cancellation forb
 # Require an explicit preflight step, rather than a mention in a comment.
 preflight = re.search(r"(?ms)^  preflight:\s*\n(.*?)(?=^  [a-zA-Z][\w-]*:|\Z)", source)
 assert preflight, "Preflight job missing"
+# A stalled preflight must not block CI indefinitely. Keep the timeout
+# on the job itself (not only on the independent diagnostic workflow).
+assert re.search(r"(?m)^    timeout-minutes:\\s*10\\s*$", preflight.group(1)), (
+    "Preflight job must retain its 10-minute timeout"
+)
 assert re.search(r"(?m)^        run: python3 scripts/test-ci-concurrency\.py\s*$", preflight.group(1)), (
     "Concurrency guard must execute in the preflight job"
 )
