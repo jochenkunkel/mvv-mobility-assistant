@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 21.11.2026, 16:25 MEZ
+
+- GitHub erneut geprüft: HEAD vor Änderungen `13e64e1`; elf offene Issues (#3–#11, #13, #14), keine offenen PRs. README, Roadmap, ADRs, Projektstatus, CI und unabhängiger Diagnoseworkflow abgeglichen. Andere Projekt-Chats sind nicht vollständig live lesbar; keine neuen Anforderungen erfunden.
+- **Regressionstest ergänzt:** `scripts/test-ci-concurrency.py` sichert nun die in `a455a2f` eingeführte 10-Minuten-Grenze des regulären Preflight-Jobs gegen versehentliches Entfernen ab. Commits `6c41b2f` (Guard) und `e81cd35` (Regex-Escape-Korrektur). Der Test prüft Workflow-Quelltext, nicht reale Runner-Laufzeit.
+- **CI:** Letzter direkt erneut geprüfter Lauf [#452](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44752622034): Preflight fehlgeschlagen, fünf Jobs übersprungen. Kein neuerer Push-Run in diesem Durchgang verifiziert; keine Testausführung im vollständigen Checkout (lokale GitHub-DNS-Auflösung gescheitert). Kein grüner Build, keine APK-Freigabe.
+- **Nächste Priorität:** Preflight-Diagnoseartefakte/Exitcodes beschaffen, tatsächlichen Fehler beheben; anschließend #13 Rotation und #14 GPS-Spur/Rerouting mit Instrumentierungstests. Keine Signing-/Secrets-Änderung.
+
 ## Entwicklungsabgleich – 21.11.2026, 15:21 MEZ
 
 - Repository vor Änderung: `8b82c75`; elf offene Issues (#3–#11, #13, #14), keine offenen PRs. README, Implementierungsroadmap, ADRs, Status, Android-CI und Diagnoseworkflow geprüft. Keine neue verifizierte Anforderung aus fremden Chats; vollständiger Live-Zugriff auf Main/Schedule fehlt.
