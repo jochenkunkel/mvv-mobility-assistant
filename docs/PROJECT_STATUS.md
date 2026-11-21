@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 21.11.2026, 20:24 MEZ
+
+- **Live geprüft:** HEAD `8cf219615add6e4e943842ee10a05cf7de7cc121`; elf offene Issues, keine offenen PRs. README, Implementierungsroadmap, Projektstatus, regulärer Android-Workflow und unabhängiger Diagnoseworkflow erneut gelesen. Bekannte Chat-Anforderungen: Rotation (#13), GPS-Spur/Rerouting (#14). Vollständige andere Chatverläufe nicht live abrufbar.
+- **Erneute CI-Fehlerisolierung:** Run [#452](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44752622034), Job `136344098872`: `preflight=failure`, fünf abhängige Jobs `skipped`; API liefert keine Job-Schritte. Logabruf am 21.11.2026 19:24 UTC erneut **404 BlobNotFound**. Dies belegt **nicht**, welches der drei Kommandos fehlschlug. Diagnoseworkflow enthält `workflow_dispatch`, unabhängige Exitcode-Protokolle und `if: always()`-Artefakt-Upload; kein tatsächlicher Diagnoselauf verifiziert.
+- **Ausführungsblockade:** Checkout auf dem Ausführungsrechner nicht möglich: `git ls-remote https://github.com/jochenkunkel/mvv-mobility-assistant.git HEAD` → `Could not resolve host: github.com`. Daher keine lokalen Regressionstests und kein belastbarer CI-Fix. Nicht allein wegen fehlender Logs den Release-Gate lockern.
+- **Nächste konkrete Aktion:** Aktuellen Actions-Push-Lauf und [Preflight-Diagnoseworkflow](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/workflows/preflight-diagnostics.yml) mit `results.txt`/`check-1.log` bis `check-3.log` prüfen bzw. manuell dispatchen, sobald eine geeignete Actions-Ausführungsschnittstelle verfügbar ist. Ersten tatsächlichen Nonzero-Exitcode beheben, Tests erneut laufen lassen. Danach #13 und #14 mit instrumentierten Tests. Keine Signing-/Secrets-Änderung, kein grüner Build nachgewiesen, keine APK-Freigabe.
+
 ## Entwicklungsabgleich – 21.11.2026, 16:25 MEZ
 
 - GitHub erneut geprüft: HEAD vor Änderungen `13e64e1`; elf offene Issues (#3–#11, #13, #14), keine offenen PRs. README, Roadmap, ADRs, Projektstatus, CI und unabhängiger Diagnoseworkflow abgeglichen. Andere Projekt-Chats sind nicht vollständig live lesbar; keine neuen Anforderungen erfunden.
