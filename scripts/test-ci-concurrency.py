@@ -27,7 +27,7 @@ preflight = re.search(r"(?ms)^  preflight:\s*\n(.*?)(?=^  [a-zA-Z][\w-]*:|\Z)", 
 assert preflight, "Preflight job missing"
 # A stalled preflight must not block CI indefinitely. Keep the timeout
 # on the job itself (not only on the independent diagnostic workflow).
-assert re.search(r"(?m)^    timeout-minutes:\\s*10\\s*$", preflight.group(1)), (
+assert re.search(r"(?m)^    timeout-minutes:\s*10\s*$", preflight.group(1)), (
     "Preflight job must retain its 10-minute timeout"
 )
 assert re.search(r"(?m)^        run: python3 scripts/test-ci-concurrency\.py\s*$", preflight.group(1)), (
