@@ -212,5 +212,26 @@ class EmulatorNavigationTests(unittest.TestCase):
         )
 
 
+    def test_failed_hierarchy_read_never_taps(self):
+        # A successful dump command is not enough: reading the XML can fail.
+        from unittest.mock import patch
+        import subprocess
+        import sys
+        commands = []
+        def fake_run(args, **kwargs):
+            commands.append(args)
+        with patch.object(sys, "argv", ["tap-emulator-navigation.py", "Start"]), \
+             patch.object(module.subprocess, "run", side_effect=fake_run), \
+             patch.object(module.subprocess, "check_output",
+                          side_effect=subprocess.CalledProcessError(
+                              1, ["adb", "exec-out", "cat", "/sdcard/window.xml"])):
+            with self.assertRaises(subprocess.CalledProcessError):
+                module.main()
+        self.assertEqual(
+            [["adb", "shell", "uiautomator", "dump", "/sdcard/window.xml"]],
+            commands,
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
