@@ -1,3 +1,9 @@
+## Entwicklungsabgleich – 22.11.2026, 08:25 MEZ
+
+- **Repo-Abgleich:** README, Roadmap, Entscheidungen, Projektstatus, Android-Workflow, Preflight-Testskript, letzte fünf Commits, elf offene Issues und null offene PRs geprüft. Bekannte Main-/Schedule-Anforderungen #13/#14 berücksichtigt; vollständige andere Chats nicht live lesbar.
+- **Konkreter Diagnosefehler behoben:** Im Android-Workflow enthielt `printf '%s => exit %s\\\\n'` zwei Backslashes vor `n`; Bash-`printf` schrieb dadurch einen literalen `\n` statt eines Zeilenumbruchs in `preflight-diagnostics/results.txt`. Korrigiert auf genau einen Backslash (`printf '%s => exit %s\\n'`), Commit `f3ce051`. Die Exitcodes sind künftig zeilenweise lesbar. Dies repariert **nur die Diagnoseausgabe**, nicht den bislang unbekannten ursprünglichen Preflight-Fehler.
+- **Tests/CI:** Statischer Quelltextvergleich durchgeführt, keine lokale Testausführung und kein neuer grüner GitHub-Actions-Lauf belegt. Keine APK-Freigabe. Nächster Schritt: Diagnoseartefakt eines neuen Laufs abrufen, tatsächlichen Nonzero-Exitcode beheben, danach Rotation/GPS-Regressionstests #13/#14 implementieren.
+
 ## Entwicklungsabgleich – 22.11.2026, 07:16 MEZ
 
 - **GitHub-Abgleich:** README, Roadmap, Architekturentscheidungen, Regressionstestmatrix, CI und Preflight-Skripte erneut gelesen. Letzte Commits vor diesem Lauf `bfad9ae` und `1ccd8d5`; elf offene Issues, keine offenen PRs. Bekannte Anforderungen aus Main/Schedule (#13/#14) berücksichtigt; vollständige Chatverläufe nicht live zugänglich.
