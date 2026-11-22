@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 # Surface the exact failing command in Actions even when downloadable logs are unavailable.
-trap 'status=$?; command=${BASH_COMMAND}; line=${LINENO}; echo "PREFLIGHT FAILED at line ${line}: ${command} (exit ${status})" >&2; printf "::error file=scripts/preflight.sh,line=%s,title=Preflight failure::Command failed (exit %s): %s\\n" "${line}" "${status}" "${command}"' ERR
+trap 'status=$?; command=${BASH_COMMAND}; line=${LINENO}; echo "PREFLIGHT FAILED at line ${line}: ${command} (exit ${status})" >&2; printf "::error file=scripts/preflight.sh,line=%s,title=Preflight failure::Command failed (exit %s): %s\n" "${line}" "${status}" "${command}"' ERR
 # Keep preflight deterministic and independent of the Android SDK.
 for script in scripts/*.sh; do
   echo "Checking shell syntax: $script"
