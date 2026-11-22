@@ -70,18 +70,32 @@ jobs:
             'bash -x scripts/preflight.sh'
             'python3 -u scripts/test-emulator-navigation.py'
           )
+          mkdir -p preflight-diagnostics
+          index=0
           for command in "${commands[@]}"; do
+            index=$((index + 1))
+            log="preflight-diagnostics/check-${index}.log"
             echo "### $command" >> "$GITHUB_STEP_SUMMARY"
             echo "\$ $command"
-            if timeout 90s bash -c "$command" > /tmp/mw2-preflight-output.txt 2>&1; then
+            if timeout 90s bash -c "$command" > "$log" 2>&1; then
+              result=0
               echo 'PASS' >> "$GITHUB_STEP_SUMMARY"
             else
               result=$?
               echo "FAIL (exit $result)" >> "$GITHUB_STEP_SUMMARY"
               echo "::error title=Preflight diagnostic::Failed: $command (exit $result)"
             fi
-            tail -n 25 /tmp/mw2-preflight-output.txt | tee -a "$GITHUB_STEP_SUMMARY"
+            printf '%s => exit %s\\n' "$command" "$result" | tee -a preflight-diagnostics/results.txt
+            tail -n 25 "$log" | tee -a "$GITHUB_STEP_SUMMARY"
           done
+      - name: Upload failing preflight diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-preflight-failure
+          path: preflight-diagnostics/
+          if-no-files-found: warn
+          retention-days: 14
 
   build-and-test:
     needs: preflight
