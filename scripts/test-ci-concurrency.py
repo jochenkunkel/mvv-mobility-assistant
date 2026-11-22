@@ -199,3 +199,11 @@ assert r"printf '%s => exit %s\n'" in preflight_steps, (
     "Preflight diagnostics must write newline-delimited exit codes"
 )
 print("Android CI diagnostic result newline regression guard passed")
+
+# Regression: ERR trap must emit a real newline-terminated Actions annotation.
+# A doubled backslash before n prints a literal backslash-n, hiding the error.
+preflight_shell = (workflow.parents[2] / "scripts/preflight.sh").read_text(encoding="utf-8")
+assert r'printf "::error file=scripts/preflight.sh,line=%s,title=Preflight failure::Command failed (exit %s): %s\n"' in preflight_shell, (
+    "Preflight ERR annotation must end with exactly one escaped newline"
+)
+print("Preflight ERR annotation newline regression guard passed")
