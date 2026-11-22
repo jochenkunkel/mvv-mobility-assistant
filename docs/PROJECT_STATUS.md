@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 22.11.2026, 20:20 MEZ
+
+- **GitHub erneut geprüft:** Neuester vor diesem Arbeitspaket gefundener Commit `9b302e0`; elf offene Issues, keine offenen PRs. README, Implementierungsroadmap, Architekturentscheidungen, Status, Android-CI, Preflight- und Emulator-Navigationstests abgeglichen. Andere Projekt-Chats nicht vollständig live zugänglich; bekannte #13/#14-Anforderungen unverändert.
+- **Kleines implementiertes Regressionstestpaket:** Zwei zusätzliche Offline-Tests in `scripts/test-emulator-navigation.py` für negative bzw. beschädigte Android-UI-Bounds: ungültige Duplikate überspringen, bei ausschließlich ungültigen Bounds sicher abbrechen statt blind zu tippen. Commit `689dd2a`. Die Produktnavigation selbst wurde nicht verändert.
+- **Verifikation:** Testcode und bestehender `center_for_label`-Parser statisch abgeglichen; keine tatsächliche Python-/Android-Testausführung. Commitbezogene Workflow-Run-Schnittstelle deckt Push-Läufe nicht zuverlässig ab. Aktueller grüner Build und APK-Freigabe **nicht** belegt.
+- **Nächste Priorität:** Aktuellen Actions-Push-Lauf und Preflight-Exitcodes/Artefakte beschaffen; danach #13 Rotation und #14 GPS-Trackkontinuität mit echten Zustands-/Instrumentierungstests absichern. Keine Änderung an Signing, Secrets oder Release-Gates.
+
 ## Entwicklungsabgleich – 22.11.2026, 19:20 MEZ
 
 - **Repository erneut verifiziert:** GitHub-Commitsuche meldet `52b48e2` (16:23:41 UTC) als jüngsten Commit; elf offene Issues und null offene PRs. README, Roadmap, Architekturentscheidungen, zentralen Status, Android-CI, Preflight-Skript, statische Regressionstests und Triage-Dokumentation gelesen. Die offenen Praxisfehler [#13](https://github.com/jochenkunkel/mvv-mobility-assistant/issues/13) und [#14](https://github.com/jochenkunkel/mvv-mobility-assistant/issues/14) sind unverändert. Vollständige andere Projekt-Chats nicht live abrufbar; nur dokumentierte Anforderungen übernommen.
