@@ -1,3 +1,9 @@
+## Entwicklungsabgleich – 22.11.2026, 09:22 MEZ
+
+- **Repository geprüft:** README, Roadmap, Architekturentscheidungen, zentraler Status, Android-CI, Preflight- und Emulator-Testskripte, jüngste Commits, elf offene Issues und keine offenen PRs. Bekannte Projektchat-Anforderungen #13 (Rotation) und #14 (GPS-Spur/Rerouting) berücksichtigt; vollständige andere Chats sind nicht live zugänglich.
+- **Implementiertes Arbeitspaket:** In `scripts/test-ci-concurrency.py` schützt ein zusätzlicher statischer Regressionstest die korrekte, newline-delimitierte Ausgabe der Preflight-Exitcodes in `results.txt` gegen den zuvor gefundenen doppelten Backslash. Commit `17fd399`. Die eigentliche Ursache des Preflight-Fehlers ist weiterhin unbekannt.
+- **CI-Belege und Grenzen:** Commitbezogene Workflow-Abfrage für `17fd399` ergab keine PR-Workflow-Läufe (keine Aussage über Push-Läufe). Der frühere Fehl-Lauf #459 hat keine abrufbaren Artefakte. Kein neuer grüner Build oder tatsächliche Testausführung belegt; keine APK-Installationsfreigabe. Nächste Priorität: aktuelle Push-Actions-Läufe und `android-preflight-failure`-Artefakt beschaffen, ersten nachgewiesenen Nonzero-Exitcode beheben, danach #13/#14 implementieren. Signing, Secrets und Freigabegates unverändert.
+
 ## Entwicklungsabgleich – 22.11.2026, 08:25 MEZ
 
 - **Repo-Abgleich:** README, Roadmap, Entscheidungen, Projektstatus, Android-Workflow, Preflight-Testskript, letzte fünf Commits, elf offene Issues und null offene PRs geprüft. Bekannte Main-/Schedule-Anforderungen #13/#14 berücksichtigt; vollständige andere Chats nicht live lesbar.
