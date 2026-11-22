@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 22.11.2026, 21:20 MEZ
+
+- **GitHub-Abgleich:** Vor Änderung jüngster Commit `d8a6c95`; elf offene Issues, null offene PRs. README, Roadmap, Entscheidungen, Projektstatus, Navigationstest und Android-Workflow gelesen. #13 (Rotation) und #14 (GPS-Track) weiterhin offen; andere Projekt-Chats nur im verfügbaren bisherigen Kontext, nicht vollständig live abrufbar.
+- **Implementiert:** Zwei Offline-Regressionstests sichern die End-to-End-Sicherheitsregel des Emulator-Tap-Helfers ab: Bei defektem UI-XML oder fehlender Zielbeschriftung darf `main()` niemals `adb shell input tap` ausführen. Commit `c9cb705`; keine Produktionscodeänderung.
+- **Nachweise und Grenze:** Tests wurden nicht ausgeführt: lokaler Git-Checkout scheitert an DNS (`Could not resolve host: github.com`). Die commitbezogene Actions-API bildet Push-Runs nicht zuverlässig ab. Aktueller grüner Build, APK und Installationsfreigabe nicht nachgewiesen.
+- **Nächster Schritt:** `python3 scripts/test-emulator-navigation.py` auf dem Commit ausführen und aktuellen Push-Preflight/Diagnoseartefakte prüfen; danach echte Rotation-/GPS-Zustandsregressionen zu #13/#14 priorisieren. Keine Änderungen an Secrets, Signing oder Gates.
+
 ## Entwicklungsabgleich – 22.11.2026, 20:20 MEZ
 
 - **GitHub erneut geprüft:** Neuester vor diesem Arbeitspaket gefundener Commit `9b302e0`; elf offene Issues, keine offenen PRs. README, Implementierungsroadmap, Architekturentscheidungen, Status, Android-CI, Preflight- und Emulator-Navigationstests abgeglichen. Andere Projekt-Chats nicht vollständig live zugänglich; bekannte #13/#14-Anforderungen unverändert.
