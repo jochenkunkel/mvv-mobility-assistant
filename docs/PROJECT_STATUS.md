@@ -1,3 +1,9 @@
+## Entwicklungsabgleich – 22.11.2026, 06:22 MEZ
+
+- **Repository:** HEAD vor Änderung `0cd6885`; elf offene Issues (#3–#11, #13, #14), keine offenen PRs. README, Roadmap, ADR, Regressionstestplan, Android-/Diagnoseworkflow und Preflight-Skripte geprüft. Bekannte Chat-Anforderungen berücksichtigt; vollständige andere Projekt-Chats nicht live zugänglich.
+- **Konkrete CI-Verbesserung:** Regulärer Android-Preflight schreibt bei einem Fehler nun die drei unabhängigen Diagnosebefehle in getrennte `check-1.log` bis `check-3.log` sowie ihre Exitcodes in `results.txt` und lädt sie mit `if: failure()` als `android-preflight-failure` für 14 Tage hoch. Commit `1ccd8d5`. Bisherige Preflight-Gates, Timeout und Release-Gates bleiben unverändert. Der Schritt ist eine Verbesserung der Fehlerbeobachtbarkeit, **keine Behebung der unbekannten Fehlerursache**.
+- **Tests/CI:** Workflow-Änderung aus dem vorhandenen Quelltext abgeleitet; kein tatsächlicher Runner-Test und kein grüner Build bestätigt. Neuester zuvor belegter Fehl-Lauf #459 (21.11.2026). Bei nächstem Actions-Lauf Artefakt `android-preflight-failure` abrufen und den ersten Nonzero-Exitcode beheben. Danach #13/#14 implementieren. Keine APK-Freigabe, keine Signing-/Secrets-Änderung.
+
 ## Entwicklungsabgleich – 22.11.2026, 04:24 MEZ
 
 - **Arbeitspaket:** Reproduzierbare Regressionstestmatrix für #13 (Rotation/Zustand) und #14 (GPS-Track/Rerouting) in `docs/ROTATION-GPS-REGRESSION-PLAN.md` angelegt, Commit `a916ed62bba679a308f11f1d915dda95f8ff193b`. Beinhaltet Activity-Recreation, Prozess-Tod, stale/outlier GPS, aus-der-Reihenfolge eintreffende Reroutes und klare Freigabegates. Noch keine Implementierung oder Testausführung.
