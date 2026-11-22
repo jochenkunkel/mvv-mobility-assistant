@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 22.11.2026, 22:24 MEZ
+
+- **Repository:** Vor Änderung letzter Commit `1ed4c87`; elf offene Issues, keine offenen PRs. README, Roadmap, Projektstatus, Android-Workflow und Navigationstests geprüft. #13 (Rotation) und #14 (GPS-Track) bleiben offen. Andere Projekt-Chats nicht vollständig live zugänglich; keine zusätzlichen Aussagen erfunden.
+- **Neues Arbeitspaket:** Zwei End-to-End-Unit-Regressionen für `scripts/tap-emulator-navigation.py` ergänzt (Commit `4c85df9`): gültige UI-Hierarchie löst genau einen Tap am berechneten Mittelpunkt aus; fehlgeschlagener `uiautomator dump` beendet die Aktion vor XML-Lesen und Tap. Keine Produktcode- oder Signing-Änderung.
+- **Test-/CI-Grenze:** Quelltext und Aufrufreihenfolge gegen das aktuelle Hilfsskript geprüft, aber Python-Tests **nicht ausgeführt**. Aktueller Android-Push-Build/Exitcodes nicht verifiziert; keine APK-Installationsfreigabe.
+- **Nächster Schritt:** `python3 -u scripts/test-emulator-navigation.py` auf Commit `4c85df9` ausführen, danach aktuelle Push-Actions-Logs/Preflight-Artefakte prüfen. Fachlich #13 Rotation und #14 GPS-Trackpersistenz mit instrumentierten Zustandsregressionen vorziehen.
+
 ## Entwicklungsabgleich – 22.11.2026, 21:20 MEZ
 
 - **GitHub-Abgleich:** Vor Änderung jüngster Commit `d8a6c95`; elf offene Issues, null offene PRs. README, Roadmap, Entscheidungen, Projektstatus, Navigationstest und Android-Workflow gelesen. #13 (Rotation) und #14 (GPS-Track) weiterhin offen; andere Projekt-Chats nur im verfügbaren bisherigen Kontext, nicht vollständig live abrufbar.
