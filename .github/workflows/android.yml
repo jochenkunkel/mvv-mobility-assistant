@@ -85,7 +85,7 @@ jobs:
               echo "FAIL (exit $result)" >> "$GITHUB_STEP_SUMMARY"
               echo "::error title=Preflight diagnostic::Failed: $command (exit $result)"
             fi
-            printf '%s => exit %s\\n' "$command" "$result" | tee -a preflight-diagnostics/results.txt
+            printf '%s => exit %s\n' "$command" "$result" | tee -a preflight-diagnostics/results.txt
             tail -n 25 "$log" | tee -a "$GITHUB_STEP_SUMMARY"
           done
       - name: Upload failing preflight diagnostics
