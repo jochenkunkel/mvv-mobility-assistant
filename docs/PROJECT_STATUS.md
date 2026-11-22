@@ -1,3 +1,9 @@
+## Entwicklungsabgleich – 22.11.2026, 12:19 MEZ
+
+- **Repository:** README, Roadmap, Status, CI-Workflow, Preflight-Skript, Regressionstestmatrix, aktuelle Commits sowie offene Issues/PRs abgeglichen. Vor diesem Lauf HEAD `3631bdf`; elf offene Issues, keine offenen PRs. Bekannte Anforderungen #13/#14; andere Chatverläufe nicht live vollständig zugänglich.
+- **Kleines Arbeitspaket:** Zusätzlichen Quelltext-Regressionstest für den Zeilenumbruch der GitHub-Actions-ERR-Annotation in `scripts/test-ci-concurrency.py` ergänzt (Commit `b6ca57a`). Er schützt den zuletzt behobenen Escape-Fehler vor Wiedereinführung. Der Vergleich des frisch abgerufenen Testquelltexts mit `scripts/preflight.sh` ergibt eine Übereinstimmung. **Keine tatsächliche Python-Testausführung oder Android-CI-Bestätigung**; die ursprüngliche Preflight-Ursache bleibt unbekannt.
+- **CI/APK:** Aktuelle Push-Workflow-Liste über den GitHub-Connector nicht vollständig abrufbar; bislang letzter belegter Fehl-Lauf [#459](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44940824673). Keine APK-Freigabe. Nächster Schritt: Preflight-Exitcodes aus einem aktuellen Lauf sichern und den ersten realen Fehler beheben; danach #13/#14 automatisieren.
+
 ## Entwicklungsabgleich – 22.11.2026, 11:17 MEZ
 
 - **Repo erneut geprüft:** README, Implementierungsroadmap, Architekturentscheidungen, Projektstatus, Android-Workflow, Preflight-Skripte, fünf jüngste Commits, elf offene Issues und null offene PRs. Vollständige fremde Projekt-Chats nicht live abrufbar; bekannte Anforderungen #13/#14 bleiben offen.
