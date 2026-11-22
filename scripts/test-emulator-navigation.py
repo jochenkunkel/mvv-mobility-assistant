@@ -177,5 +177,40 @@ class EmulatorNavigationTests(unittest.TestCase):
         self.assertEqual(1, len(commands))
         self.assertEqual("uiautomator", commands[0][2])
 
+    def test_successful_navigation_taps_exactly_once_at_detected_center(self):
+        from unittest.mock import patch
+        import sys
+        commands = []
+        xml = '<hierarchy><node text="Verbindungen" bounds="[120,240][320,300]"/></hierarchy>'
+        with patch.object(sys, "argv", ["tap-emulator-navigation.py", "Verbindungen"]), \
+             patch.object(module.subprocess, "run",
+                          side_effect=lambda args, **kwargs: commands.append(args)), \
+             patch.object(module.subprocess, "check_output", return_value=xml):
+            module.main()
+        self.assertEqual([
+            ["adb", "shell", "uiautomator", "dump", "/sdcard/window.xml"],
+            ["adb", "shell", "input", "tap", "220", "270"],
+        ], commands)
+
+    def test_failed_uiautomator_dump_never_taps(self):
+        from unittest.mock import patch
+        import subprocess
+        import sys
+        commands = []
+        def failing_run(args, **kwargs):
+            commands.append(args)
+            raise subprocess.CalledProcessError(1, args)
+        with patch.object(sys, "argv", ["tap-emulator-navigation.py", "Start"]), \
+             patch.object(module.subprocess, "run", side_effect=failing_run), \
+             patch.object(module.subprocess, "check_output") as read_dump:
+            with self.assertRaises(subprocess.CalledProcessError):
+                module.main()
+            read_dump.assert_not_called()
+        self.assertEqual(
+            [["adb", "shell", "uiautomator", "dump", "/sdcard/window.xml"]],
+            commands,
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
