@@ -150,6 +150,23 @@ for command in required_preflight_commands:
     )
 print("Android CI failure diagnostic visibility regression guard passed")
 
+# Failure diagnostics must be downloadable even when Actions job logs are absent.
+# Keep this an additive observer: it must never replace the failing preflight gate.
+assert re.search(r"(?m)^      - name: Upload failing preflight diagnostics\\s*$", preflight_steps), (
+    "Preflight failure artifact upload step missing"
+)
+assert re.search(r"(?ms)^      - name: Upload failing preflight diagnostics\\s*\\n"
+                 r"        if: failure\\(\\)\\s*\\n"
+                 r"        uses: actions/upload-artifact@v4\\s*\\n"
+                 r"        with:\\s*\\n"
+                 r"          name: android-preflight-failure\\s*\\n"
+                 r"          path: preflight-diagnostics/\\s*\\n", preflight_steps), (
+    "Failure artifact must upload the independent preflight logs"
+)
+print("Android CI preflight failure artifact regression guard passed")
+
+
+
 # Protect the independent no-APK diagnostic path against accidental removal.
 # This is a source-level contract, not proof that GitHub ran the workflow.
 diagnostic_path = workflow.parent / "preflight-diagnostics.yml"
