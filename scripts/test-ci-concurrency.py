@@ -192,3 +192,10 @@ assert "actions/upload-artifact@v4" in diagnostic, (
 )
 assert "retention-days: 14" in diagnostic, "Diagnostic artifact retention must be explicit"
 print("Independent preflight diagnostics source contract passed")
+
+# Regression: diagnostics must record one exit result per physical line.
+# A doubled backslash would print literal \\n and merge all results.
+assert r"printf '%s => exit %s\n'" in preflight_steps, (
+    "Preflight diagnostics must write newline-delimited exit codes"
+)
+print("Android CI diagnostic result newline regression guard passed")
