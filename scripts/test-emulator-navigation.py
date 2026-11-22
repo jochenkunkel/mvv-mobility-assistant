@@ -128,6 +128,21 @@ class EmulatorNavigationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.center_for_label(xml, "Meine Fahrt")
 
+    def test_skips_negative_or_malformed_bounds_before_valid_duplicate(self):
+        # Android hierarchy dumps can contain off-screen or malformed duplicates.
+        # Never tap those coordinates when a usable navigation label exists.
+        xml = ('<hierarchy>'
+               '<node text="Verbindungen" bounds="[-20,0][80,100]"/>'
+               '<node text="Verbindungen" bounds="garbled"/>'
+               '<node text="Verbindungen" bounds="[240,360][440,440]"/>'
+               '</hierarchy>')
+        self.assertEqual((340, 400), module.center_for_label(xml, "Verbindungen"))
+
+    def test_negative_bounds_without_valid_duplicate_fail_closed(self):
+        xml = '<hierarchy><node text="Meine Fahrt" bounds="[-10,0][100,100]"/></hierarchy>'
+        with self.assertRaises(ValueError):
+            module.center_for_label(xml, "Meine Fahrt")
+
     def test_rejects_empty_bounds(self):
         xml = '<hierarchy><node text="Verbindungen" bounds="[100,200][100,260]"/></hierarchy>'
         with self.assertRaises(ValueError):
