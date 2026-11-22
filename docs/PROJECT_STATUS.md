@@ -1,3 +1,9 @@
+## Entwicklungsabgleich – 22.11.2026, 14:23 MEZ
+
+- **Repo-Abgleich:** README, Roadmap, Architekturentscheidungen, Preflight-Workflow und Skripte, Issues und PRs geprüft; #13/#14 weiterhin offen. Vollständige Live-Verläufe anderer Projekt-Chats nicht zugänglich; bekannte Anforderungen berücksichtigt.
+- **Arbeit:** Nachvollziehbare, nach Fehlerklasse gegliederte CI-Fehlerisolierung in [CI-PREFLIGHT-TRIAGE-2026-11-22.md](CI-PREFLIGHT-TRIAGE-2026-11-22.md) ergänzt (Commit `a6acba7`). Beschreibt aktuelle Run-/Artefakt-Suche, lokale drei Einzelprüfungen, fehlende Belege und Freigabegrenzen. Keine spekulative Änderung am Produktionscode.
+- **Tests/CI:** Dokumentation geändert; keine ausführbaren Tests oder neuen grünen Build nachgewiesen. Die Connector-Abfrage für Commits ist auf PR-Läufe beschränkt. Kein APK-Freigabenachweis. **Nächster Schritt:** ersten echten Nonzero-Exitcode aus aktuellem Preflight/Diagnose-Workflow sichern und Ursache beheben; anschließend #13/#14 testen.
+
 ## Entwicklungsabgleich – 22.11.2026, 12:19 MEZ
 
 - **Repository:** README, Roadmap, Status, CI-Workflow, Preflight-Skript, Regressionstestmatrix, aktuelle Commits sowie offene Issues/PRs abgeglichen. Vor diesem Lauf HEAD `3631bdf`; elf offene Issues, keine offenen PRs. Bekannte Anforderungen #13/#14; andere Chatverläufe nicht live vollständig zugänglich.
