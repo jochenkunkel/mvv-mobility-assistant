@@ -1,3 +1,9 @@
+## Entwicklungsabgleich – 22.11.2026, 04:24 MEZ
+
+- **Arbeitspaket:** Reproduzierbare Regressionstestmatrix für #13 (Rotation/Zustand) und #14 (GPS-Track/Rerouting) in `docs/ROTATION-GPS-REGRESSION-PLAN.md` angelegt, Commit `a916ed62bba679a308f11f1d915dda95f8ff193b`. Beinhaltet Activity-Recreation, Prozess-Tod, stale/outlier GPS, aus-der-Reihenfolge eintreffende Reroutes und klare Freigabegates. Noch keine Implementierung oder Testausführung.
+- **Repo-Abgleich:** README, Roadmap, ADRs, Handoff, CI-/Diagnoseworkflow, Preflight-Quelltext und elf offene Issues gelesen; keine offenen PRs. Vollständige fremde Chatverläufe nicht verfügbar; bekannte Anforderungen aus Main/Schedule übernommen.
+- **CI:** Letzter zuvor belegter fehlgeschlagener Android-Push-Lauf #459 (21.11.2026); in diesem Lauf kein neuer erfolgreicher Actions-Lauf nachgewiesen. Einzelne Preflight-Exitcodes weiter unbekannt. Keine APK-Freigabe. Nächster Schritt: Diagnoseartefakte/Exitcodes beschaffen, Preflight reparieren, anschließend Tests gemäß neuer Matrix implementieren.
+
 ## Entwicklungsabgleich – 22.11.2026, 03:25 MEZ
 
 - **Live-Stand:** `main` vor dieser Aktualisierung `a8374ebd36acca6c8872ec9aebde343ebf45d8ad`; elf offene Issues, keine offenen PRs. README, Roadmap, Entscheidungen, Status, Android-/Diagnoseworkflow und Preflight-Skript abgeglichen. Bekannte Projektchat-Anforderungen #13 (Rotation) und #14 (GPS-Spur/Rerouting); vollständige fremde Chatverläufe nicht abrufbar.
