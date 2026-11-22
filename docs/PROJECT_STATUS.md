@@ -596,3 +596,10 @@ Keine erfundenen CI-Ergebnisse oder pauschale „fertig“-Meldung.
 - **Tests/CI:** Keine Tests ausgeführt. Commit-Statusabfrage für `78ea9e0` lieferte keine Statuschecks; Push-Actions-Lauf nicht nachgewiesen. Keine APK-Freigabe.
 - **Nächster Schritt:** Instrumentierten roten Rotationstest auf Basis des neuen Vertrags implementieren; danach zusammenhängenden Navigationszustand in ViewModel auslagern, GPS-/Rerouting-Regressionen nachziehen.
 - **Chats:** Bekannte Meldungen aus Main/Schedule berücksichtigt; kein vollständiger Live-Zugriff auf alle Chats.
+
+## Automatischer Entwicklungsabgleich – 22.11.2026, 23:24 MEZ
+
+- **GitHub-Baseline:** vor Änderung `3a92744`; 11 offene Issues (#3–#11, #13, #14), keine offenen PRs. README, Roadmap, Activity-Recreation-Vertrag, Navigationstest, Tap-Helfer und Android-Workflow geprüft. Andere Projekt-Chats sind nicht vollständig live abrufbar; bekannte Anforderungen zu Rotation, GPS-Spur und Rerouting bleiben #13/#14 zugeordnet.
+- **Arbeitspaket:** `caedd32` ergänzt `test_failed_hierarchy_read_never_taps` in `scripts/test-emulator-navigation.py`. Der Test simuliert einen fehlgeschlagenen `adb exec-out cat` nach erfolgreichem UI-Dump und fordert, dass niemals `adb shell input tap` ausgeführt wird. Testdatei nach Commit erneut gelesen; keine Änderung an Produktivcode, Signing oder Secrets.
+- **Tests/CI:** Python-Test und Android-Build in diesem Lauf **nicht ausgeführt**. `fetch_commit_workflow_runs(caedd32)` ergab `[]`, aber dieser Connector berücksichtigt nur PR-getriggerte Läufe; kein Nachweis zum Push-Build. Keine APK-Installationsfreigabe.
+- **Nächste Priorität:** `python3 -u scripts/test-emulator-navigation.py` auf dem exakten HEAD ausführen und aktuelle Push-Preflight-Logs auswerten; danach funktionale Activity-Recreation- (#13) und GPS-Track-Regressionen (#14) statt weiterer ausschließlich UI-Helfertests priorisieren.
