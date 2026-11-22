@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 22.11.2026, 11:17 MEZ
+
+- **Repo erneut geprüft:** README, Implementierungsroadmap, Architekturentscheidungen, Projektstatus, Android-Workflow, Preflight-Skripte, fünf jüngste Commits, elf offene Issues und null offene PRs. Vollständige fremde Projekt-Chats nicht live abrufbar; bekannte Anforderungen #13/#14 bleiben offen.
+- **Konkrete Korrektur:** Im ERR-Trap von `scripts/preflight.sh` verwendete die GitHub-Actions-Annotation ein doppelt escaptes `\\n`; `printf` schrieb deshalb ein literales `\n` statt eines echten Zeilenendes. Auf einfaches `\n` korrigiert (Commit `ebba512`). Die Ausgabe lässt sich damit korrekt zeilenweise parsen. Die unbekannte ursprüngliche Preflight-Fehlerursache ist **nicht** behoben.
+- **Prüfung:** Bash-`printf`-Verhalten lokal mit Byteausgabe verifiziert (doppelter Backslash: `61 5c 6e`, einfacher Backslash: `61 0a`); einfacher Shell-Syntax-Smokecheck durchgeführt. Kein vollständiger Repository-Checkout, kein Android-/GitHub-Runner-Test und kein grüner Build nachgewiesen. Push-Workflow-Läufe über die commitbezogene PR-Abfrage nicht zuverlässig sichtbar; bisher belegter Fehl-Lauf [#459](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44940824673). Keine APK-Freigabe.
+- **Nächste Priorität:** Neueste Push-Actions-Läufe und `android-preflight-failure`-Artefakt prüfen, tatsächlichen Nonzero-Exitcode isolieren; anschließend #13 Rotation und #14 GPS-/Reroute-Regressionstests. Signing, Secrets und Gates unverändert.
+
 ## Entwicklungsabgleich – 22.11.2026, 09:22 MEZ
 
 - **Repository geprüft:** README, Roadmap, Architekturentscheidungen, zentraler Status, Android-CI, Preflight- und Emulator-Testskripte, jüngste Commits, elf offene Issues und keine offenen PRs. Bekannte Projektchat-Anforderungen #13 (Rotation) und #14 (GPS-Spur/Rerouting) berücksichtigt; vollständige andere Chats sind nicht live zugänglich.
