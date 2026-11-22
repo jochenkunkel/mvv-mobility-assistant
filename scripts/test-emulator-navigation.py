@@ -149,5 +149,33 @@ class EmulatorNavigationTests(unittest.TestCase):
             module.center_for_label(xml, "Verbindungen")
 
 
+    def test_malformed_dump_never_sends_adb_tap(self):
+        # A corrupt UI dump must fail before issuing any input event.
+        from unittest.mock import patch
+        import sys
+        commands = []
+        def fake_run(args, **kwargs):
+            commands.append(args)
+        with patch.object(sys, "argv", ["tap-emulator-navigation.py", "Start"]), \
+             patch.object(module.subprocess, "run", side_effect=fake_run), \
+             patch.object(module.subprocess, "check_output",
+                          return_value='<hierarchy><node text="Start"'):
+            with self.assertRaises(Exception):
+                module.main()
+        self.assertEqual([["adb", "shell", "uiautomator", "dump", "/sdcard/window.xml"]], commands)
+
+    def test_missing_target_never_sends_adb_tap(self):
+        from unittest.mock import patch
+        import sys
+        commands = []
+        with patch.object(sys, "argv", ["tap-emulator-navigation.py", "Meine Fahrt"]), \
+             patch.object(module.subprocess, "run", side_effect=lambda args, **kwargs: commands.append(args)), \
+             patch.object(module.subprocess, "check_output",
+                          return_value='<hierarchy><node text="Start" bounds="[0,0][100,100]"/></hierarchy>'):
+            with self.assertRaises(ValueError):
+                module.main()
+        self.assertEqual(1, len(commands))
+        self.assertEqual("uiautomator", commands[0][2])
+
 if __name__ == "__main__":
     unittest.main()
