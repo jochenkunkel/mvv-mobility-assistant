@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 22.11.2026, 07:16 MEZ
+
+- **GitHub-Abgleich:** README, Roadmap, Architekturentscheidungen, Regressionstestmatrix, CI und Preflight-Skripte erneut gelesen. Letzte Commits vor diesem Lauf `bfad9ae` und `1ccd8d5`; elf offene Issues, keine offenen PRs. Bekannte Anforderungen aus Main/Schedule (#13/#14) berücksichtigt; vollständige Chatverläufe nicht live zugänglich.
+- **Kleines Testpaket:** `scripts/test-ci-concurrency.py` prüft jetzt zusätzlich, dass der reguläre Android-Preflight bei Fehlern weiterhin `android-preflight-failure` mit `preflight-diagnostics/` über `actions/upload-artifact@v4` hochlädt. Commits `a6be745` (Guard) und `780f13f` (Regex-Escape-Korrektur). Dies schützt die Beobachtbarkeit; die unbekannte eigentliche CI-Fehlerursache ist damit nicht behoben.
+- **CI-Evidenz:** Run [#459](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44940824673) erneut abgefragt: `preflight=failure`, fünf weitere Jobs `skipped`, keine Artefakte. Commitbezogene Actions-Abfrage für `bfad9ae` leer (erfasst Push-Läufe nicht zuverlässig). Kein neuer grüner Build verifiziert, keine lokalen Tests ausgeführt, keine APK-Freigabe.
+- **Nächster Schritt:** Aktuellen Push-Lauf samt Fehlerartefakt abrufen, ersten tatsächlichen Nonzero-Exitcode isolieren und beheben; anschließend #13/#14 automatisiert testen. Signing/Secrets/Release-Gates unverändert.
+
 ## Entwicklungsabgleich – 22.11.2026, 06:22 MEZ
 
 - **Repository:** HEAD vor Änderung `0cd6885`; elf offene Issues (#3–#11, #13, #14), keine offenen PRs. README, Roadmap, ADR, Regressionstestplan, Android-/Diagnoseworkflow und Preflight-Skripte geprüft. Bekannte Chat-Anforderungen berücksichtigt; vollständige andere Projekt-Chats nicht live zugänglich.
