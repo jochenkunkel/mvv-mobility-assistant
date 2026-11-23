@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 23.11.2026, 03:24 MEZ
+
+- **Live-Repository:** `main` vor Änderung `e615cfa` (23.11.2026, 00:19 UTC); elf offene Issues, keine offenen PRs. README, Roadmap, Entscheidungen, CI und Emulator-Navigationstests geprüft. #13 Rotation und #14 GPS-Trackverlust offen. Andere Projekt-Chats nicht vollständig live lesbar; nur bekannte dokumentierte Anforderungen verwendet.
+- **Neuer verifizierter CI-Befund:** Der zuvor nur als Warteschlange bekannte Push-Lauf [#490](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45088092833), Run-ID `45088092833`, ist abgeschlossen: `preflight=failure` (Job `137411172360`), fünf Folgejobs `skipped`. Die Jobschritt-Schnittstelle liefert eine leere Liste, Joblogs weiterhin HTTP 404 `BlobNotFound`; die Artefaktliste ist **leer**. Damit ist weder ein konkreter Preflight-Fehler noch ein erfolgreiches Build nachgewiesen. Der fehlende Diagnoseartefakt-Upload könnte an einem frühen Job-/Checkout-Problem liegen; das ist eine Hypothese, keine Feststellung.
+- **Diagnose/Arbeitsplan:** Auf einem zugänglichen Checkout exakt `e615cfa` die drei unabhängigen Prüfungen `python3 scripts/test-ci-concurrency.py`, `bash -x scripts/preflight.sh`, `python3 -u scripts/test-emulator-navigation.py` mit Exitcodes reproduzieren. Alternativ unabhängigen Diagnoseworkflow ausführen. Erst nach konkretem Traceback gezielten Fix committen. Danach #13 Activity-Neuerstellung und #14 GPS-Trackkontinuität instrumentiert testen. Keine Secrets/Signing/Gates geändert.
+- **Test-/Freigabegrenze:** In diesem Lauf keine ausführbaren Tests, kein grüner Android-Build und keine APK-Installationsfreigabe.
+
 ## Entwicklungsabgleich – 22.11.2026, 22:24 MEZ
 
 - **Repository:** Vor Änderung letzter Commit `1ed4c87`; elf offene Issues, keine offenen PRs. README, Roadmap, Projektstatus, Android-Workflow und Navigationstests geprüft. #13 (Rotation) und #14 (GPS-Track) bleiben offen. Andere Projekt-Chats nicht vollständig live zugänglich; keine zusätzlichen Aussagen erfunden.
