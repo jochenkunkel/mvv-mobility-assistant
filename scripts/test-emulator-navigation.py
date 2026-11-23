@@ -233,5 +233,29 @@ class EmulatorNavigationTests(unittest.TestCase):
         )
 
 
+    def test_failed_adb_tap_propagates_error_after_single_attempt(self):
+        # A rejected input event must never be reported as successful navigation.
+        from unittest.mock import patch
+        import subprocess
+        import sys
+        commands = []
+        xml = '<hierarchy><node text="Start" bounds="[20,40][120,140]"/></hierarchy>'
+
+        def fake_run(args, **kwargs):
+            commands.append(args)
+            if args[:4] == ["adb", "shell", "input", "tap"]:
+                raise subprocess.CalledProcessError(1, args)
+
+        with patch.object(sys, "argv", ["tap-emulator-navigation.py", "Start"]), \
+             patch.object(module.subprocess, "run", side_effect=fake_run), \
+             patch.object(module.subprocess, "check_output", return_value=xml):
+            with self.assertRaises(subprocess.CalledProcessError):
+                module.main()
+        self.assertEqual([
+            ["adb", "shell", "uiautomator", "dump", "/sdcard/window.xml"],
+            ["adb", "shell", "input", "tap", "70", "90"],
+        ], commands)
+
+
 if __name__ == "__main__":
     unittest.main()
