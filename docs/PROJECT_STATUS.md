@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 23.11.2026, 21:24 MEZ
+
+- **Repository-Abgleich:** Vor Änderung letzter Commit `02f059e`; elf offene Issues, keine offenen PRs. README, Implementierungsroadmap, Entscheidungen, Status und Preflight-Diagnoseworkflow geprüft. #13 (Rotation) und #14 (GPS-Spurverlust) weiterhin offen. Andere Projekt-Chats nicht vollständig live zugänglich; keine neuen Anforderungen erfunden.
+- **Arbeitspaket:** Neuer Offline-Regressionstest `test_tap_timeout_propagates_without_retry` in `scripts/test-emulator-navigation.py` (Commit `509e841`). Bei Timeout des abschließenden ADB-Taps wird `TimeoutExpired` weitergereicht; es erfolgt **kein** zweiter Tap, weil der erste trotz Timeout beim Gerät angekommen sein könnte.
+- **Nachweisgrenze:** Testquelltext und `tap-emulator-navigation.py` statisch abgeglichen, aber Python-/Android-Tests nicht ausgeführt. Der Connector liefert für Commit-SHA nur PR-bezogene Workflow-Läufe, daher ist der aktuelle Push-CI-Status nicht nachgewiesen. Keine APK-Freigabe, keine Änderung an Signing/Secrets oder CI-Gates.
+- **Nächster Schritt:** `python3 -u scripts/test-emulator-navigation.py` ausführen; aktuelle Push-Actions-Läufe und Diagnoselogs/Exitcodes über Actions-UI oder `gh` prüfen. Danach die konkrete CI-Blockade beheben und instrumentierte Regressionstests für #13/#14 priorisieren.
+
 ## Entwicklungsabgleich – 23.11.2026, 20:21 MEZ
 
 - **Live-Abgleich:** Letzter Commit vor Änderung `092053d`; elf offene Issues, keine offenen PRs. README, Implementierungsroadmap, Entscheidungen, Status, Diagnoseworkflow und Emulator-Helfer/Tests geprüft. #13 Rotation und #14 GPS-Spurverlust bleiben offen. Andere Chats nicht vollständig live abrufbar; keine zusätzlichen Anforderungen unterstellt.
