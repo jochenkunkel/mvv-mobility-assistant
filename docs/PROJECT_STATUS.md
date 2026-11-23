@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 23.11.2026, 20:21 MEZ
+
+- **Live-Abgleich:** Letzter Commit vor Änderung `092053d`; elf offene Issues, keine offenen PRs. README, Implementierungsroadmap, Entscheidungen, Status, Diagnoseworkflow und Emulator-Helfer/Tests geprüft. #13 Rotation und #14 GPS-Spurverlust bleiben offen. Andere Chats nicht vollständig live abrufbar; keine zusätzlichen Anforderungen unterstellt.
+- **Implementiert:** Zwei gezielte Regressionstests für ADB-Timeouts in `scripts/test-emulator-navigation.py`: Bei Timeout des UI-Dumps darf weder die Hierarchie gelesen noch getippt werden; bei Timeout des XML-Lesens darf kein Tap folgen. Commit `3f74aee`. Keine Produktcode-, Signing- oder Secrets-Änderung.
+- **Verifikation:** Neuen Testcode gegen das unveränderte `tap-emulator-navigation.py` statisch abgeglichen; ausführbare Python-/Android-Tests in dieser Umgebung nicht durchgeführt. Die commitbezogene Workflow-Abfrage für `3f74aee` ergab keine PR-Läufe, belegt jedoch **nicht**, dass kein Push-Workflow lief. Kein grüner Build und keine APK-Freigabe.
+- **Nächster Schritt:** `python3 -u scripts/test-emulator-navigation.py` auf dem neuen Head ausführen, aktuelle Push-Actions-/Diagnoseartefakte in Actions-UI/CLI überprüfen, dann CI-Preflight-Fehler anhand echter Exitcodes beheben. Fachlich #13/#14 mit instrumentierten Zustandsregressionen priorisieren.
+
 ## Entwicklungsabgleich – 23.11.2026, 19:19 MEZ
 
 - **Repo:** Vor Änderung letzter gefundener Commit `b53f777`; elf offene Issues, keine offenen PRs. README, Roadmap, ADRs, Status, Emulator-Helfer und Diagnoseworkflow geprüft. #13/#14 weiterhin offen. Andere Chats nur über verfügbaren Kontext, nicht vollständig live zugänglich.
