@@ -277,5 +277,38 @@ class EmulatorNavigationTests(unittest.TestCase):
         self.assertTrue(all(timeout > 0 for _, kw in commands for timeout in [kw["timeout"]]))
 
 
+    def test_dump_timeout_never_reads_hierarchy_or_taps(self):
+        from unittest.mock import patch
+        import subprocess
+        import sys
+        commands = []
+        def timeout_run(args, **kwargs):
+            commands.append(args)
+            raise subprocess.TimeoutExpired(args, kwargs["timeout"])
+        with patch.object(sys, "argv", ["tap-emulator-navigation.py", "Start"]), \
+             patch.object(module.subprocess, "run", side_effect=timeout_run), \
+             patch.object(module.subprocess, "check_output") as read_dump:
+            with self.assertRaises(subprocess.TimeoutExpired):
+                module.main()
+            read_dump.assert_not_called()
+        self.assertEqual([["adb", "shell", "uiautomator", "dump", "/sdcard/window.xml"]], commands)
+
+    def test_hierarchy_read_timeout_never_taps(self):
+        from unittest.mock import patch
+        import subprocess
+        import sys
+        commands = []
+        def fake_run(args, **kwargs):
+            commands.append(args)
+        with patch.object(sys, "argv", ["tap-emulator-navigation.py", "Start"]), \
+             patch.object(module.subprocess, "run", side_effect=fake_run), \
+             patch.object(module.subprocess, "check_output",
+                          side_effect=subprocess.TimeoutExpired(
+                              ["adb", "exec-out", "cat", "/sdcard/window.xml"], 15)):
+            with self.assertRaises(subprocess.TimeoutExpired):
+                module.main()
+        self.assertEqual([["adb", "shell", "uiautomator", "dump", "/sdcard/window.xml"]], commands)
+
+
 if __name__ == "__main__":
     unittest.main()
