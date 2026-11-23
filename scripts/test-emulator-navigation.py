@@ -310,5 +310,28 @@ class EmulatorNavigationTests(unittest.TestCase):
         self.assertEqual([["adb", "shell", "uiautomator", "dump", "/sdcard/window.xml"]], commands)
 
 
+    def test_tap_timeout_propagates_without_retry(self):
+        # Never silently retry an input event: the first tap may have reached Android.
+        from unittest.mock import patch
+        import subprocess
+        import sys
+        commands = []
+        xml = '<hierarchy><node text="Start" bounds="[0,0][100,100]"/></hierarchy>'
+
+        def fake_run(args, **kwargs):
+            commands.append(args)
+            if args[:4] == ["adb", "shell", "input", "tap"]:
+                raise subprocess.TimeoutExpired(args, kwargs["timeout"])
+
+        with patch.object(sys, "argv", ["tap-emulator-navigation.py", "Start"]), \
+             patch.object(module.subprocess, "run", side_effect=fake_run), \
+             patch.object(module.subprocess, "check_output", return_value=xml):
+            with self.assertRaises(subprocess.TimeoutExpired):
+                module.main()
+        self.assertEqual([
+            ["adb", "shell", "uiautomator", "dump", "/sdcard/window.xml"],
+            ["adb", "shell", "input", "tap", "50", "50"],
+        ], commands)
+
 if __name__ == "__main__":
     unittest.main()
