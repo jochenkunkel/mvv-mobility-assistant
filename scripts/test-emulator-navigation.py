@@ -257,5 +257,25 @@ class EmulatorNavigationTests(unittest.TestCase):
         ], commands)
 
 
+    def test_adb_operations_have_bounded_timeouts(self):
+        # A stuck emulator must not hang CI or local navigation indefinitely.
+        from unittest.mock import patch
+        import sys
+        commands = []
+        xml = '<hierarchy><node text="Start" bounds="[0,0][100,100]"/></hierarchy>'
+        def fake_run(args, **kwargs):
+            commands.append((args, kwargs))
+        def fake_output(args, **kwargs):
+            commands.append((args, kwargs))
+            return xml
+        with patch.object(sys, "argv", ["tap-emulator-navigation.py", "Start"]), \
+             patch.object(module.subprocess, "run", side_effect=fake_run), \
+             patch.object(module.subprocess, "check_output", side_effect=fake_output):
+            module.main()
+        self.assertEqual(3, len(commands))
+        self.assertEqual([30, 15, 15], [kw["timeout"] for _, kw in commands])
+        self.assertTrue(all(timeout > 0 for _, kw in commands for timeout in [kw["timeout"]]))
+
+
 if __name__ == "__main__":
     unittest.main()
