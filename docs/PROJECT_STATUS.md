@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 24.11.2026, 00:20 MEZ
+
+- **HEAD und Aufgaben:** `main=8f8cb49ca38fd2ac9ac8eb768dc7d44f3a349004`; elf offene Issues, keine offenen PRs. README, Implementierungsroadmap, Status und Emulator-Helfer/Regressionstests gelesen. #13 (Rotation) und #14 (GPS-Spurverlust) bleiben offen. Andere Chats nur über verfügbaren Kontext, nicht als vollständiger Live-Verlauf.
+- **Neue gezielte CI-Prüfung:** Android-Push-Lauf [#504](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45268631001) hat den fehlgeschlagenen Preflight-Job **138022172035**; die fünf abhängigen Jobs sind `skipped`. Die Jobantwort enthält keine Schritte. Direkter Logabruf für den Job lieferte `404 BlobNotFound` (24.11., 00:20 MEZ). Die Ursache ist weiterhin **nicht** bewiesen; weder Runner-Start noch Skriptfehler lassen sich daraus ableiten.
+- **Diagnose als nächstes:** Actions-Weboberfläche für Job 138022172035 aufrufen, die **Setup-Job-Logs und Runner-Zuweisung** prüfen; falls auch dort keine Schritte existieren, Repository-Einstellungen für Actions/Runner, Billing/Kontingent und GitHub-Status prüfen. Erst nach nachgewiesenen Step-Logs die drei Preflight-Kommandos separat ausführen. Zusätzlich `python3 -u scripts/test-emulator-navigation.py` auf einem echten Checkout ausführen; hier scheiterte `git ls-remote` an DNS-Auflösung von `github.com`.
+- **Nachweise:** Keine Codeänderung, keine Tests ausgeführt, kein grüner Build und keine APK-Freigabe. Keine Änderung an Signing/Secrets/CI-Gates. Fachlich als nächstes ausführbare Regressionen für #13/#14, nicht weitere ungetestete ADB-Testvarianten.
+
 ## Entwicklungsabgleich – 23.11.2026, 21:24 MEZ
 
 - **Repository-Abgleich:** Vor Änderung letzter Commit `02f059e`; elf offene Issues, keine offenen PRs. README, Implementierungsroadmap, Entscheidungen, Status und Preflight-Diagnoseworkflow geprüft. #13 (Rotation) und #14 (GPS-Spurverlust) weiterhin offen. Andere Projekt-Chats nicht vollständig live zugänglich; keine neuen Anforderungen erfunden.
