@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 23.11.2026, 19:19 MEZ
+
+- **Repo:** Vor Änderung letzter gefundener Commit `b53f777`; elf offene Issues, keine offenen PRs. README, Roadmap, ADRs, Status, Emulator-Helfer und Diagnoseworkflow geprüft. #13/#14 weiterhin offen. Andere Chats nur über verfügbaren Kontext, nicht vollständig live zugänglich.
+- **Verbesserung:** `scripts/tap-emulator-navigation.py` begrenzt nun alle drei ADB-Aufrufe (UI-Dump 30 s, XML-Lesen und Tap jeweils 15 s), damit ein blockierter Emulator Test-/CI-Läufe nicht unbegrenzt anhält. Commit `e2b3b64`. Regressionstest prüft alle drei Timeout-Parameter (`dc33c39`). Keine Änderungen an App-Produktcode, Signing oder Secrets.
+- **CI-Nachweis:** Historischer Android-Lauf [#491](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45100034723) weiterhin Preflight fehlgeschlagen und fünf Folgejobs übersprungen; Artefaktliste leer. Die neuen `scripts/**`-Commits sollten den Diagnoseworkflow triggern, dessen tatsächlicher Start ist **noch nicht bestätigt**. Kein aktueller grüner Build oder APK-Freigabe.
+- **Tests:** Quelltext statisch geprüft; Python-Tests und Android-Build hier nicht ausgeführt. Nächster Schritt: `python3 scripts/test-emulator-navigation.py` sowie neueste Actions-Push-Runs/Diagnoseartefakte prüfen; danach #13 Rotation und #14 GPS-Trackkontinuität instrumentiert absichern.
+
 ## Entwicklungsabgleich – 23.11.2026, 18:20 MEZ
 
 - **Repository:** Vor Änderung `main=cb2dc99`; elf offene Issues, keine offenen PRs. README, Roadmap, Entscheidungen, Status, Preflight-Diagnose und Emulator-Helfer abgeglichen. #13/#14 weiter offen. Andere Projekt-Chats nicht vollständig live zugänglich.
