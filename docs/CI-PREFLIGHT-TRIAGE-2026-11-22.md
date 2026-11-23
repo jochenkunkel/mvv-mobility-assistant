@@ -1,7 +1,14 @@
 # Android-CI Preflight: reproduzierbare Fehlerisolierung (22.11.2026)
 
+## Neuer Befund – 23.11.2026, 08:20 MEZ (Actions #491)
+
+- Der aktuelle Push-Lauf [Android CI #491](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45100034723), Run-ID `45100034723`, SHA `0b71b0b70dd02c9dbe5d3d8cff1b150aea64588f`, ist `completed/failure`. Preflight-Job `137448513229` = `failure`; die fünf anderen Jobs sind `skipped`.
+- Die **Jobschritt-API liefert null Schritte**, der gezielte Logabruf liefert HTTP 404 `BlobNotFound`, und die Artefakt-API meldet `total_count: 0`. Daher gibt es **keinen Beleg, dass auch nur einer der drei Python-/Shell-Preflight-Befehle gestartet wurde**. Die GitHub-Klassifikation `preflight=failure` ist keine Diagnose eines fehlerhaften Skripts.
+- **Diagnoseentscheidung:** Vor weiteren Änderungen an CI-Guards oder Anwendung zuerst prüfen, ob der Job überhaupt einen Runner erhalten hat (GitHub-Actions-Weboberfläche: Jobinitialisierung/Runner-Zuweisung, Repository-Actions-Einstellungen, Runner-Kapazität, gegebenenfalls Abrechnungs-/Nutzungslimits). Dies sind mögliche Ursachen, keine bestätigten Befunde. Wenn auch der unabhängige Diagnoseworkflow keine Schritte erzeugt, Infrastruktur-/Runnerproblem priorisieren statt Produktcode zu verändern.
+- **Erst nach bestätigtem Runner-Start** die drei Befehle aus der untenstehenden Anleitung mit Exitcode und Traceback reproduzieren. Keine APK-Freigabe; keine Änderung an Signing, Secrets oder Release-Gates.
+
 ## Gesicherte Beobachtung
-Der zuletzt in den bisherigen Projektberichten konkret belegte fehlgeschlagene Lauf ist [Android CI #459](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44940824673): Preflight fehlgeschlagen, nachgelagerte Jobs übersprungen. Der aktuelle Push-Run-Status ist **nicht** über die commitbezogene Connector-Abfrage beweisbar, weil diese nur PR-Läufe abdeckt. Der ursprüngliche Fehlercode ist nicht bekannt. Die inzwischen ergänzten Diagnose- und Newline-Korrekturen sind **keine nachgewiesene Reparatur der Ursache**.
+Der historische, zum Zeitpunkt der Erstfassung belegte fehlgeschlagene Lauf ist [Android CI #459](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/44940824673): Preflight fehlgeschlagen, nachgelagerte Jobs übersprungen. Der aktuelle Push-Run-Status ist **nicht** über die commitbezogene Connector-Abfrage beweisbar, weil diese nur PR-Läufe abdeckt. Der ursprüngliche Fehlercode ist nicht bekannt. Die inzwischen ergänzten Diagnose- und Newline-Korrekturen sind **keine nachgewiesene Reparatur der Ursache**.
 
 ## Nächste Diagnose (keine APK-Freigabe)
 1. Unter [Actions / Android CI](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/workflows/android.yml) den neuesten Lauf für `main` und dessen Commit-SHA feststellen. Nicht den historischen #459 als aktuellen Lauf behandeln.
