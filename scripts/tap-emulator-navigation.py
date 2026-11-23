@@ -34,13 +34,13 @@ def main() -> None:
     parser.add_argument("label", choices=("Start", "Verbindungen", "Meine Fahrt"))
     args = parser.parse_args()
     subprocess.run(["adb", "shell", "uiautomator", "dump", "/sdcard/window.xml"],
-                   check=True, stdout=subprocess.DEVNULL)
+                   check=True, stdout=subprocess.DEVNULL, timeout=30)
     xml_text = subprocess.check_output(
-        ["adb", "exec-out", "cat", "/sdcard/window.xml"], text=True
+        ["adb", "exec-out", "cat", "/sdcard/window.xml"], text=True, timeout=15
     )
     x, y = center_for_label(xml_text, args.label)
     print(f"Tap navigation label {args.label!r} at ({x}, {y})")
-    subprocess.run(["adb", "shell", "input", "tap", str(x), str(y)], check=True)
+    subprocess.run(["adb", "shell", "input", "tap", str(x), str(y)], check=True, timeout=15)
 
 
 if __name__ == "__main__":
