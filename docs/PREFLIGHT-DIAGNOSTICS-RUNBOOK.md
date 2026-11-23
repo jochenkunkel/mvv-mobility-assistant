@@ -24,3 +24,13 @@ The workflow writes each command's exit status to `preflight-diagnostics/results
 After restoring a trustworthy CI baseline, prioritize [#13](https://github.com/jochenkunkel/mvv-mobility-assistant/issues/13) with a non-empty `ActivityScenario.recreate()` navigation/track fixture, then [#14](https://github.com/jochenkunkel/mvv-mobility-assistant/issues/14) with accepted GPS trace continuity and stale reroute callbacks. Instrumentation must actually run on an emulator; ordinary push CI is insufficient.
 
 **Verification boundary:** This document describes repository workflow source and an investigation procedure, not observed diagnostic-run results. Do not approve installation while required tests remain red or unknown.
+
+## Verified Actions checkpoint — 2026-11-23 23:24 CET
+
+Direct repository-wide Actions REST queries (not the PR-only commit-run lookup) establish:
+
+- Latest normal push CI for `main` commit `18f03413`: [Android CI run #504](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45268631001), **failure**. Job API: `preflight=failure`, five downstream jobs `skipped`, `steps=[]`, no run artifacts.
+- Independent [preflight diagnostics run](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45259023378) for `509e841`: **failure**. Job API: `diagnose=failure`, `steps=[]`, no artifacts. This proves the separate workflow **did start** on an earlier scripts change, contradicting older checkpoints that left its execution unverified; it does not prove that any of its three commands started.
+- Other recent diagnostic runs are also marked failed (for example [run 45248127273](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45248127273)); do not equate missing step metadata with an identified runner failure.
+
+**Operational next action:** Inspect the GitHub Actions web UI for run 45259023378 (diagnose) and 45268631001 (normal preflight), including job initialization and raw logs. If the UI exposes no steps/logs, verify Actions runner allocation, organization/repository policy and billing/quota with an authorized maintainer before modifying preflight scripts. If the scripts ran, capture the exact first failing command, exit code and log; reproduce it at the same SHA. The diagnostic workflow is path-filtered, so a docs-only commit here is **not** expected to trigger it. Do not approve APK installation.
