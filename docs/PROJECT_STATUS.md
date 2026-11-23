@@ -1,3 +1,11 @@
+## Entwicklungsabgleich – 23.11.2026, 18:20 MEZ
+
+- **Repository:** Vor Änderung `main=cb2dc99`; elf offene Issues, keine offenen PRs. README, Roadmap, Entscheidungen, Status, Preflight-Diagnose und Emulator-Helfer abgeglichen. #13/#14 weiter offen. Andere Projekt-Chats nicht vollständig live zugänglich.
+- **Implementiert:** Zusätzlicher Offline-Regressionstest in `scripts/test-emulator-navigation.py` prüft, dass ein fehlgeschlagener `adb shell input tap` den Fehler propagiert und nur ein Tap versucht wird. Commit [`6d4c97e`](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/6d4c97eba32677cc4e935e72e7b3e106f171179c). Keine Änderung an Produktcode, Secrets oder Signing.
+- **CI:** Bekannter Lauf [#491](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45100034723) weiterhin Preflight fehlgeschlagen, fünf Folgejobs übersprungen; keine auswertbaren Schritte. Der neue Test-Commit unter `scripts/**` sollte den separaten Diagnoseworkflow per Push triggern, **dessen Start/Ergebnis ist nicht nachgewiesen**. Die commitbezogene Connector-Abfrage deckt nur PR-Läufe ab und lieferte leer.
+- **Nachweise:** Quelltext statisch mit `tap-emulator-navigation.py` abgeglichen; Python-/Android-Tests hier nicht ausgeführt, kein grüner Build und keine APK-Installationsfreigabe.
+- **Nächster Schritt:** Aktuellen Push-Run des Diagnoseworkflows über Actions-UI/CLI samt Artefakt und Exitcodes prüfen, konkrete Preflight-Ursache beheben; danach instrumentierte Rotation-/GPS-Tracktests #13/#14.
+
 ## Entwicklungsabgleich – 23.11.2026, 16:16 MEZ
 
 - **Live-Abgleich:** Jüngster gefundener Commit `a1f41f4`; elf offene Issues, keine offenen PRs. README, Roadmap, Status, Android-CI, unabhängigen Diagnoseworkflow und Preflight-Guard gelesen. #13 (Rotation) und #14 (GPS-Spurverlust) weiterhin offen. Vollständige Main-/Schedule-Chatverläufe hier nicht live lesbar; keine unbestätigten Anforderungen übernommen.
