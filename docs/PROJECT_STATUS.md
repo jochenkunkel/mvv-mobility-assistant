@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 23.11.2026, 16:16 MEZ
+
+- **Live-Abgleich:** Jüngster gefundener Commit `a1f41f4`; elf offene Issues, keine offenen PRs. README, Roadmap, Status, Android-CI, unabhängigen Diagnoseworkflow und Preflight-Guard gelesen. #13 (Rotation) und #14 (GPS-Spurverlust) weiterhin offen. Vollständige Main-/Schedule-Chatverläufe hier nicht live lesbar; keine unbestätigten Anforderungen übernommen.
+- **CI-Befund:** Actions-Run [#491](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45100034723) liefert über die Jobschnittstelle weiterhin `preflight=failure` und fünf `skipped`-Jobs. Die Jobantwort enthält keine verwertbaren Schrittangaben. Das belegt **nicht**, ob der Runner vor oder nach Checkout/Scriptstart scheiterte. Das aktuelle `android.yml` besitzt drei getrennte Preflight-Kommandos und einen Fehlerartefakt-Upload; `preflight-diagnostics.yml` enthält einen unabhängig auslösbaren Diagnoselauf. Ein solcher Diagnoselauf wurde hier **nicht** gestartet.
+- **Konkreter nächster Schritt:** Unabhängigen Workflow `preflight-diagnostics.yml` per Actions-UI/CLI `gh workflow run preflight-diagnostics.yml --repo jochenkunkel/mvv-mobility-assistant --ref main` starten; Run-ID und Runner-/Checkoutstatus ermitteln, `preflight-diagnostics`-Artefakt auswerten. Bei erneut fehlenden Schritten/Artefakten zuerst GitHub-Runner-/Actions-Berechtigungen und Jobinitialisierung prüfen. Bei vorhandenem Exitcode den ersten reproduzierten Preflight-Fehler mit Test korrigieren. Danach #13/#14 instrumentiert absichern.
+- **Ausführung/Freigabe:** Quelltext und Konfiguration statisch geprüft; keine Python-/Android-Tests ausgeführt, kein grüner Build nachgewiesen, keine APK-Installationsfreigabe. Keine Signing-, Secrets- oder Gate-Änderungen.
+
 ## Entwicklungsabgleich – 23.11.2026, 03:24 MEZ
 
 - **Live-Repository:** `main` vor Änderung `e615cfa` (23.11.2026, 00:19 UTC); elf offene Issues, keine offenen PRs. README, Roadmap, Entscheidungen, CI und Emulator-Navigationstests geprüft. #13 Rotation und #14 GPS-Trackverlust offen. Andere Projekt-Chats nicht vollständig live lesbar; nur bekannte dokumentierte Anforderungen verwendet.
