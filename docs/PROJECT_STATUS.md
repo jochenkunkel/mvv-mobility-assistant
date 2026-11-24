@@ -1,3 +1,11 @@
+## Entwicklungsabgleich – 24.11.2026, 10:20 MEZ
+
+- **Repository:** Vor Änderung `main=5df66d4`; elf offene Issues, keine offenen PRs. README, Roadmap/Status, RouteProgress und Tests geprüft. Bekannte Chat-Anforderungen #13 Rotation und #14 GPS-Spurverlust bleiben offen; vollständige andere Chatverläufe nicht live zugänglich.
+- **Neuer CI-Nachweis:** [Android CI #509](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45355344537) auf `5df66d4` ist `failure`; Preflight-Job `138311658580` hat **0 zurückgelieferte Schritte**, fünf abhängige Jobs sind `skipped`. Ursache weiterhin nicht bewiesen; kein Android-Buildnachweis.
+- **Arbeitspaket:** Drei neue Kotlin-JUnit-Regressionstests in `RouteProgressTest.kt` für doppelte OSM-Polyline-Stützpunkte, nichtendliche GPS-Längengrade/einpunktige Route und strikte Offroute-Heading-Schwelle. Code-Commit `a6f91b9`. Diese Tests decken Geometrie-Randfälle ab, **nicht** Activity-Rotation oder GPS-Trackpersistenz.
+- **Testgrenze:** Tests statisch gegen `RouteProgress.kt` geprüft, aber hier nicht ausführbar verifiziert. Kein grüner CI-/APK-Nachweis; keine Installationsfreigabe.
+- **Nächste Schritte:** CI-Jobinitialisierung/Runner-Logs für #509 über Actions-UI untersuchen; unabhängig davon instrumentierten `ActivityScenario.recreate()`-Test mit aktiver Route und Track für #13 und anschließend deterministische GPS-Trackkontinuität für #14 implementieren.
+
 ## Entwicklungsabgleich – 24.11.2026, 00:20 MEZ
 
 - **HEAD und Aufgaben:** `main=8f8cb49ca38fd2ac9ac8eb768dc7d44f3a349004`; elf offene Issues, keine offenen PRs. README, Implementierungsroadmap, Status und Emulator-Helfer/Regressionstests gelesen. #13 (Rotation) und #14 (GPS-Spurverlust) bleiben offen. Andere Chats nur über verfügbaren Kontext, nicht als vollständiger Live-Verlauf.
