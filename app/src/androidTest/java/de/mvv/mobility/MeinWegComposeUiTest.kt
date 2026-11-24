@@ -121,6 +121,26 @@ class MeinWegComposeUiTest {
         compose.onNodeWithTag("walking_dashboard").assertDoesNotExist()
     }
 
+    /** Regression for #13: recreation must not silently discard an active walking dashboard. */
+    @Test fun activeWalkingDashboardSurvivesActivityRecreation() {
+        val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra("mein_weg_test_fixture", true)
+        ActivityScenario.launch<MainActivity>(intent).use { scenario ->
+            compose.onNodeWithTag("mvv_search_button").performScrollTo().performClick()
+            compose.onNodeWithTag("journey_summary").performScrollTo().assertExists()
+            compose.onNodeWithTag("open_walking_dashboard").performScrollTo().performClick()
+            compose.onNodeWithTag("walking_dashboard").assertExists()
+            compose.onNodeWithTag("tab_journey").performClick()
+            compose.onNodeWithTag("walking_dashboard").assertExists()
+
+            scenario.recreate()
+            compose.waitForIdle()
+            compose.onNodeWithTag("walking_dashboard").assertExists()
+            compose.onNodeWithTag("journey_summary").assertExists()
+        }
+    }
+
     @Test fun settingsOpenFromEveryTabAndCloseCleanly() = launchFixture {
         for (tab in listOf("tab_start", "tab_connections", "tab_journey")) {
             compose.onNodeWithTag(tab).performClick()
