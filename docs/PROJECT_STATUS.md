@@ -1,3 +1,11 @@
+## Entwicklungsabgleich – 24.11.2026, 20:20 MEZ
+
+- **Repository vor Änderung:** `main=1b6be872bd47ec5b2676ec0f454ce25031208102`; elf offene Issues, keine offenen PRs. README, Roadmap, Projektstatus, Android-Workflow, RouteProgress-Code und -Tests sowie letzte Actions-Läufe geprüft. Andere Projekt-Chats nicht als vollständige Live-Verläufe abrufbar.
+- **CI:** [Android #520](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45447585407) auf `1b6be87` = `failure`; Preflight-Job `138635494499` hat null abrufbare Schritte, fünf Folgejobs `skipped`. Direkter Job-Logabruf: GitHub `404 BlobNotFound`. Ursache der Jobinitialisierung nicht belegt; keine Änderungen an Runner/Signing/Secrets oder CI-Gates auf Verdacht.
+- **Codebefund und Fix:** `RouteProgress.project` prüfte zwar die GPS-Position auf endliche Koordinaten, nicht jedoch die Polyline-Stützpunkte. Ein NaN/Infinity-Stützpunkt kann zu einer nichtendlichen Projektion führen und Folgeentscheidungen für Heading/Fortschritt verfälschen. In `fdb85d6` werden Routen mit nichtendlichen Koordinaten früh verworfen; in `3cc74c3` Regressionen für NaN-Breitengrad, Infinity-Längengrad und Heading ergänzt. Kleiner, isolierter Fail-closed-Fix; **keine Behauptung einer vollständigen GPS- oder OSM-Korrektur**.
+- **Testgrenze:** Die Kotlin-Tests sind committed, aber nicht ausgeführt nachgewiesen. Nach dem Commit CI-Status prüfen; bei weiter fehlendem Runner lokal `gradle :app:testDebugUnitTest :app:lintDebug` auf einem Android-SDK-35/JDK-17-Checkout ausführen. Keine APK-Installationsfreigabe ohne grünes Gate.
+- **Nächste Priorität:** Runner-Setup-Meldung im GitHub-Actions-UI bzw. durch Repo-Admin prüfen; fachlich #13/#14: Rotation mit nichtleerem Track und GPS-Lücken/Rerouting instrumentiert verifizieren.
+
 ## Entwicklungsabgleich – 24.11.2026, 16:20 MEZ
 
 - **Verifiziert vor Änderung:** `main=f2aa74e33cc63f83e61c01bc79c06380d671c8b6`; elf offene Issues, keine offenen PRs. README, Implementierungsroadmap, Projektstatus, Preflight-Runbook, Android-Workflow, letzte Commits und Actions-Läufe erneut abgeglichen. Vollständige andere Projekt-Chats nicht live abrufbar; keine unbestätigten neuen Anforderungen übernommen.
