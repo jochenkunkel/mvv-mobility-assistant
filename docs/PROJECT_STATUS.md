@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 24.11.2026, 11:20 MEZ
+
+- **Live-Repository:** Vor Änderung `main=46faa9d089c259ccf43de1df9cf3538e0f59ad48`; offene PRs: 0; #13 und #14 weiter offen. README, Roadmap, Status, Lifecycle-State-Contract, GPS-Rotations-Matrix, letzte Commits und Actions geprüft. Andere Projekt-Chats nur im verfügbaren Kontext, nicht vollständig live lesbar.
+- **Neue CI-Nachweise:** [Android CI #510](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45364347987) auf `a6f91b9` und [#511](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45364369275) auf `46faa9d` sind beide `failure`. Bei #511: Preflight-Job `138342151819` startete 09:21:10 UTC und endete 09:21:12 UTC; die API liefert **null Schritte**; alle fünf Folgejobs `skipped`. Kein Beweis für einen Fehler in einem bestimmten Preflight-Kommando, kein grüner Build.
+- **Konkrete CI-Triage:** In GitHub Actions für #511 zuerst Job-/Setup-Annotations, Runner-Zuweisung und ggf. Billing/Runner-Verfügbarkeit prüfen. Falls Step-Logs existieren, den ersten fehlerhaften Befehl mit Exitcode isolieren; bei weiterhin null Schritten keine spekulativen Änderungen an CI-Skripten/Gates. Neue Kotlin-Geometrietests von `a6f91b9` sind weiterhin **nicht ausgeführt nachgewiesen**.
+- **Fachliche Priorität:** #13 `ActivityScenario.recreate()` mit aktiver Route und nichtleerem Track; danach #14 deterministische Track-Segmenttests bei Fix-Ausfall/Sprung/Rerouting. Keine Änderung an Signing/Secrets, keine APK-Installationsfreigabe.
+
 ## Entwicklungsabgleich – 24.11.2026, 10:20 MEZ
 
 - **Repository:** Vor Änderung `main=5df66d4`; elf offene Issues, keine offenen PRs. README, Roadmap/Status, RouteProgress und Tests geprüft. Bekannte Chat-Anforderungen #13 Rotation und #14 GPS-Spurverlust bleiben offen; vollständige andere Chatverläufe nicht live zugänglich.
