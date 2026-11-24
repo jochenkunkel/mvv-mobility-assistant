@@ -70,4 +70,27 @@ class RouteProgressTest {
         assertNull(RouteProgress.heading(path, 48.1050, 11.5050))
     }
 
+    @Test fun projectionHandlesDuplicateVerticesWithoutLosingDistance() {
+        val withDuplicate = listOf(
+            48.1000 to 11.5000,
+            48.1000 to 11.5000,
+            48.1000 to 11.5010,
+            48.1000 to 11.5010,
+            48.1010 to 11.5010
+        )
+        val projected = requireNotNull(RouteProgress.project(withDuplicate, 48.1005, 11.5010))
+        assertEquals(3, projected.segmentIndex)
+        assertTrue(projected.lateralMeters < 1.0)
+        assertTrue(projected.alongMeters > 120.0)
+    }
+
+    @Test fun projectionRejectsNonFiniteLongitudeAndSinglePointRoute() {
+        assertNull(RouteProgress.project(path, 48.1000, Double.POSITIVE_INFINITY))
+        assertNull(RouteProgress.project(path.take(1), 48.1000, 11.5000))
+    }
+
+    @Test fun headingRejectsPositionBeyondOffRouteThreshold() {
+        assertNull(RouteProgress.heading(path, 48.1050, 11.5050, maxOffRouteMeters = 10.0))
+    }
+
 }
