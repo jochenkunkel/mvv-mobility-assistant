@@ -100,6 +100,23 @@ class RouteProgressTest {
         assertNull(RouteProgress.project(invalidLongitude, 48.1000, 11.5005))
         assertNull(RouteProgress.heading(invalidLatitude, 48.1000, 11.5005))
     }
+    @Test fun repeatedOnlyVerticesHaveNoProjectableSegment() {
+        val stationaryPath = List(3) { 48.1000 to 11.5000 }
+        assertNull(RouteProgress.project(stationaryPath, 48.1000, 11.5000))
+        assertNull(RouteProgress.heading(stationaryPath, 48.1000, 11.5000))
+        assertNull(RouteProgress.nextTurn(route.copy(path = stationaryPath), 48.1000, 11.5000))
+    }
 
+    @Test fun tinyDegenerateSegmentDoesNotPreventFollowingValidSegment() {
+        val nearDuplicate = listOf(
+            48.1000 to 11.5000,
+            48.1000 to 11.500000000001,
+            48.1000 to 11.5010
+        )
+        val projected = requireNotNull(RouteProgress.project(nearDuplicate, 48.1000, 11.5005))
+        assertEquals(1, projected.segmentIndex)
+        assertTrue(projected.lateralMeters < 1.0)
+        assertTrue(projected.alongMeters > 30.0)
+    }
 
 }
