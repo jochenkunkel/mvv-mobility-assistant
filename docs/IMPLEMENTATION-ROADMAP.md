@@ -1,3 +1,9 @@
+## CI-Blocker – 24.11.2026, 18:20 MEZ (Lauf #519)
+
+- [Android-CI #519](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45436118213) auf `605f62c9845f1794ab17c4285a331d48851e012c` ist `failure`. [Jobs](https://api.github.com/repos/jochenkunkel/mvv-mobility-assistant/actions/runs/45436118213/jobs): `preflight` Job `138594255867` = `failure`, API meldet **0 Schritte**; alle fünf Folgejobs `skipped`. [Artefakte](https://api.github.com/repos/jochenkunkel/mvv-mobility-assistant/actions/runs/45436118213/artifacts): **0**. Das Diagnose-Upload-Step wurde somit nicht nachweislich ausgeführt. Der tatsächliche Auslöser bleibt unbekannt.
+- **Entscheidungsgrenze:** Ein Testskriptfehler ist nicht belegt. Kein weiteres blindes Umstellen von Workflow, Signing oder Secrets. **Konkrete externe Prüfung:** Im Actions-UI für Job `138594255867` die Setup-/Runner-Zuweisungsmeldung ansehen; Repo-Actions-Einstellungen, Runner-Verfügbarkeit, Nutzungs-/Abrechnungsgrenzen und ggf. GitHub-Support anhand der Run-ID prüfen. Bei wieder verfügbaren Schritten erst dann das erste fehlgeschlagene Kommando isolieren.
+- **Fachlicher nächster Schritt ohne CI-Abhängigkeit:** #13/#14: API-35-Emulator mit aktiver Route und drei akzeptierten GPS-Punkten; echte Orientation-Transitions und Spurkontinuität bei Fix-Ausfall/Rerouting. Bestehende Regressionstests sind ohne Ausführungsnachweis. **Kein APK-Go.**
+
 # Mein Weg 2.0 – Entwicklungs- und Freigabeplan
 
 ## CI-Triage – 24.11.2026, 09:20 MEZ
