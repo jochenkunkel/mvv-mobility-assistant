@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 24.11.2026, 15:20 MEZ
+
+- **Live-Stand vor Änderung:** `main=2b1a3422a6c0314bb3f798751afd895011211514`; elf offene Issues, keine offenen PRs. README, Roadmap, aktuelle Instrumentierungstests und letzte Commits geprüft. Andere Chats nicht vollständig live abrufbar.
+- **Implementiert:** Instrumentierter Regressionstest `arrivalBufferSelectionSurvivesActivityRecreation()` in `MeinWegComposeUiTest.kt` (Commit `3503ec4`). Er stellt im Fixture 60 Minuten Ankunftspuffer ein, erzwingt `ActivityScenario.recreate()` und verlangt anschließend weiterhin „60 Min. früher“. Der Test isoliert den Konfigurationsverlust aus #13 zusätzlich zum bestehenden Dashboard-Smoke-Test; er deckt **noch nicht** Route/GPS-Spur/echte Orientation-Transitions ab.
+- **Nachweisgrenze:** Test nicht ausgeführt; ein Scheitern ist angesichts der dokumentierten `remember`-Zustände möglich und wäre ein reproduzierbarer Red-Test, keine Regression durch die Testergänzung. Der zuletzt bekannte Android-CI-Lauf #514 scheiterte im Preflight mit null abrufbaren Schritten. Kein grüner Build, keine APK-Freigabe.
+- **Nächste Arbeit:** Emulator-Test ausführen und Befund protokollieren; bei reproduziertem Verlust Ankunftspuffer über saveable State oder einen geeigneten StateHolder retten. Danach Fixture mit nichtleerer GPS-Spur/Route für #13/#14 und Runner-Setup-Logs untersuchen. Keine Änderungen an Signing/Secrets.
+
 ## Entwicklungsabgleich – 24.11.2026, 13:20 MEZ
 
 - **Live-Abgleich:** `main=7277a7c52fc7e7e3c829be1bc58c4ea3698e5794`; elf offene Issues, keine offenen PRs. README, Implementierungsroadmap, Lifecycle-/GPS-Regression-Spezifikation, aktuellen Instrumentierungstest und letzte Commits gelesen. Andere Projekt-Chats nicht als vollständige Live-Verläufe abrufbar; bekannte Anforderungen #13/#14 stammen aus Issues und vorhandener Übergabe.
