@@ -93,4 +93,13 @@ class RouteProgressTest {
         assertNull(RouteProgress.heading(path, 48.1050, 11.5050, maxOffRouteMeters = 10.0))
     }
 
+    @Test fun rejectsNonFiniteRouteVerticesInsteadOfReturningNaNProjection() {
+        val invalidLatitude = listOf(48.1000 to 11.5000, Double.NaN to 11.5010)
+        val invalidLongitude = listOf(48.1000 to 11.5000, 48.1000 to Double.POSITIVE_INFINITY)
+        assertNull(RouteProgress.project(invalidLatitude, 48.1000, 11.5005))
+        assertNull(RouteProgress.project(invalidLongitude, 48.1000, 11.5005))
+        assertNull(RouteProgress.heading(invalidLatitude, 48.1000, 11.5005))
+    }
+
+
 }
