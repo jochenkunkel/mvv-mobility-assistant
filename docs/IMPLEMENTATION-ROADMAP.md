@@ -1,5 +1,17 @@
 # Mein Weg 2.0 – Entwicklungs- und Freigabeplan
 
+## Aktuelle Prioritäten – 24.11.2026, 02:20 MEZ
+
+Dieser Abschnitt ergänzt die historischen Phasenstände unten; maßgeblich sind `main`, [PROJECT_STATUS.md](PROJECT_STATUS.md), [GPS-/Rotations-Testmatrix](GPS-ROTATION-REGRESSION-MATRIX.md) und die Issues.
+
+1. **P0 – CI-Nachweis wiederherstellen:** Der zuletzt belegte Push-Lauf [#504](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45268631001) scheiterte im Preflight, Folgejobs wurden übersprungen. Jobschritte fehlen in der verfügbaren Antwort; ein Logabruf ergab `404 BlobNotFound`. Die Fehlerursache ist **unbekannt**. Über Actions-Weboberfläche Setup-/Runner-Logs, Actions-Berechtigungen und ggf. Kontingente prüfen; erst dann gezielt reparieren. Lokal die drei Preflight-Kommandos mit Exitcodes ausführen. Kein APK-Go.
+2. **P0 – #13 Rotationsverlust:** In [LIFECYCLE-GPS-CODE-AUDIT](LIFECYCLE-GPS-CODE-AUDIT-2026-11-19.md) sind `dashboardJourney`, `walkingRoute`, `walkedTrack` und `selectedTab` als Compose-`remember`-Zustände dokumentiert. **Nächstes ausführbares Paket:** instrumentierten Test mit `ActivityScenario.recreate()` und aktiver Route/Track (ROT-01) erstellen, zunächst erwarteten Fehler belegen; dann einen klaren Navigation-Session-StateHolder mit definiertem Lifecycle implementieren. Keine ungetestete Bundle-Serialisierung komplexer Routen.
+3. **P0 – #14 GPS-Spur:** Track und geplante Route getrennt halten. Reine JVM-Tests für GPS-01 bis GPS-05 (Fix-Akzeptanz, Lücken, Sprünge, Rerouting) vor UI-Änderung; anschließend echte Tracksegmente rendern, keine Verbindungslinien über Lücken. In `WalkingMiniMap` ist `walkedTrack` als Eingabe vorhanden, das belegt aber **nicht** deren korrekte Lebensdauer oder Zeichnung.
+4. **P1 – Zeitpuffer, MVV und UX:** Erst nach den P0-Regressionsnachweisen dynamischen Puffer, MVV-Zielkoordinaten und Interaktion gegen bestehende Issues prüfen; keine neuen Behauptungen ohne Code-/Testnachweis.
+
+**Stand dieser Prüfung:** `main` zuletzt `0c41be9`, elf offene Issues, keine offenen PRs; keine ausführbaren Tests in diesem Lauf. Andere Projekt-Chats sind nur über den vorhandenen Kontext zugänglich, nicht vollständig live. Diese Roadmap-Aktualisierung ist **kein** bestandener Build und keine Gerätefreigabe.
+
+
 > **Aktueller Abgleich (16.11.2026):** Die Phasenstände und die Tabelle unten sind
 > historische Planungs-Snapshots vom 15.11.2026, **kein aktueller Nachweis**
 > des Repository-Zustands. Inzwischen existieren OSRM-Fußwegrouting,
