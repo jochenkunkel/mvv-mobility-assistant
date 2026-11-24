@@ -1,5 +1,12 @@
 # Mein Weg 2.0 – Entwicklungs- und Freigabeplan
 
+## CI-Triage – 24.11.2026, 09:20 MEZ
+
+- **Neu verifiziert:** [Android-CI #507](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45304391960), Job `138144525407`: `preflight=failure`, fünf weitere Jobs `skipped`. Der Job-Schritt-Endpunkt liefert `[]`, der Jobdatensatz `steps=null` und `logs_url=null`. Dies belegt **keinen** Skript-Exitcode und **keinen** bestimmten Runner-Fehler. Keine grüne CI und keine APK-Freigabe.
+- **Diagnoseentscheidung:** Nicht weitere Änderungen an `preflight.sh` oder CI-Gates auf Verdacht. Zuerst in Actions-UI den fehlgeschlagenen Job öffnen und nach Setup-Job-/Runner-Zuweisungsfehlern und Annotations suchen. Falls weiterhin keine Schritte vorhanden sind: Actions-/Runner-Einstellungen, Abrechnung/Kontingente und GitHub-Status prüfen. Nur bei vorhandenen Schrittlogs zuerst den konkreten fehlschlagenden Befehl reproduzieren.
+- **Unabhängige fachliche Arbeit:** #13 benötigt einen Instrumentierungstest mit *aktiver* Navigation und `ActivityScenario.recreate()` (Route, Ziel, Tab, GPS-Spur vor/nach Rotation); #14 benötigt JVM-Tests für Track-Lücken und ungültige Fixes. Diese Tests dürfen unabhängig von der CI-Triage auf einem eigenen Branch entwickelt werden; ohne ausführbaren Testnachweis nicht mergen oder zur Installation freigeben.
+- **Zugriffsgrenze:** Andere Projekt-Chats sind nicht als vollständige Live-Verläufe zugänglich. Keine neuen Anforderungen aus unbestätigten Chat-Aussagen übernommen.
+
 ## Aktuelle Prioritäten – 24.11.2026, 02:20 MEZ
 
 Dieser Abschnitt ergänzt die historischen Phasenstände unten; maßgeblich sind `main`, [PROJECT_STATUS.md](PROJECT_STATUS.md), [GPS-/Rotations-Testmatrix](GPS-ROTATION-REGRESSION-MATRIX.md) und die Issues.
