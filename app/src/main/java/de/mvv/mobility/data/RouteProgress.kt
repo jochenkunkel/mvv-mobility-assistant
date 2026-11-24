@@ -14,7 +14,8 @@ internal object RouteProgress {
     data class Projection(val alongMeters: Double, val lateralMeters: Double, val segmentIndex: Int)
 
     fun project(path: List<Pair<Double, Double>>, latitude: Double, longitude: Double): Projection? {
-        if (path.size < 2 || !latitude.isFinite() || !longitude.isFinite()) return null
+        if (path.size < 2 || !latitude.isFinite() || !longitude.isFinite() ||
+            path.any { !it.first.isFinite() || !it.second.isFinite() }) return null
         val cosLatitude = cos(Math.toRadians(latitude)).coerceAtLeast(0.01)
         fun xy(point: Pair<Double, Double>): Pair<Double, Double> =
             (point.second - longitude) * 111_320.0 * cosLatitude to
