@@ -100,6 +100,22 @@ class MeinWegComposeUiTest {
         compose.onNodeWithText("5 Min. früher").assertExists()
     }
 
+    /** #13: an unsaved arrival-buffer edit must survive Activity recreation. */
+    @Test fun arrivalBufferSelectionSurvivesActivityRecreation() {
+        val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra("mein_weg_test_fixture", true)
+        ActivityScenario.launch<MainActivity>(intent).use { scenario ->
+            compose.onNodeWithTag("arrival_buffer_slider").performScrollTo()
+                .performSemanticsAction(SemanticsActions.SetProgress) { it(60f) }
+            compose.onNodeWithText("60 Min. früher").assertExists()
+
+            scenario.recreate()
+            compose.waitForIdle()
+            compose.onNodeWithText("60 Min. früher").assertExists()
+        }
+    }
+
     @Test fun compactFilterChipsAndAdvancedSettingsWork() = launchFixture {
         compose.onNodeWithTag("route_filter_mode_ANY").performScrollTo().assertExists()
         compose.onNodeWithTag("route_filter_mode_ONLY_LINE_WITH_WALK").performClick()
