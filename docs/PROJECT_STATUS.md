@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 24.11.2026, 23:20 MEZ
+
+- **Vor Änderung:** main=ab175f77; elf offene Issues, keine offenen PRs; README, Roadmap, Projektstatus, Regression-Matrix, Workflow, RouteProgress-Code und Tests geprüft. Andere Projekt-Chats nicht vollständig live abrufbar.
+- **CI:** jüngster verifizierter Android-CI-Lauf [#523](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45469315567) = failure; der Preflight hat null Schritte und Folgejobs sind übersprungen. Kein belegter Kotlin-Testfehler; keine APK-Freigabe.
+- **Kleines Testpaket:** Commit `1a55124` ergänzt JVM-Regressionen für eine ausschließlich aus Duplikaten bestehende Route (keine Projektion/Heading/Turn) und für ein nahezu null-langes erstes Segment vor einem gültigen Segment. Ziel ist deterministisches Verhalten bei degenerierter OSRM-Geometrie; die Tests sind **nicht ausgeführt**.
+- **Nächster Schritt:** GitHub-Actions-Runner-Zuweisung anhand Setup-/Billing-/Policy-Meldungen klären, danach `gradle :app:testDebugUnitTest :app:lintDebug` auf JDK 17/SDK 35 ausführen. Anschließend #13/#14 mit echter GPS-Spur und Rotation instrumentiert prüfen. Keine Signing-/Secrets-Änderungen.
+
 ## Entwicklungsabgleich – 24.11.2026, 20:20 MEZ
 
 - **Repository vor Änderung:** `main=1b6be872bd47ec5b2676ec0f454ce25031208102`; elf offene Issues, keine offenen PRs. README, Roadmap, Projektstatus, Android-Workflow, RouteProgress-Code und -Tests sowie letzte Actions-Läufe geprüft. Andere Projekt-Chats nicht als vollständige Live-Verläufe abrufbar.
