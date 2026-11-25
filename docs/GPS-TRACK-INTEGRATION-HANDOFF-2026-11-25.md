@@ -20,3 +20,10 @@ This handoff is documentation only: no source-code integration or tests are clai
 
 ## Chat boundary
 Current conversation and repository documents were available; complete independent live access to all Main/Schedule project chat transcripts was not established. Do not infer new requirements from unseen chats.
+
+## 11:20 MEZ follow-up — verified callback and CI #539
+- `MainActivity.kt` near lines 392–406: accepted location callback appends `found.latitude to found.longitude` to `walkedTrack` only while walking navigation/dashboard is active, accuracy <=35 m, and distance from the previous point is 3–60 m. It truncates at 1500 points. This **distance-only** logic does not encode timestamp gaps or reject physically implausible speed; it is not equivalent to `WalkedTrace.accept`.
+- `walkedTrack` is created by `remember { mutableStateListOf<...>() }` near line 263, and both walking map call sites (near 1434 and 1723) pass the flat list. The route-change effect around line 435 resets off-route counters, not the GPS trace. Review explicit navigation-end semantics before changing trace retention.
+- **Next bounded code change:** move acceptance to a single state owner with timestamp/accuracy guards and a trace-specific regression test; then pass segments to both map call sites and draw separate polylines. Preserve the existing 1500-point memory bound in the new owner or define an equivalent bounded retention policy. Avoid flattening segments for drawing.
+- **Latest verified push CI:** [Android CI #539](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45584208419) for `f8980ad`, created 2026-11-25 09:18 UTC, completed **failure**. [Job listing](https://api.github.com/repos/jochenkunkel/mvv-mobility-assistant/actions/runs/45584208419/jobs) shows `preflight` failure with zero reported steps and five skipped dependent jobs. Root cause still not established. This supersedes #525 as latest observed run. No test pass or APK release is inferred.
+- This checkpoint is a source/CI analysis, **not** the functional integration; no local Android test or emulator execution occurred.
