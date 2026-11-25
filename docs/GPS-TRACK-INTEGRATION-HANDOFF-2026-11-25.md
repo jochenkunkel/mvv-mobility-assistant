@@ -27,3 +27,10 @@ Current conversation and repository documents were available; complete independe
 - **Next bounded code change:** move acceptance to a single state owner with timestamp/accuracy guards and a trace-specific regression test; then pass segments to both map call sites and draw separate polylines. Preserve the existing 1500-point memory bound in the new owner or define an equivalent bounded retention policy. Avoid flattening segments for drawing.
 - **Latest verified push CI:** [Android CI #539](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45584208419) for `f8980ad`, created 2026-11-25 09:18 UTC, completed **failure**. [Job listing](https://api.github.com/repos/jochenkunkel/mvv-mobility-assistant/actions/runs/45584208419/jobs) shows `preflight` failure with zero reported steps and five skipped dependent jobs. Root cause still not established. This supersedes #525 as latest observed run. No test pass or APK release is inferred.
 - This checkpoint is a source/CI analysis, **not** the functional integration; no local Android test or emulator execution occurred.
+
+## 12:20 MEZ — bounded retention building block
+
+- Implemented `WalkedTrace.retainLast(maxFixes)` in the pure data model, preserving GPS segment boundaries while retaining the newest fixes. A zero limit returns an empty trace, a negative limit throws, and a limit greater than the current size returns the same immutable instance.
+- Added three JVM regression tests: trimming across segment boundaries, empty/unchanged histories, and invalid limit. Commits: `c8108d3` (model), `6700ef4` (tests).
+- **Not yet integrated:** `MainActivity.walkedTrack` is still a Compose-owned flat list with a 1500-point cap; `WalkingMiniMap` still draws one flat polyline. On integration, use `trace.accept(fix).retainLast(1500)` and render each segment separately; avoid implying that the new helper alone fixes #13/#14.
+- Tests were committed but **not executed** in this run. CI remains without a confirmed green build. No APK installation authorization.
