@@ -19,6 +19,29 @@ data class WalkedTrace(
 ) {
     val fixes: List<TraceFix> get() = segments.flatten()
 
+    /**
+     * Retain at most [maxFixes] recent accepted fixes without joining GPS gaps.
+     * Useful for the navigation session's bounded in-memory history.
+     */
+    fun retainLast(maxFixes: Int): WalkedTrace {
+        require(maxFixes >= 0) { "maxFixes must not be negative" }
+        val count = segments.sumOf { it.size }
+        if (count <= maxFixes) return this
+        var toDrop = count - maxFixes
+        val retained = buildList {
+            for (segment in segments) {
+                if (toDrop >= segment.size) {
+                    toDrop -= segment.size
+                    continue
+                }
+                val remaining = segment.drop(toDrop)
+                toDrop = 0
+                if (remaining.isNotEmpty()) add(remaining)
+            }
+        }
+        return WalkedTrace(retained)
+    }
+
     fun accept(
         fix: TraceFix,
         maxAccuracyMeters: Float = 35f,
