@@ -62,3 +62,12 @@ The historical [Actions run #491](https://github.com/jochenkunkel/mvv-mobility-a
 - `WalkedTraceTest.kt` (Commit `8d75626`) enthält vier JVM-Regressionen für Reihenfolge, Ablehnung, Zeitlücke und Routenunabhängigkeit. **Nicht ausgeführt**; CI ist weiterhin ohne bestätigten grünen Lauf. Dies ist ein erster Baustein für GPS-01/02/03/05, keine End-to-End-Abnahme.
 - **Offen und wichtig:** Geschwindigkeitssprünge/Teleportation (GPS-04), Provider-/Berechtigungsverlust (GPS-06), Zeitstempel-Frische relativ zur aktuellen Uhrzeit, StateHolder-/Activity-Recreation-Persistenz (#13), tatsächliche Overlay-Segmentdarstellung und Rerouting-Integration. `WalkingMiniMap` nimmt derzeit eine flache `walkedTrack`-Liste entgegen; bei Segmentintegration dürfen Lücken nicht wieder verbunden werden.
 - **Nächstes Paket:** erst die GPS-04-Sprungprüfung deterministisch mit Tests ergänzen; anschließend den tatsächlichen Track-Eigentümer in `MainActivity` identifizieren und die UI-Anbindung inklusive Segmentgrenzen und Rotationstest vornehmen. Keine Freigabe ohne grüne CI.
+
+
+## Entwicklungsabgleich 25.11.2026, 06:20 MEZ – GPS-04
+
+- Repository vor Änderung: `ba1820c`; elf offene Issues, keine offenen PRs. README, Roadmap, Projektstatus, Matrix, GPS-Modell und Tests, Android-Workflow und letzte Commits abgeglichen.
+- **Code:** `d1fc83f` ergänzt eine Haversine-basierte Geschwindigkeitsschranke (Standard 15 m/s) für kurze Intervalle zwischen akzeptierten Fixes. Unrealistische Sprünge werden verworfen, ohne die bisherige Spur zu löschen. Bei Zeitlücken über 120 s beginnt weiterhin ein neues Segment; dadurch wird keine Verbindungslinie über eine lange GPS-Lücke behauptet. Die Schranke ist ein vorläufiger Modell-Default, keine validierte Fußgänger-Kalibrierung.
+- **Tests:** `141dca9` aktualisiert den Dreipunkt-Test auf plausible Abstände und ergänzt Regressionen für Sprungablehnung, konfigurierbare Geschwindigkeit und Segmenttrennung. Tests **nicht ausgeführt**; CI-Erfolg nicht belegt. Das Modell ist weiterhin nicht an den produktiven Track-StateHolder bzw. die Karte angeschlossen.
+- **Nächste Schritte:** JDK-17-/SDK-35-JVM-Tests ausführen, die produktive GPS-Integration prüfen und erst danach Rotation/Overlay und Provider-Ausfälle absichern. Runner-Setup-Ursache der bekannten fehlgeschlagenen Actions-Preflights bleibt offen. Keine APK-Freigabe, keine Änderungen an Signing/Secrets.
+- Andere Projekt-Chats sind nicht vollständig live abrufbar; keine unbelegten Anforderungen übernommen.
