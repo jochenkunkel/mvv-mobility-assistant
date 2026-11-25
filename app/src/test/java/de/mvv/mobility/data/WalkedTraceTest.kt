@@ -104,4 +104,15 @@ class WalkedTraceTest {
         assertEquals(1, first.fixes.size)
     }
 
+    @Test fun antimeridianCrossingUsesShortestGeodesicDistance() {
+        // A 0.0002-degree crossing of +/-180 is only about 22 m at the equator,
+        // not a 40,000 km teleport. The speed filter must use spherical distance.
+        val start = TraceFix(0.0, 179.9999, 1_000L, 5f)
+        val crossing = TraceFix(0.0, -179.9999, 4_000L, 5f)
+        val trace = WalkedTrace().accept(start).accept(crossing)
+        assertEquals(2, trace.fixes.size)
+        assertEquals(1, trace.segments.size)
+        assertEquals(-179.9999, trace.fixes.last().longitude, 0.0)
+    }
+
 }
