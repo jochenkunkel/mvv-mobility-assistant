@@ -54,3 +54,11 @@ The historical [Actions run #491](https://github.com/jochenkunkel/mvv-mobility-a
 5. Ein fehlgeschlagener Test ist als reproduzierter Red-Test zu dokumentieren, nicht durch Abschwächen der Assertions zu umgehen. Keine Behauptung, dass der StateHolder bereits existiert oder Rotation behoben ist.
 
 **CI-Grenze:** Keine dieser Assertions wurde in diesem Dokumentationslauf ausgeführt. Der letzte bekannte Push-Run #525 scheiterte vor auswertbaren Testschritten; Runner-Setup/Billing/Policy bleiben unbestätigte Ursachen. APK nicht freigeben.
+
+
+## Implementierungsstand 25.11.2026, 05:20 MEZ
+
+- Neues **isoliertes, noch nicht an die UI angebundenes** Modell `data/WalkedTrace.kt` (Commit `7bd2b83`) hält akzeptierte GPS-Fixes unveränderlich in Segmenten; es ist unabhängig von der geplanten OSRM-Route. Es verwirft ungültige Koordinaten, ungenaue und nicht-monotone Fixes und trennt Segmente bei Zeitlücken >120 s.
+- `WalkedTraceTest.kt` (Commit `8d75626`) enthält vier JVM-Regressionen für Reihenfolge, Ablehnung, Zeitlücke und Routenunabhängigkeit. **Nicht ausgeführt**; CI ist weiterhin ohne bestätigten grünen Lauf. Dies ist ein erster Baustein für GPS-01/02/03/05, keine End-to-End-Abnahme.
+- **Offen und wichtig:** Geschwindigkeitssprünge/Teleportation (GPS-04), Provider-/Berechtigungsverlust (GPS-06), Zeitstempel-Frische relativ zur aktuellen Uhrzeit, StateHolder-/Activity-Recreation-Persistenz (#13), tatsächliche Overlay-Segmentdarstellung und Rerouting-Integration. `WalkingMiniMap` nimmt derzeit eine flache `walkedTrack`-Liste entgegen; bei Segmentintegration dürfen Lücken nicht wieder verbunden werden.
+- **Nächstes Paket:** erst die GPS-04-Sprungprüfung deterministisch mit Tests ergänzen; anschließend den tatsächlichen Track-Eigentümer in `MainActivity` identifizieren und die UI-Anbindung inklusive Segmentgrenzen und Rotationstest vornehmen. Keine Freigabe ohne grüne CI.
