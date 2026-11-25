@@ -115,4 +115,30 @@ class WalkedTraceTest {
         assertEquals(-179.9999, trace.fixes.last().longitude, 0.0)
     }
 
+
+    @Test fun boundedRetentionKeepsNewestFixesWithoutBridgingGaps() {
+        val trace = WalkedTrace()
+            .accept(fix(1_000))
+            .accept(fix(2_000, 48.10001))
+            .accept(fix(200_000, 48.2))
+            .accept(fix(201_000, 48.20001))
+        val retained = trace.retainLast(3)
+        assertEquals(listOf(1, 2), retained.segments.map { it.size })
+        assertEquals(listOf(2_000L, 200_000L, 201_000L), retained.fixes.map { it.timestampMillis })
+        assertEquals(4, trace.fixes.size)
+    }
+
+    @Test fun boundedRetentionHandlesEmptyZeroAndUnchangedHistory() {
+        val trace = WalkedTrace().accept(fix(1_000)).accept(fix(2_000))
+        assertSame(trace, trace.retainLast(2))
+        assertEquals(emptyList<TraceFix>(), trace.retainLast(0).fixes)
+        assertEquals(emptyList<TraceFix>(), WalkedTrace().retainLast(0).fixes)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun boundedRetentionRejectsNegativeLimit() {
+        WalkedTrace().retainLast(-1)
+    }
+
+
 }
