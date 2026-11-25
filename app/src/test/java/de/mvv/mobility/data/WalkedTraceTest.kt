@@ -79,4 +79,29 @@ class WalkedTraceTest {
         assertEquals(listOf(1, 1), resumed.segments.map { it.size })
     }
 
+    @Test fun boundaryCoordinatesAndAccuracyAreValidated() {
+        val first = WalkedTrace().accept(fix(1_000))
+        assertSame(first, first.accept(TraceFix(90.0001, 11.5, 2_000, 5f)))
+        assertSame(first, first.accept(TraceFix(48.1, -180.0001, 2_000, 5f)))
+        assertSame(first, first.accept(TraceFix(48.1, 11.5, 2_000, Float.NaN)))
+        assertSame(first, first.accept(TraceFix(48.1, 11.5, 2_000, -1f)))
+        assertSame(first, first.accept(TraceFix(48.1, 11.5, 2_000, 35.01f)))
+        assertEquals(2, first.accept(TraceFix(48.1, 11.5, 2_000, 35f)).fixes.size)
+    }
+
+    @Test fun invalidFilterConfigurationDoesNotAlterTrace() {
+        val first = WalkedTrace().accept(fix(1_000))
+        val next = fix(2_000)
+        assertSame(first, first.accept(next, maxAccuracyMeters = Float.NaN))
+        assertSame(first, first.accept(next, maxSpeedMetersPerSecond = Double.POSITIVE_INFINITY))
+        assertSame(first, first.accept(next, maxSpeedMetersPerSecond = 0.0))
+        assertSame(first, first.accept(next, gapMillis = -1))
+    }
+
+    @Test fun duplicateTimestampDoesNotAppendOrResetTrace() {
+        val first = WalkedTrace().accept(fix(1_000))
+        assertSame(first, first.accept(fix(1_000, 48.10001)))
+        assertEquals(1, first.fixes.size)
+    }
+
 }
