@@ -34,6 +34,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ViewModelProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
@@ -90,6 +91,7 @@ class MainActivity : ComponentActivity() {
         val gpsDebugEnabled = BuildConfig.DEBUG && BuildConfig.ENABLE_GPS_DEBUG_EXPORT
         GpsDebugRecorder.enabled = gpsDebugEnabled
         GpsDebugRecorder.clear()
+        val navigationTraceViewModel = ViewModelProvider(this)[NavigationTraceViewModel::class.java]
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
@@ -256,7 +258,6 @@ class MainActivity : ComponentActivity() {
                         latitude = 48.137154
                         longitude = 11.576124
                     } else null) }
-                    var walkedTrace by remember { mutableStateOf(de.mvv.mobility.data.WalkedTrace()) }
                     var locationStatus by remember { mutableStateOf("Noch kein Standort abgerufen") }
                     var locationPermissionGranted by remember {
                         mutableStateOf(CurrentLocationRepository.hasPermission(this@MainActivity))
@@ -395,7 +396,7 @@ class MainActivity : ComponentActivity() {
                                                  val fix = de.mvv.mobility.data.TraceFix(
                                                      found.latitude, found.longitude, found.time, found.accuracy
                                                  )
-                                                 walkedTrace = walkedTrace.accept(fix).retainLast(1500)
+                                                 navigationTraceViewModel.acceptFix(fix)
                                              }
                                         }
                                         locationClock = now
@@ -1426,7 +1427,7 @@ class MainActivity : ComponentActivity() {
                                         ) {
                                             WalkingMiniMap(
                                                                      route, location,
-                                                                     walkedSegments = walkedTrace.segments.map { segment ->
+                                                                     walkedSegments = navigationTraceViewModel.walkedTrace.segments.map { segment ->
                                                                          segment.map { it.latitude to it.longitude }
                                                                      }
                                                                  )
@@ -1720,7 +1721,7 @@ class MainActivity : ComponentActivity() {
                                                                 color = Color(0xFFF2EFFA)) {
                                                                 WalkingMiniMap(
                                                                      route, location,
-                                                                     walkedSegments = walkedTrace.segments.map { segment ->
+                                                                     walkedSegments = navigationTraceViewModel.walkedTrace.segments.map { segment ->
                                                                          segment.map { it.latitude to it.longitude }
                                                                      }
                                                                  )
