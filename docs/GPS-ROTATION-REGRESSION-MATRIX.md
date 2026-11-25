@@ -40,3 +40,17 @@ The historical [Actions run #491](https://github.com/jochenkunkel/mvv-mobility-a
 - **Nächstes kleines Codepaket:** Im vorhandenen Fixture eine deterministische akzeptierte Dreipunkt-Spur A/B/C und separate geplante Polyline bereitstellen; vor und nach `recreate()` Anzahl, Reihenfolge und unveränderte Koordinaten der akzeptierten Spur prüfen. Erst danach Orientation-Transitions und GPS-03/05 implementieren. Keine synthetische Route als tatsächliche Spur ausgeben.
 - **Test-Gate:** CI auf `main` zuletzt ohne nachgewiesenen grünen Build; kombinierter Commit-Status für `502f86e` lieferte `statuses=[]` (kein Erfolgsnachweis). Letzter dokumentierter Actions-Run #525 fehlgeschlagen; Live-Actions-Joblogs konnten über den verfügbaren GitHub-Connector nicht neu abgefragt werden. Zuerst Runner-/Setup-Fehlermeldung administrativ ermitteln, dann JDK-17-/SDK-35-Tests und Emulator ausführen. Keine APK-Freigabe.
 - Andere Projekt-Chats sind nicht vollständig live lesbar; keine zusätzlichen Anforderungen ohne überprüfbare Quelle behaupten.
+
+## Testdesign 25.11.2026 – überprüfbarer ROT-01/GPS-05-Vertrag
+
+**Bestandsprüfung:** In `MeinWegComposeUiTest.kt` existieren `activeWalkingDashboardSurvivesActivityRecreation` und `arrivalBufferSelectionSurvivesActivityRecreation`. Beide verwenden `ActivityScenario.recreate()`; keiner injiziert GPS-Fixes oder prüft Trackkoordinaten. Die bestehenden Semantics-Tags `walking_dashboard`, `journey_summary`, `tab_journey` zeigen UI-Zustand, nicht Trackdaten. Deshalb wäre ein zusätzlicher `assertExists()`-Test kein ausreichender Fix für #13/#14.
+
+**Minimaler implementierbarer Vertrag (vor dem nächsten Test-Commit im Code verifizieren):**
+
+1. Ein ausschließlich im Testmodus aktivierter Fixture-Injector liefert eine geplante Route R und unabhängig davon akzeptierte Fixes A/B/C mit festen Koordinaten, Zeitstempeln und monotoner Reihenfolge. Keine Live-MVV-/GPS-Abhängigkeit und keine Produktions-Sonderlogik außerhalb der Fixture-Grenze.
+2. Ein auslesbarer Test-State-Snapshot enthält `sessionId`, `destinationId`, `acceptedFixes` (Koordinaten, Timestamp, Segment-ID), `plannedRoute` und `arrivalBufferMinutes`. Bei fehlendem Test-Hook zunächst einen reinen JVM-StateHolder-Test schreiben; keine Koordinaten aus Bildpixeln ableiten.
+3. Vor `recreate()` Snapshot S0 aufnehmen; danach S1. Verbindliche Assertions: gleiche Session/Zielauswahl, identische drei akzeptierte Fixes in gleicher Reihenfolge, unveränderte Segmentgrenzen und unveränderter Puffer. Die geplante Route ist getrennt vom Track zu prüfen.
+4. Danach Route R durch R2 ersetzen und S2 prüfen: `plannedRoute` ändert sich, `acceptedFixes` und Segment-IDs bleiben bytegleich (GPS-05). Erst im nächsten Schritt reale Portrait→Landscape→Portrait-Transitions mit denselben Assertions ergänzen.
+5. Ein fehlgeschlagener Test ist als reproduzierter Red-Test zu dokumentieren, nicht durch Abschwächen der Assertions zu umgehen. Keine Behauptung, dass der StateHolder bereits existiert oder Rotation behoben ist.
+
+**CI-Grenze:** Keine dieser Assertions wurde in diesem Dokumentationslauf ausgeführt. Der letzte bekannte Push-Run #525 scheiterte vor auswertbaren Testschritten; Runner-Setup/Billing/Policy bleiben unbestätigte Ursachen. APK nicht freigeben.
