@@ -41,3 +41,12 @@ Current conversation and repository documents were available; complete independe
 - **Important:** The two production call sites in `MainActivity` still supply a flat list, so #13/#14 are **not fixed** by this change. No claim of GPS trace retention, gap handling in the active UI, or lifecycle safety.
 - **Next:** Make the active navigation session own `WalkedTrace`, pass `trace.segments.map { segment -> segment.map { it.latitude to it.longitude } }` to **both** `WalkingMiniMap` call sites, and test rotation, rerouting and gap rendering. Keep route geometry separate and cap trace at 1500 accepted fixes.
 - **Validation:** No local Android SDK/emulator test executed in this run; verify compile, lint, and instrumented map overlays before any APK installation. Do not treat empty commit statuses as green CI.
+
+
+## 15:20 MEZ — production trace feed wired (partial, unverified)
+
+- Commit `c88d42f` replaces the flat Compose `walkedTrack` list with a `WalkedTrace` state value. Accepted location callbacks now pass provider timestamps and accuracy into `accept(...).retainLast(1500)` instead of a 3–60 m distance-only check.
+- Both production `WalkingMiniMap` call sites now pass `walkedSegments`, preserving segment boundaries for rendering. Planned route geometry remains independent.
+- **Remaining #13 risk:** the trace is still owned by `remember` in `MainActivity`, so Activity recreation can reset it. Move to a session-scoped ViewModel before closing #13/#14; add rotation, reroute, and GPS-gap instrumentation tests.
+- **Timestamp caveat:** fixes without a positive provider `Location.time` are not appended. Check on-device behavior and prefer a monotonic elapsed-realtime timestamp policy if needed; never manufacture stale points.
+- No local Android SDK tests or emulator runs executed. CI must be checked for this exact commit before any APK approval.
