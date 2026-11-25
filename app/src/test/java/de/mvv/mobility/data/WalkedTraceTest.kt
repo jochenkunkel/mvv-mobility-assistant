@@ -9,8 +9,8 @@ class WalkedTraceTest {
         TraceFix(lat, 11.5, time, accuracy)
 
     @Test fun orderedFixesStayInOneSegment() {
-        val trace = WalkedTrace().accept(fix(1000)).accept(fix(2000, 48.2)).accept(fix(3000, 48.3))
-        assertEquals(listOf(48.1, 48.2, 48.3), trace.fixes.map { it.latitude })
+        val trace = WalkedTrace().accept(fix(1000)).accept(fix(2000, 48.10001)).accept(fix(3000, 48.10002))
+        assertEquals(listOf(48.1, 48.10001, 48.10002), trace.fixes.map { it.latitude })
         assertEquals(1, trace.segments.size)
     }
 
@@ -36,5 +36,27 @@ class WalkedTraceTest {
         plannedRoute.add(49.0 to 12.0)
         assertEquals(listOf(48.1, 48.1), trace.fixes.map { it.latitude })
         assertEquals(2, trace.fixes.size)
+    }
+
+    @Test fun impossibleJumpIsRejectedWithoutResettingTrace() {
+        val first = WalkedTrace().accept(fix(1000))
+        val rejected = first.accept(fix(2000, 48.2))
+        assertSame(first, rejected)
+        val resumed = rejected.accept(fix(3000, 48.10001))
+        assertEquals(listOf(48.1, 48.10001), resumed.fixes.map { it.latitude })
+        assertEquals(1, resumed.segments.size)
+    }
+
+    @Test fun speedThresholdIsStrictAndConfigurable() {
+        val first = WalkedTrace().accept(fix(1000))
+        val next = fix(2000, 48.1001) // approximately 11.1 m in one second
+        assertEquals(2, first.accept(next).fixes.size)
+        assertSame(first, first.accept(next, maxSpeedMetersPerSecond = 5.0))
+    }
+
+    @Test fun longGapDoesNotDrawTeleportLine() {
+        val trace = WalkedTrace().accept(fix(1000))
+            .accept(fix(200_000, 49.0))
+        assertEquals(listOf(1, 1), trace.segments.map { it.size })
     }
 }
