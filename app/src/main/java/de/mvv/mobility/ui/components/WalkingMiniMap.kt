@@ -29,7 +29,7 @@ import org.osmdroid.views.overlay.Polyline
  * when already-cached map tiles are available.
  */
 @Composable
-fun WalkingMiniMap(route: WalkingRoute, position: Location?, walkedTrack: List<Pair<Double, Double>> = emptyList(), modifier: Modifier = Modifier) {
+fun WalkingMiniMap(route: WalkingRoute, position: Location?, walkedTrack: List<Pair<Double, Double>> = emptyList(), modifier: Modifier = Modifier, walkedSegments: List<List<Pair<Double, Double>>>? = null) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val lastHeading = remember { mutableFloatStateOf(Float.NaN) }
     val map = remember {
@@ -103,9 +103,13 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, walkedTrack: List<P
         }
         // Actual walked path is independent of the current planned route.
         // It remains visible after rerouting or a temporary GPS outage.
-        if (walkedTrack.size >= 2) {
+        // Keep each accepted GPS segment separate. Never bridge a GPS outage
+        // with an invented straight line. Legacy callers still pass walkedTrack
+        // until the navigation session owns WalkedTrace.
+        for (segment in (walkedSegments ?: listOf(walkedTrack))) {
+            if (segment.size < 2) continue
             view.overlays.add(Polyline().apply {
-                setPoints(walkedTrack.map { GeoPoint(it.first, it.second) })
+                setPoints(segment.map { GeoPoint(it.first, it.second) })
                 outlinePaint.color = Color.rgb(33, 135, 128)
                 outlinePaint.strokeWidth = 7f
                 outlinePaint.strokeCap = Paint.Cap.ROUND
