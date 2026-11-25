@@ -1,6 +1,6 @@
 # Regression matrix: active navigation state and GPS track (#13 / #14)
 
-Status: **test specification only**, 2026-11-23. No executable Android test or device acceptance is implied. Related decision: [ADR-010](DECISIONS.md).
+Status: **Abnahmematrix mit partieller Testimplementierung**, aktualisiert 2026-11-25. Es existieren inzwischen instrumentierte Activity-Recreation-Smoke-Tests (siehe `docs/PROJECT_STATUS.md`, Commits `3503ec4` und frühere); sie belegen weder vollständige ROT-01-Abdeckung noch einen erfolgreichen Testlauf. Die GPS-01–06-Szenarien bleiben als vollständige End-to-End-Abnahme offen. Related decision: [ADR-010](DECISIONS.md).
 
 ## Invariants
 - The selected itinerary, active navigation state and settings are not reset by an Activity recreation caused by rotation.
@@ -32,3 +32,11 @@ Status: **test specification only**, 2026-11-23. No executable Android test or d
 
 ## Current evidence limits
 The historical [Actions run #491](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45100034723) has a failed preflight and skipped downstream jobs; this does not identify the exact failing command. The GitHub commit-workflow lookup available in this session only covers PR runs and cannot establish current push CI. Run `python3 -u scripts/test-emulator-navigation.py`, `bash -x scripts/preflight.sh` and `python3 scripts/test-ci-concurrency.py` on an accessible checkout; obtain real exit codes and latest push Actions logs before attributing a CI cause.
+
+## Abgleich 25.11.2026 – nächstes ausführbares Paket
+
+- `main=502f86e0e639d01112813f362a1a8f5bd8885b2f`; Issues #13 und #14 offen, keine offenen PRs beim Abgleich.
+- Vorhandene instrumentierte `ActivityScenario.recreate()`-Tests prüfen Dashboard und Ankunftspuffer im Fixture, **nicht** eine nichtleere akzeptierte GPS-Spur über einen echten Portrait/Landscape-Wechsel. Die ergänzten RouteProgress-JVM-Tests prüfen geplante Routengeometrie, **nicht** GPS-Trackpersistenz.
+- **Nächstes kleines Codepaket:** Im vorhandenen Fixture eine deterministische akzeptierte Dreipunkt-Spur A/B/C und separate geplante Polyline bereitstellen; vor und nach `recreate()` Anzahl, Reihenfolge und unveränderte Koordinaten der akzeptierten Spur prüfen. Erst danach Orientation-Transitions und GPS-03/05 implementieren. Keine synthetische Route als tatsächliche Spur ausgeben.
+- **Test-Gate:** CI auf `main` zuletzt ohne nachgewiesenen grünen Build; kombinierter Commit-Status für `502f86e` lieferte `statuses=[]` (kein Erfolgsnachweis). Letzter dokumentierter Actions-Run #525 fehlgeschlagen; Live-Actions-Joblogs konnten über den verfügbaren GitHub-Connector nicht neu abgefragt werden. Zuerst Runner-/Setup-Fehlermeldung administrativ ermitteln, dann JDK-17-/SDK-35-Tests und Emulator ausführen. Keine APK-Freigabe.
+- Andere Projekt-Chats sind nicht vollständig live lesbar; keine zusätzlichen Anforderungen ohne überprüfbare Quelle behaupten.
