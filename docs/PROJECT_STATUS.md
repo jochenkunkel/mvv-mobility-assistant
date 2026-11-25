@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 26.11.2026, 00:24 MEZ (GPS-Regressionen erweitert)
+
+- **Live-Baseline:** main vor Änderung `45e3904`; README, Roadmap, Status, NavigationTraceViewModel, WalkedTrace, Testdatei, Issues und PRs geprüft. Elf offene Issues, keine offenen PRs. Main-/Schedule-Chats nicht vollständig live verfügbar.
+- **Kleines Codepaket:** Commit [bbbb7bb](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/bbbb7bbd48f9569f554ab5623c30aa4bcf5d6653) ergänzt zwei JVM-Regressionen im ViewModel: lange GPS-Unterbrechung erzeugt separate Segmente und ein ungültiger Fix verbindet sie nicht; expliziter Session-Reset erlaubt anschließend einen neuen Zeitstempel-Ursprung. Bestehende Tests bleiben erhalten.
+- **Test-/CI-Grenze:** Tests nicht ausgeführt. Commit-Status-API liefert keine verifizierte Android-Actions-/Emulator-Abnahme; bisheriger dokumentierter Preflight-Lauf #548 fehlgeschlagen. Keine APK-Installationsfreigabe.
+- **Nächste Priorität:** Instrumentierter ActivityScenario.recreate()-Test mit tatsächlich nichtleerem GPS-Track, danach Rotation/Rerouting und Lifecycle-Erhalt von Route, Tab, Ziel und Zeitpuffer. Runner-Setup-/Policy-Fehler anhand der Actions-UI/Annotations prüfen, nicht durch spekulative Workflow-Änderungen.
+
 ## Entwicklungsabgleich – 25.11.2026, 23:20 MEZ (GPS-ViewModel angebunden; Lifecycle-Abnahme offen)
 
 - **Repository geprüft:** neuester Commit auf `main` ist [56f4841](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/56f4841fe378e57745c190d254c3a42c6bace234) (22:18 MEZ), davor [5f5ee53](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/5f5ee534b82e44d085b2431ef78029faf64a22b0) mit der produktiven Anbindung des Activity-scoped `NavigationTraceViewModel`. README, Roadmap, Chat-Start, Navigation-Session-Vertrag, offene Issues/PRs und Commitliste abgeglichen. Elf offene Issues, keine offenen PRs. Main-/Schedule-Chats nicht vollständig live abrufbar; keine unbekannten Anforderungen unterstellt.
