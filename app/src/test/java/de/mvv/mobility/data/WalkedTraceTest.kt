@@ -59,4 +59,24 @@ class WalkedTraceTest {
             .accept(fix(200_000, 49.0))
         assertEquals(listOf(1, 1), trace.segments.map { it.size })
     }
+    @Test fun exactGapBoundaryStaysConnectedWhenMovementIsPlausible() {
+        val first = WalkedTrace().accept(fix(1_000))
+        val trace = first.accept(fix(121_000, 48.10001))
+        assertEquals(listOf(2), trace.segments.map { it.size })
+    }
+
+    @Test fun firstMillisecondBeyondGapStartsSeparateSegment() {
+        val trace = WalkedTrace().accept(fix(1_000))
+            .accept(fix(121_001, 48.10001))
+        assertEquals(listOf(1, 1), trace.segments.map { it.size })
+    }
+
+    @Test fun rejectedJumpDoesNotMoveGapAnchor() {
+        val first = WalkedTrace().accept(fix(1_000))
+        val rejected = first.accept(fix(60_000, 49.0))
+        assertSame(first, rejected)
+        val resumed = rejected.accept(fix(122_000, 48.10001))
+        assertEquals(listOf(1, 1), resumed.segments.map { it.size })
+    }
+
 }
