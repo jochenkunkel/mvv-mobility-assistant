@@ -34,3 +34,10 @@ Current conversation and repository documents were available; complete independe
 - Added three JVM regression tests: trimming across segment boundaries, empty/unchanged histories, and invalid limit. Commits: `c8108d3` (model), `6700ef4` (tests).
 - **Not yet integrated:** `MainActivity.walkedTrack` is still a Compose-owned flat list with a 1500-point cap; `WalkingMiniMap` still draws one flat polyline. On integration, use `trace.accept(fix).retainLast(1500)` and render each segment separately; avoid implying that the new helper alone fixes #13/#14.
 - Tests were committed but **not executed** in this run. CI remains without a confirmed green build. No APK installation authorization.
+
+## 14:20 MEZ — segmented map overlay API (partial integration)
+
+- Commit `7de121e` extends `WalkingMiniMap` with optional `walkedSegments: List<List<Pair<Double, Double>>>?` and draws **one polyline per segment**. Segments with fewer than two fixes do not create a line. Existing callers remain source-compatible and use their legacy flat `walkedTrack` until explicitly migrated.
+- **Important:** The two production call sites in `MainActivity` still supply a flat list, so #13/#14 are **not fixed** by this change. No claim of GPS trace retention, gap handling in the active UI, or lifecycle safety.
+- **Next:** Make the active navigation session own `WalkedTrace`, pass `trace.segments.map { segment -> segment.map { it.latitude to it.longitude } }` to **both** `WalkingMiniMap` call sites, and test rotation, rerouting and gap rendering. Keep route geometry separate and cap trace at 1500 accepted fixes.
+- **Validation:** No local Android SDK/emulator test executed in this run; verify compile, lint, and instrumented map overlays before any APK installation. Do not treat empty commit statuses as green CI.
