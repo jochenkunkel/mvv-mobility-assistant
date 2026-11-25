@@ -71,3 +71,11 @@ The historical [Actions run #491](https://github.com/jochenkunkel/mvv-mobility-a
 - **Tests:** `141dca9` aktualisiert den Dreipunkt-Test auf plausible Abstände und ergänzt Regressionen für Sprungablehnung, konfigurierbare Geschwindigkeit und Segmenttrennung. Tests **nicht ausgeführt**; CI-Erfolg nicht belegt. Das Modell ist weiterhin nicht an den produktiven Track-StateHolder bzw. die Karte angeschlossen.
 - **Nächste Schritte:** JDK-17-/SDK-35-JVM-Tests ausführen, die produktive GPS-Integration prüfen und erst danach Rotation/Overlay und Provider-Ausfälle absichern. Runner-Setup-Ursache der bekannten fehlgeschlagenen Actions-Preflights bleibt offen. Keine APK-Freigabe, keine Änderungen an Signing/Secrets.
 - Andere Projekt-Chats sind nicht vollständig live abrufbar; keine unbelegten Anforderungen übernommen.
+
+
+## Abgleich 25.11.2026, 08:20 MEZ
+
+- Repository-HEAD vor Teständerung `3fca6ab`; elf offene Issues, keine offenen PRs. `WalkedTrace` bleibt ein isoliertes Modell ohne nachgewiesene Integration in die aktive Navigation.
+- Commit `069b03c` ergänzt drei JVM-Tests für Koordinaten-/Genauigkeitsgrenzen, ungültige Filterparameter und identische Zeitstempel. Tests wurden in diesem Lauf nicht ausgeführt; damit keine Aussage über Grün/Rot.
+- **Nächstes funktionales Paket:** Den tatsächlichen `walkedTrack`-Eigentümer in `MainActivity` mit dem segmentierten Modell verbinden, ohne über GPS-Lücken Linien zu zeichnen. Erst mit deterministischem StateHolder-Test für Track/Reroute/Activity-Recreation absichern; keine blinde Umstellung von Compose-`remember` auf Persistenz.
+- **CI-Gate:** Aktueller Push-Workflow für `069b03c` nicht durch einen erfolgreichen Lauf belegt; bekannte Preflight-Initialisierungsblockade weiterhin offen. Keine APK-Installationsfreigabe. Vollständige Live-Verläufe anderer Projekt-Chats nicht zugänglich.
