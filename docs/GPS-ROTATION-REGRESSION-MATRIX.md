@@ -79,3 +79,11 @@ The historical [Actions run #491](https://github.com/jochenkunkel/mvv-mobility-a
 - Commit `069b03c` ergänzt drei JVM-Tests für Koordinaten-/Genauigkeitsgrenzen, ungültige Filterparameter und identische Zeitstempel. Tests wurden in diesem Lauf nicht ausgeführt; damit keine Aussage über Grün/Rot.
 - **Nächstes funktionales Paket:** Den tatsächlichen `walkedTrack`-Eigentümer in `MainActivity` mit dem segmentierten Modell verbinden, ohne über GPS-Lücken Linien zu zeichnen. Erst mit deterministischem StateHolder-Test für Track/Reroute/Activity-Recreation absichern; keine blinde Umstellung von Compose-`remember` auf Persistenz.
 - **CI-Gate:** Aktueller Push-Workflow für `069b03c` nicht durch einen erfolgreichen Lauf belegt; bekannte Preflight-Initialisierungsblockade weiterhin offen. Keine APK-Installationsfreigabe. Vollständige Live-Verläufe anderer Projekt-Chats nicht zugänglich.
+
+
+## Entwicklungsabgleich 25.11.2026, 09:20 MEZ – Antimeridian-Regression
+
+- Auf Basis von `e74d461` wurden README, GPS-Testmatrix, `WalkedTrace`-Implementierung/-Tests, offene Issues/PRs und Android-CI-Workflow geprüft. Elf offene Issues, keine offenen PRs. Vollständige andere Projekt-Chats sind nicht live zugänglich.
+- Commit `f9b449b` ergänzt einen JVM-Test für den Übergang von +179.9999° auf -179.9999° Länge in drei Sekunden. Das sind am Äquator ca. 22 m; die Haversine-basierte Geschwindigkeitsschranke soll den gültigen Fix annehmen und im selben Segment halten. Kein Produktionscode geändert.
+- **Teststatus:** Der Test ist eingecheckt, aber nicht ausgeführt. Für diesen Commit liegt noch kein bestätigter grüner Android-CI-Lauf vor. Keine APK-Freigabe.
+- **Nächstes Arbeitspaket:** Statt weiterer isolierter Modelltests nun den tatsächlichen Eigentümer der produktiven `walkedTrack`-Daten in `MainActivity.kt` und die flache Polylinien-Übergabe an `WalkingMiniMap.kt` untersuchen. Danach `WalkedTrace.segments` ohne Verbindungsstriche über Lücken in den aktiven Navigationszustand und das Karten-Overlay integrieren; Rotation und Rerouting instrumentiert prüfen. Die CI-Preflight-Runner-Ursache weiterhin anhand von Job-Setup-Annotations klären.
