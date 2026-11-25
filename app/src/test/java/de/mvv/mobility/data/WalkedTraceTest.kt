@@ -141,4 +141,17 @@ class WalkedTraceTest {
     }
 
 
+    @Test fun boundedTraceContinuesAfterTrimmingWithoutJoiningSegments() {
+        val original = WalkedTrace()
+            .accept(fix(1_000))
+            .accept(fix(2_000, 48.10001))
+            .accept(fix(200_000, 48.2))
+        val trimmed = original.retainLast(2)
+        val continued = trimmed.accept(fix(201_000, 48.20001)).retainLast(2)
+        assertEquals(listOf(200_000L, 201_000L), continued.fixes.map { it.timestampMillis })
+        assertEquals(listOf(2), continued.segments.map { it.size })
+        assertEquals(listOf(1, 1), trimmed.segments.map { it.size })
+        assertEquals(3, original.fixes.size)
+    }
+
 }
