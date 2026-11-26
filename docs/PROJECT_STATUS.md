@@ -1,3 +1,13 @@
+## Endgültiger Nachweis – 26.11.2026
+
+- **Commit:** `ddbc09b` auf `main`.
+- **Vollständiger Release-CI:** [Run `45830055385`](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45830055385) auf `ddbc09b` = **success**, alle sechs Jobs grün (inkl. Golden-Vergleich).
+- **Signierter Release:** [Run `45831167108`](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45831167108) = **success**, `gate` und `signed-release` grün; Artefakt `mein-weg-signed-release` mit `app-release.apk` + `app-release.aab`.
+- **APK:** `versionCode=1000003` (> Debug-/Update-APK `597`), `versionName=0.2.3`, Signatur `CN=MeinWeg2`, per `aapt dump badging` / `apksigner` aus dem heruntergeladenen Artefakt geprüft.
+- **Secrets:** Die vorhandenen `MEIN_WEG_CI_SIGNING_*`-Secrets werden für beide Workflows genutzt; keine neuen Secrets angelegt.
+
+---
+
 ## Nachbesserung – 26.11.2026 (Golden-Vergleich deterministisch)
 
 - Release-Lauf `45828424419` scheiterte nur am Golden-Vergleich von `02-verbindungen` (`mean=30.05` > 28): Der Fixture-Modus führte online eine Adressauflösung durch, die lokal den vollständigen Zieltext ergab, in CI aber nicht.
