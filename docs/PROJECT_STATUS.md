@@ -1,3 +1,13 @@
+## CI-Abgleich – 26.11.2026, 17:20 MEZ
+
+- **Live geprüft:** GitHub Actions [Push-CI #45847703945](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45847703945) auf `d769a2e` ist **completed/success**; `preflight` und `build-and-test` erfolgreich. Die Jobs `mvv-live-probe`, `door-to-door-live-probe`, `emulator-smoke-test` und `release-acceptance` wurden in diesem Push-Lauf **übersprungen**. Somit ist **kein vollständiger Release-/Emulator-Gate-Nachweis** für `d769a2e` vorhanden.
+- Der ältere [CI-Lauf #45838422250](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45838422250) auf `d6347a6` steht inzwischen auf **cancelled** (nicht mehr „Retry läuft“). Der zuvor dokumentierte Gradle-Daemon-Abbruch bleibt ein historischer Befund; die erfolgreiche Folge-CI ist kein kausaler Nachweis für dessen Ursache.
+- **Repository:** Vier offene Produkt-Issues #15–#18, zuletzt dokumentierter HEAD `d769a2e`; keine neuen Feature-Implementierungen nachgewiesen. README, Roadmap, Chat-Handoff, CI und Issues geprüft. Andere Main-/Schedule-Chatverläufe sind hier nicht vollständig live abrufbar; nur bereits sichtbare Nutzerentscheidungen verwendet.
+- **Nächster kleiner Schritt:** #17: Compose-Navigationszustand und Bottom-Tab-Sichtbarkeit im aktiven Dashboard anhand `MainActivity.kt` prüfen; erst danach gezielten Regressionstest für Back/Rotation und Vollbildansicht schreiben. #18 danach, #15/#16 anschließend. Keine Signing-/Secret-Änderung und keine APK-Installationsfreigabe.
+- **Dieser Lauf:** CI-Ergebnis und Priorität im Repository aktualisiert, keine Codeänderung oder lokalen Tests. Nachfolgender Push-CI für diesen Dokumentationscommit ist separat zu prüfen.
+
+---
+
 ## CI-Triage – 26.11.2026, 16:17 MEZ
 
 - **Aktueller Stand:** `main` = `d6347a6`; weiterhin vier offene Produkt-Issues #15–#18, keine offenen PRs. Noch keine Produktimplementierung dieser Tickets nachgewiesen.
