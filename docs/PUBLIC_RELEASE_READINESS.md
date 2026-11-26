@@ -132,7 +132,7 @@ Gitleaks 8.30.1 scannte alle 590 Commits und den Arbeitsbaum.
 | Prüfpunkt | Befund | Bewertung |
 | --- | --- | --- |
 | `LICENSE` / GitHub-Lizenzmetadaten | Kein `LICENSE`; API liefert `license: null` | **Blocker** für Open-Source-Veröffentlichung; Eigentümerentscheidung erforderlich |
-| Persönliche E-Mail in Git-Historie | Ursprünglich `[alte private E-Mail-Adresse]` in **396** Commits | **Behoben**: freigegebener Rewrite ersetzt sie durch `354472984+jochenkunkel@users.noreply.github.com` (Abschnitt 12) |
+| Persönliche E-Mail in Git-Historie | Ursprünglich eine private E-Mail-Adresse in **396** Commits | **Behoben**: freigegebener Rewrite ersetzt sie durch die GitHub-Noreply-Adresse (Abschnitt 12) |
 | Echte Kalender-/GPS-/Adressdaten im Repository | Keine. Alle Koordinaten in Tests sind synthetisch (z. B. 48.1000/11.5000); Fallback ist Marienplatz als öffentliches Wahrzeichen | **Sauber** |
 | Adressbeispiel in Dokumentation | Aus Screenshot-Kontext, durch Musteradresse ersetzt | Behoben |
 | Debug-Exporte | `GpsDebugRecorder` und `DebugResponseCapture` nur in Debug-Builds, opt-in, im Speicher begrenzt (2400 Events / 512 KB), Export über Android SAF, keine automatischen Schreib- oder Upload-Vorgänge | **Sauber**, aber bei Weitergabe exportierter Dateien Vorsicht geboten |
