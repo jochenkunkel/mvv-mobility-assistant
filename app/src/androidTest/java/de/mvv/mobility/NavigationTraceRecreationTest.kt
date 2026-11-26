@@ -47,4 +47,25 @@ class NavigationTraceRecreationTest {
             }
         }
     }
+
+    @Test fun explicitSessionEndClearsRetainedTraceAcrossRecreation() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                val owner = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
+                owner.acceptFix(TraceFix(48.1000, 11.5000, 1_000L, 5f))
+                assertEquals(1, owner.walkedTrace.fixes.size)
+                owner.clearSession()
+                assertEquals(emptyList<TraceFix>(), owner.walkedTrace.fixes)
+                assertEquals(0, owner.walkedTrace.segments.size)
+            }
+            scenario.recreate()
+            scenario.onActivity { activity ->
+                val owner = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
+                assertEquals(emptyList<TraceFix>(), owner.walkedTrace.fixes)
+                owner.acceptFix(TraceFix(48.2000, 11.6000, 500L, 5f))
+                assertEquals(1, owner.walkedTrace.fixes.size)
+                assertEquals(500L, owner.walkedTrace.fixes.single().timestampMillis)
+            }
+        }
+    }
 }
