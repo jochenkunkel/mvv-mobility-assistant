@@ -1,3 +1,12 @@
+## Entwicklungsabgleich – 26.11.2026, 11:18 MEZ (öffentliche Sichtbarkeit und Freigabegrenzen)
+
+- **Live-Repository:** GitHub meldet `visibility=public` auf `main`; elf offene Issues (#3–#11, #13, #14), keine offenen PRs. Letzter vor diesem Lauf abgefragter HEAD: `b9b47c7` (nach History-Rewrite). Alte Commit-SHAs aus vorangegangenen Berichten können durch den Rewrite ungültig sein.
+- **Konsistenzfix:** README behauptete weiterhin „privat“; in `fe44305d` an die aktuellen Repository-Metadaten angepasst. Die Sicherheitsprüfung in `PUBLIC_RELEASE_READINESS.md` bleibt als historischer Prüfbericht bestehen. **Public ist keine Release-/APK-Freigabe.**
+- **Tests und CI:** Nur Dokumentation geändert, keine Tests ausgeführt. Commit-Status-Abfrage für `b9b47c7` lieferte `statuses=[]`, also **keinen** erfolgreichen CI-Nachweis. Letzter dokumentierter Actions-Run `45795582864` scheiterte vor auslesbaren Schritten; Runner-/Billing-Ursache administrativ zu klären. Lokale Tests aus früherem Audit sind keine aktuelle Actions-Freigabe. Keine APK-Installationsfreigabe.
+- **Nächste Priorität:** #8 Actions-Runner/Setup anhand eines aktuellen Runs diagnostizieren, dann #13/#14 aktive Navigation mit Route/Ziel/Tab/Puffer und GPS-Spur bei echter Rotation auf API-35-Emulator testen. Andere Main-/Schedule-Chats nicht als vollständige Live-Verläufe abrufbar.
+
+---
+
 ## Entwicklungsrunde – 26.11.2026 (History-Rewrite abgeschlossen)
 
 - **Freigabe umgesetzt:** Die alte private E-Mail-Adresse wurde mit `git-filter-repo` in **396** Commit-Metadaten durch `354472984+jochenkunkel@users.noreply.github.com` ersetzt. Zusätzlich wurden verbliebene Vorkommen in historischen Dokumenten ersetzt.
