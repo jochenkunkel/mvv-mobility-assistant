@@ -1,5 +1,6 @@
 ## Code-Review-Nachbesserungen – 26.11.2026
 
+- **Code-Commit:** `8d1182f` auf `main`. Push-CI [45893162384](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45893162384) und vollständiger Release-CI [45893175285](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45893175285) wurden für diesen Commit gestartet; Ergebnisse beim Eintrag noch offen.
 - **Boarding-Ziel:** Das Vollbild-Dashboard routet jetzt anhand des `fromStop` des ersten Fahrzeugabschnitts; Zielhaltestellen-Koordinaten und bereits geladene Fußwege zum Reiseziel werden nicht mehr als MVV-Einstiegspunkt missbraucht. Plattform, Koordinatenwarnung und Fußwegdistanz beziehen sich ebenfalls auf diesen Einstieg.
 - **Suchdatum:** Die Vergangenheitsmarkierung der Verbindungskarten nutzt `JourneyTime.isPast` mit absolutem EFA-Instant bzw. gewähltem Suchzeitpunkt.
 - **Anschlusspuffer:** Die Gesamtgehzeit einer Reise wird nicht mehr als Gehzeit zum nächsten Anschluss ausgegeben. Der Puffer bleibt ehrlich „unbekannt“, bis eine anschlussspezifische Restgehzeit verfügbar ist; Gehzeit wird als Gesamtwert beschriftet.
