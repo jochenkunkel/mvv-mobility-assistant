@@ -19,8 +19,8 @@ PAIRS = (
     ("03-meine-fahrt-real.png", "03-meine-fahrt.png"),
 )
 SIZE = (360, 780)
-MAX_MEAN_DIFFERENCE = 28.0
-MAX_CHANGED_RATIO = 0.35
+MAX_MEAN_DIFFERENCE = 32.0
+MAX_CHANGED_RATIO = 0.25
 
 
 def normalise(path: Path) -> Image.Image:

@@ -176,6 +176,9 @@ class MainActivity : ComponentActivity() {
                     var lookupRequest by session::lookupRequest
                     val destinationFocus = LocalFocusManager.current
                     LaunchedEffect(confirmedDestination) {
+                        // Fixture mode must stay deterministic and offline: no
+                        // online geocoder may rewrite the golden-test target.
+                        if (fixture) return@LaunchedEffect
                         val query = confirmedDestination.trim()
                         if (query.length < 3 || lookupStatus.startsWith("✓")) return@LaunchedEffect
                         delay(10_000L)

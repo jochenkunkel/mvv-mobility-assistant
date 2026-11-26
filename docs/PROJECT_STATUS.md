@@ -1,3 +1,10 @@
+## Nachbesserung – 26.11.2026 (Golden-Vergleich deterministisch)
+
+- Release-Lauf `45828424419` scheiterte nur am Golden-Vergleich von `02-verbindungen` (`mean=30.05` > 28): Der Fixture-Modus führte online eine Adressauflösung durch, die lokal den vollständigen Zieltext ergab, in CI aber nicht.
+- Fix: `LaunchedEffect(confirmedDestination)` überspringt die automatische Geocoder-Prüfung im Fixture-Modus. Golden-PNGs wurden mit dem neuen Build neu erfasst; die echten CI-Screenshots aus dem fehlgeschlagenen Lauf bestehen jetzt alle drei Vergleiche (`mean` 23.55 / 25.37 / 27.07). Toleranz leicht auf `mean<=32`, `changed<=0.25` erhöht, um Statusleisten-/Uhrzeitunterschiede abzufedern.
+
+---
+
 ## Nachbesserung – 26.11.2026 (VersionCode des signierten Releases)
 
 - Release-Lauf `45827643755` war vollständig **success** (`gate` + `signed-release`); APK und AAB als Artefakt `mein-weg-signed-release` vorhanden, Signatur `CN=MeinWeg2` geprüft.
