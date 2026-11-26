@@ -1,3 +1,13 @@
+## CI-Triage – 26.11.2026, 16:17 MEZ
+
+- **Aktueller Stand:** `main` = `d6347a6`; weiterhin vier offene Produkt-Issues #15–#18, keine offenen PRs. Noch keine Produktimplementierung dieser Tickets nachgewiesen.
+- **Neuer Befund:** [Push-CI #45838422250](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45838422250) auf `d6347a6` = **failure**. `preflight` erfolgreich, `build-and-test` beim Schritt `Android lint (every commit)` fehlgeschlagen; nachfolgende Jobs wurden übersprungen.
+- **Logdiagnose:** Gradle meldet `Gradle build daemon disappeared unexpectedly` und verweist auf `hs_err_pid2867.log` (JVM-Crashlog). Parallel liefen `lintAnalyzeDebug`, `lintAnalyzeDebugAndroidTest`, `lintAnalyzeDebugUnitTest`. Kotlin-Deprecation-Warnungen erscheinen im Log, sind **kein nachgewiesener Lint-Fehler**. Der genaue JVM-Crashgrund ist ohne Crashlog nicht bestimmt; Runner-Ressourcenproblem oder JVM-Crash sind Hypothesen, kein Beweis.
+- **Maßnahme:** GitHub-Actions-Funktion **„Re-run failed jobs“** für denselben Lauf ausgelöst. Ergebnis zum Dokumentationszeitpunkt noch offen. Keine Signing-/Secret-Änderung, keine APK-Freigabe.
+- **Nächster Schritt:** Retry-Ergebnis und gegebenenfalls `hs_err_pid2867.log` prüfen. Bei reproduzierbarem Crash: Runner-Speicher-/JVM-Konfiguration und parallele Lint-Worker gezielt untersuchen, erst dann risikoarme Anpassung mit Tests. Bei grünem Retry: transienten Fehler vermerken, danach #17 mit einem kleinen Compose-Regressionstest beginnen.
+
+---
+
 ## Entwicklungsabgleich – 26.11.2026, 15:22 MEZ (neue Nutzerentscheidungen)
 
 **Live-Stand vor dieser Dokumentationsänderung:** `main` = `7f3b461`; vier offene Issues [#15](https://github.com/jochenkunkel/mvv-mobility-assistant/issues/15), [#16](https://github.com/jochenkunkel/mvv-mobility-assistant/issues/16), [#17](https://github.com/jochenkunkel/mvv-mobility-assistant/issues/17), [#18](https://github.com/jochenkunkel/mvv-mobility-assistant/issues/18). Diese Tickets sind **neu und nicht implementiert**; frühere Aussagen „0 offene Tickets“ sind historische Momentaufnahmen. Die Designreferenzen liegen unter `docs/design/dashboard-design-5-kompakt.svg` und `docs/design/navigation-design-1-karte-im-fokus.svg`.
