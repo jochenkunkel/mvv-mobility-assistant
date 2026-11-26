@@ -42,7 +42,7 @@
 
 - Die in dieser Runde verwendeten lokalen Werkzeuge und Scan-Reports liegen persistent unter `.work/tools/` und `.work/reports/` (durch `.gitignore` ausgeschlossen, nicht Teil des Repositories). Gitleaks 8.30.1 kann dort als `.work/tools/gitleaks` erneut ausgeführt werden; Gradle 8.13 liegt unter `.work/tools/gradle-8.13/`.
 - Gitleaks erkennt Muster und Entropie; es ersetzt keine manuelle Prüfung und keine Rotationsprüfung bei externen Diensten.
-- GitHub-Actions-Job-Logs waren über die CLI nicht abrufbar (`gh run view … --log-failed` lieferte keine Ausgabe). CI-Ergebnisse wurden daher **nicht** als Nachweis verwendet.
+- GitHub-Actions-Job-Logs waren über die CLI nicht abrufbar (`gh run view … --log-failed` lieferte keine Ausgabe). CI-Ergebnisse wurden daher **nicht** als erfolgreicher Nachweis verwendet. Der neue Lauf `45795582864` auf `2b13c4a` bestätigt jedoch erneut einen Preflight-Abbruch nach ~2 s mit `steps=[]` und fünf übersprungenen Jobs – ein externes Runner-/Kontingentproblem, kein Kotlin- oder Skriptfehler.
 - Andere Chatverläufe sind nicht live zugänglich; es wurden keine unbekannten Anforderungen unterstellt.
 
 ---
@@ -76,7 +76,7 @@ Gitleaks 8.30.1 scannte alle 590 Commits und den Arbeitsbaum.
 | R-05 | Kein `LICENSE` – Public Repository wäre nicht open source | Hoch (rechtlich) | **Offen**, Eigentümerentscheidung |
 | R-06 | Öffentliche Artefakte: signierte Update-APK/AAB und Debug-APK sind in GitHub Actions für Betrachter des Runs herunterladbar | Mittel–Hoch | **Offen**, Eigentümerentscheidung; keine Änderung vorgenommen |
 | R-07 | Keine Security Policy, keine Issue-/PR-Templates, keine Contribution Guidelines | Niedrig | **Behoben** |
-| R-08 | CI-Log-Download nicht verfügbar; tatsächliche Runner-Ursache der historischen Fehlläufe nicht belegt | Mittel (Nachweis) | **Offen**, administrativ zu klären |
+| R-08 | CI-Job bricht nach ~2 s mit 0 Schritten ab; Runner-/Billing-Problem bleibt bestehen | Mittel (Nachweis) | **Offen**, administrativ zu klären; nicht durch den Syntaxfix behoben |
 | R-09 | Keine Lizenz-/CLA-Regel für externe Beiträge | Niedrig | **Offen**, Teil der Lizenzentscheidung |
 
 **Hinweis zu R-06:** Die Workflows laden aktuell `mein-weg-debug-apk-not-update-guaranteed`, `mein-weg-signed-update-apk` und `mein-weg-signed-release` als Artefakte hoch. In einem öffentlichen Repository sind Actions-Artefakte und Logs für Dritte sichtbar. Die Logs enthalten keine Secret-Werte; ein heruntergeladenes signiertes Paket ist jedoch ein gültig signiertes Update-APK. Eine Änderung der Upload- oder Signierungspolitik wurde **nicht** eigenmächtig vorgenommen, da die Funktionsweise der bestehenden Secrets vollständig geklärt bleiben muss.
