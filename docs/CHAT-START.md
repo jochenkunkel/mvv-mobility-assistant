@@ -27,6 +27,7 @@ der gemeinsame, persistente Übergabepunkt.
 
 ## 2. Pflichtlektüre in dieser Reihenfolge
 
+0. `docs/PUBLIC_RELEASE_READINESS.md` – Sicherheitsbewertung, Freigabegrenzen und offene Entscheidungen (Lizenz, Artefakte, `public`-Umsstellung).
 1. `docs/PROJECT_STATUS.md` – aktueller Arbeitsstand, Tickets, letzte Commits.
 2. `README.md` – Projektüberblick, Einstieg, Build-/Testhinweise.
 3. `docs/DECISIONS.md` – bindende UX- und Architekturentscheidungen.

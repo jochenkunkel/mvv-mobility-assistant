@@ -1,3 +1,16 @@
+## Entwicklungsrunde – 26.11.2026 (Release-Readiness, CI-Blocker, Offline-Tests)
+
+- **Baseline:** Frisch geklont, `main=a796545`, Working Tree sauber, 115 Dateien, 3 Remote-Branches, keine Tags, Repo `PRIVATE`, `licenseInfo=null`. README, CHAT-START,PROJECT_STATUS, Issues (11 offen), Workflows, Build-Dateien, Manifest und jüngste Commits geprüft.
+- **Security-Audit:** Gitleaks 8.30.1 über **590 Commits** (Worktree + Historie): 1 Treffer, ein False Positive (`diagnose=failure` im Runbook), Text umformuliert. Keine Keystores, Tokens, Passwörter, `.env`-Dateien, APKs/AABs oder Binär-Secrets in Historie oder Baum. Ein Adressbeispiel im Cockpit-Plan durch Musteradresse ersetzt. **Kein History-Rewrite nötig und nicht durchgeführt.** Bericht: `docs/PUBLIC_RELEASE_READINESS.md`.
+- **CI-Ursache gefunden:** `scripts/test-emulator-navigation.py:39` hatte seit `5df2a0fb` (17.11.) eine fehlende schließende Klammer → SyntaxError im Preflight-Job. Korrigiert. Damit ist erstmals ein **lokal reproduzierbarer** Preflight-Blocker belegt; historische Actions-Job-Logs bleiben nicht abrufbar.
+- **Ausgeführte lokale Tests (JDK 17, Gradle 8.13, SDK 35):** `python3 scripts/test-ci-concurrency.py` exit 0; `python3 scripts/test-emulator-navigation.py` exit 0 (30 Tests grün); `bash scripts/preflight.sh` exit 0; `python3 -m unittest discover -s scripts -p 'test_*.py'` exit 0 (6 Tests). Kotlin-/Gradle-Ergebnisse: siehe separater Eintrag nach Buildabschluss. **Keine GitHub-Actions-Bestätigung, kein Emulator-/Gerätelauf, keine APK-Freigabe.**
+- **Signierung:** Unverändert. Keystore/Passwörter ausschließlich in Actions Secrets; Fork-PRs erhalten keine Signierung. Bestehende Secrets nicht gelöscht oder überschrieben.
+- **Öffentliche Struktur neu:** `.gitignore` gehärtet, `.gitattributes`, `.github/SECURITY.md`, Issue-/PR-Templates, `CONTRIBUTING.md`, `AGENTS.md`, `docs/LICENSE-DECISION.md`; README/CHAT-START verlinkt.
+- **Offene Freigaben:** (1) Lizenzentscheidung des Eigentümers (Empfehlung Apache-2.0, kein `LICENSE` angelegt); (2) ausdrückliche Zustimmung zur Umstellung auf `public` – **nicht erfolgt**; (3) Entscheidung zur öffentlichen Sichtbarkeit signierter Artefakte; (4) Actions-Budget/Runner administrativ prüfen.
+- **Nächste Schritte:** Nach Freigabe `public` schalten, echten CI-Status prüfen, vollständige Kette Preflight→Kotlin→Unit→Lint→Debug-APK→Instrumentierung→Emulator→Signatur ausführen; danach #13/#14 mit aktiver Route bei Rotation.
+
+---
+
 ## Entwicklungsabgleich – 26.11.2026, 10:20 MEZ (ungenaue GPS-Fixes nach Recreation)
 
 - **Baseline:** `main=0d28c30` vor Änderung; README, Roadmap, Status, Testcode, GPS-Filter, Android-Workflow, Issues/PRs und jüngste Commits geprüft. Elf offene Issues, keine offenen PRs. Vollständige Main-/Schedule-Chats nicht live zugänglich.

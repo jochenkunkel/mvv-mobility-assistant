@@ -26,7 +26,7 @@
 - Kalender-Ziel **sichtbar vorausfüllen**, nicht nur als Placeholder/unterhalb eines leeren Eingabefeldes anzeigen.
 - Wenn vorhanden, **automatisch und asynchron** online prüfen/auflösen; Ergebnisse direkt als Status („bestätigt“, „mehrdeutig“, „nicht gefunden“) darstellen.
 - Bei eindeutiger Übereinstimmung automatisch übernehmen; bei mehreren Kandidaten kurze Auswahl anbieten; bei Fehler oder Offline-Betrieb editierbaren Originalwert behalten.
-- Doppelte Adressbestandteile (Screenshot: „Wettersteinstraße 11 Wettersteinstraße 11“) vermeiden; Ort/PLZ nicht blind abschneiden. Keine Endlosschleifen durch automatische Lookup-Updates.
+- Doppelte Adressbestandteile (Screenshot-Beispiel: „Musterstraße 11 Musterstraße 11“) vermeiden; Ort/PLZ nicht blind abschneiden. Keine Endlosschleifen durch automatische Lookup-Updates.
 - Manuelle Prüfung nur als kleine Wiederholen-Aktion bei Fehlern oder auf ausdrücklichen Wunsch.
 
 ### Startposition

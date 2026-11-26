@@ -1,9 +1,50 @@
+# Gradle / IDE / local configuration
 .gradle/
 .idea/
 *.iml
 local.properties
+
+# Build outputs
 /build/
 /app/build/
+**/build/
 *.apk
 *.aab
+
+# Signing material and secrets – never commit these files.
+# CI provides signing material exclusively via GitHub Actions secrets.
+*.jks
+*.keystore
+*.keystore.base64
+*.p12
+*.pfx
+*.pem
+*.key
+keystore.properties
+signing.properties
+.env
+.env.*
+!.env.example
+
+# Captured/debug data and local test output.
+# Debug exports may contain calendar destinations or GPS traces.
+*.log
+gps-debug*.json
+mvv-debug*.json
+test-results/
+preflight-diagnostics/
+window.xml
+
+# Local agent working data (tools, downloaded distributions, scan reports)
+.work/
+
+# Kotlin compiler daemon session files
+.kotlin/
+
+# Python caches
+__pycache__/
+*.pyc
+
+# OS files
 .DS_Store
+Thumbs.db

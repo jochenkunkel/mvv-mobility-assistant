@@ -2,6 +2,12 @@
 
 Android-App mit Kalenderterminen, automatischer Standortermittlung und Vordergrund-Aktualisierung, MVV-Tür-zu-Tür-Verbindungen, Linienfilter, Ankunftspuffer und Geh-Dashboard.
 
+## Veröffentlichungs- und Sicherheitsstatus
+
+Das Repository ist derzeit **privat**. Die vollständige Sicherheitsprüfung inklusive Git-Historie steht in **[docs/PUBLIC_RELEASE_READINESS.md](docs/PUBLIC_RELEASE_READINESS.md)**. Eine Umstellung auf `public` erfolgt **nur mit ausdrücklicher Freigabe des Eigentümers**. Es ist noch **keine Lizenz gewählt**; Optionen und Entscheidungsbedarf stehen in [docs/LICENSE-DECISION.md](docs/LICENSE-DECISION.md). Bis zur Entscheidung gilt: alle Rechte vorbehalten, keine Weiternutzung durch Dritte.
+
+Sicherheitshinweise (auch für die Geheimnisvergabe) siehe [.github/SECURITY.md](.github/SECURITY.md); Regeln für Beiträge in [CONTRIBUTING.md](CONTRIBUTING.md) und [AGENTS.md](AGENTS.md).
+
 ## Neuer Chat? Hier starten
 
 **[docs/CHAT-START.md](docs/CHAT-START.md)** enthält den vollständigen
@@ -41,7 +47,16 @@ Der **[systematische Entwicklungs- und Freigabeplan](docs/IMPLEMENTATION-ROADMAP
 Der verbindliche [Geräte-, Installations-, Update- und Store-Freigabeplan](docs/STORE-READINESS.md) legt Prüfungen für kleine/große Smartphones, Tablets, große Schrift, Erstinstallation, Deinstallation, signierte Updates und spätere Google-Play-Veröffentlichung fest. **Die Kriterien sind noch nicht vollständig nachgewiesen; keine Store-Freigabe behauptet.**
 
 ## Entwickeln und testen
-JDK 17, Android SDK 35 und Gradle 8.13. `gradle :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest`.
+JDK 17, Android SDK 35 und Gradle 8.13. Lokal:
+
+```bash
+python3 scripts/test-ci-concurrency.py
+python3 scripts/test-emulator-navigation.py
+bash scripts/preflight.sh
+gradle :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
+```
+
+Instrumentierte Tests benötigen einen API-35-Emulator bzw. ein Gerät: `gradle :app:connectedDebugAndroidTest`. Ein Commit oder ein gestarteter Build ist kein Testnachweis; dokumentiere tatsächlich ausgeführte Befehle und Ergebnisse.
 
 GitHub Actions führt MVV-Live-Probes, Android-Tests und Emulator-UI-Tests aus. Debug-APKs sind **nur zum Testen**; ihre Signatur kann zwischen GitHub-Runnern wechseln. Eine neue Debug-APK kann daher nicht garantiert über eine bereits installierte Debug-APK installiert werden.
 
