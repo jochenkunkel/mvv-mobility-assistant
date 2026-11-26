@@ -1,3 +1,13 @@
+## Entwicklungsabgleich – 26.11.2026, 11:37 MEZ (grüner CI-Lauf nach Veröffentlichung)
+
+- **Live-Befund:** GitHub meldet `visibility=public` und `license=Apache-2.0`. Der vorherige 2-Sekunden-Preflight-Abbruch mit `steps=[]` ist nach der Veröffentlichung **nicht** mehr reproduzierbar: [Android CI #45800089593](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45800089593) auf `c323364` = **success** (5m 8s).
+- **Jobs:** `preflight=success` mit **9 Schritten**, `build-and-test=success` mit **15 Schritten**; `mvv-live-probe`, `door-to-door-live-probe`, `emulator-smoke-test` und `release-acceptance` sind bei einem normalen Push erwartungsgemäß `skipped`. Die historische Annahme „kein erfolgreicher Actions-Nachweis" ist damit überholt.
+- **Artefakt:** `mein-weg-debug-apk-not-update-guaranteed` (10.620.066 Byte) heruntergeladen nach `.work/artifacts/45800089593/`; `apksigner verify --print-certs` bestanden. Signatur: `CN=MeinWeg2, OU=Android, O=MeinWeg2`, SHA-256 `7240b34b…a0534ed`. Damit sind die stabilen CI-Signierungs-Secrets funktionsfähig.
+- **Freigabegrenze:** Ein grüner Push-Build ist **keine** Release-/Installationsfreigabe. Instrumentierte Tests, Emulator-Smoke-Test, Live-Probes und die Release-Akzeptanz liefen in diesem Lauf nicht; #13/#14 und die visuelle OSM-Attribution bleiben offen.
+- **Nächster Schritt:** Release-Lauf (`workflow_dispatch`, `test_level=release`) oder Versionstag ausführen, um Emulator-, Live-Probe- und Signatur-Gates vollständig abzudecken; danach #13/#14 auf API 35.
+
+---
+
 ## Entwicklungsabgleich – 26.11.2026, 11:18 MEZ (öffentliche Sichtbarkeit und Freigabegrenzen)
 
 - **Live-Repository:** GitHub meldet `visibility=public` auf `main`; elf offene Issues (#3–#11, #13, #14), keine offenen PRs. Letzter vor diesem Lauf abgefragter HEAD: `b9b47c7` (nach History-Rewrite). Alte Commit-SHAs aus vorangegangenen Berichten können durch den Rewrite ungültig sein.

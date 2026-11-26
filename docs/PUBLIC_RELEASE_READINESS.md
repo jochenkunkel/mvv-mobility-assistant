@@ -19,9 +19,9 @@
 | History-Rewrite erforderlich | **Ja** – ausgeführt, keine Secrets betroffen |
 | Technische Hindernisse für `public` | Keine Hard-Blocker gefunden |
 | Lizenz entschieden | **Ja** – Apache-2.0, `LICENSE` und `NOTICE` vorhanden |
-| Freigabe zur `public`-Umsstellung | **NOCH NICHT ERTEILT** – wird beim Eigentümer angefordert |
+| Freigabe zur `public`-Umsstellung | **ERTEILT und umgesetzt** (26.11.2026, `visibility=public`) |
 
-**Empfehlung:** Nach den dokumentierten Korrekturen und dem abgeschlossenen, verifizierten History-Rewrite (Abschnitt 12) ist das Repository veröffentlichungsfähig. Die Umstellung auf `public` ist ein administrativer Schritt und setzt die noch ausstehende ausdrückliche Freigabe des Eigentümers voraus. Der aktuelle Commit ist `b3c22e7`; GitHub erkennt `Apache-2.0`.
+**Empfehlung umgesetzt:** Nach den dokumentierten Korrekturen und dem verifizierten History-Rewrite (Abschnitt 12) wurde das Repository mit ausdrücklicher Eigentümerfreigabe auf `public` umgestellt. GitHub erkennt `Apache-2.0`; der erste anschließende CI-Lauf war grün. Der Bericht bleibt als Historie der Prüfung erhalten.
 
 ---
 
@@ -116,8 +116,9 @@ Gitleaks 8.30.1 scannte alle 590 Commits und den Arbeitsbaum.
 | Least privilege | Alle Workflows mit `permissions: contents: read` |
 | Änderungen in dieser Runde | **Keine** an Secrets, Workflows oder Signierungskonfiguration |
 | Freigabegrenze | Bestehende Secrets wurden nicht gelöscht, überschrieben oder rotiert |
+| Funktionsnachweis (nach `public`) | CI-Artefakt aus Lauf `45800089593` mit `apksigner verify --print-certs` geprüft: `CN=MeinWeg2, OU=Android, O=MeinWeg2`, SHA-256 `7240b34b…a0534ed`. Die stabilen CI-Signierungs-Secrets sind vorhanden und wirksam. |
 
-**Offen vor Veröffentlichung:** Klärung, ob die hochgeladenen signierten Artefakte (R-06) auch öffentlich herunterladbar sein sollen. Bis zur Entscheidung bleibt die Konfiguration unverändert.
+**Entscheidung umgesetzt (R-06):** Das signierte Update-Artefakt wird nur noch bei Release-Läufen/Tags hochgeladen; das Debug-APK aus normalen Pushes bleibt verfügbar. Die Signierungs-Secrets selbst blieben unverändert.
 
 ---
 
@@ -192,7 +193,7 @@ Der vollständige lokale Lauf dauerte 11m 31s (53 Tasks) und endete mit `BUILD S
 
 **Technisch und rechtlich: bereit.** Die Repository-Inhalte enthalten keine Secrets, keine privaten Schlüssel und keine echten personenbezogenen Daten. Die Lizenz ist geklärt, die historische E-Mail-Adresse wird entfernt, die Actions-Artefakte sind eingeschränkt, und die lokale Build-/Testkette ist grün. Der CI-Blocker ist administrativer Natur (Compute/Billing).
 
-**Freigabe:** Der Eigentümer hat Lizenz, History-Rewrite, OSM-/Datenschutzmaßnahmen und Artefakt-Einschränkung entschieden (Abschnitt 10). Die **ausdrückliche Freigabe zur Umstellung auf `public` wurde noch nicht erteilt** und wird hiermit angefordert. Nach der Umstellung ist der echte CI-Status erneut zu prüfen; ein erfolgreicher GitHub-Actions-Lauf liegt zum Zeitpunkt dieses Berichts **nicht** vor.
+**Nachtrag zur Veröffentlichung:** Der Eigentümer hat alle Entscheidungen getroffen und die Umstellung auf `public` ausdrücklich freigegeben; GitHub meldet seit 26.11.2026 `visibility=public` und `license=Apache-2.0`. Der anschließende [Android CI #45800089593](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45800089593) auf `c323364` lief vollständig grün (`preflight` 9 Schritte, `build-and-test` 15 Schritte) und lieferte ein signiertes Debug-APK-Artefakt. Die Instrumentierungs-, Emulator-, Live-Probe- und Release-Gates liefen dabei nicht und bleiben offen. Ein Push-Build ist weiterhin keine APK-Installations- oder Store-Freigabe.
 
 ---
 
