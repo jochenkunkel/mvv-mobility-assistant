@@ -67,14 +67,14 @@ GitHub Actions führt MVV-Live-Probes, Android-Tests und Emulator-UI-Tests aus. 
 ## Updates ohne Neuinstallation
 Android erlaubt ein Update nur bei identischer `applicationId`, kompatibler Signatur und höherem `versionCode`. Die App-ID bleibt `de.mvv.mobility`.
 
-Für dauerhafte Updates **einmalig** einen sicheren Release-Keystore erstellen und extern sichern. In den GitHub-Actions-Secrets hinterlegen:
+Für dauerhafte Updates wird der bereits konfigurierte stabile Signaturschlüssel verwendet. Er liegt ausschließlich in diesen GitHub-Actions-Secrets (nicht im Repository):
 
-- `MEIN_WEG_KEYSTORE_BASE64`: Base64 des Keystore-Dateiinhalts
-- `MEIN_WEG_KEYSTORE_PASSWORD`: Keystore-Passwort
-- `MEIN_WEG_KEY_ALIAS`: Schlüsselalias
-- `MEIN_WEG_KEY_PASSWORD`: Schlüsselpasswort
+- `MEIN_WEG_CI_SIGNING_KEY_B64`: Base64 des Keystore-Dateiinhalts
+- `MEIN_WEG_CI_SIGNING_STORE_PASSWORD`: Keystore-Passwort
+- `MEIN_WEG_CI_SIGNING_KEY_ALIAS`: Schlüsselalias
+- `MEIN_WEG_CI_SIGNING_KEY_PASSWORD`: Schlüsselpasswort
 
-Danach den Workflow **Signed Android Release** manuell starten. Er baut eine signierte APK und AAB, prüft die APK-Signatur und setzt eine monoton steigende Versionsnummer aus der Workflow-Run-Nummer. **Keystore und Passwörter niemals ins Repository committen.** Den einmaligen Wechsel von einer anders signierten Debug-APK auf die Release-APK kann Android nicht als In-Place-Update durchführen; dafür muss die alte Testinstallation deinstalliert werden. Danach sind Updates mit demselben Release-Schlüssel möglich.
+Der Workflow **Signed Android Release** übernimmt diese Werte intern unter den von Gradle erwarteten Namen und setzt so dieselbe Signatur wie bei den stabilen Update-APKs. Danach den Workflow manuell starten. Er baut eine signierte APK und AAB, prüft die APK-Signatur und setzt eine monoton steigende Versionsnummer aus der Workflow-Run-Nummer. **Keystore und Passwörter niemals ins Repository committen.** Den einmaligen Wechsel von einer anders signierten Debug-APK auf die Release-APK kann Android nicht als In-Place-Update durchführen; dafür muss die alte Testinstallation deinstalliert werden. Danach sind Updates mit demselben Release-Schlüssel möglich.
 
 Es gibt noch **keine automatische In-App-Updatefunktion**. Die Release-APK kann nach dem Download manuell als Update installiert werden. Eine Play-Store-Veröffentlichung erfordert zusätzliche Store-Metadaten, Richtlinienprüfung und gegebenenfalls Play App Signing.
 

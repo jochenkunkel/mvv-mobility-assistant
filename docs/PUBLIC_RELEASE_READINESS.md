@@ -109,7 +109,7 @@ Gitleaks 8.30.1 scannte alle 590 Commits und den Arbeitsbaum.
 
 | Aspekt | Befund |
 | --- | --- |
-| Release-Signierung | `release.yml` nutzt `MEIN_WEG_KEYSTORE_BASE64`, `MEIN_WEG_KEYSTORE_PASSWORD`, `MEIN_WEG_KEY_ALIAS`, `MEIN_WEG_KEY_PASSWORD` |
+| Release-Signierung | `release.yml` nutzt die vorhandenen Secrets `MEIN_WEG_CI_SIGNING_KEY_B64`, `MEIN_WEG_CI_SIGNING_STORE_PASSWORD`, `MEIN_WEG_CI_SIGNING_KEY_ALIAS`, `MEIN_WEG_CI_SIGNING_KEY_PASSWORD` |
 | CI-Debug-Signierung (stabile Updates) | `android.yml` nutzt `MEIN_WEG_CI_SIGNING_KEY_B64`, `MEIN_WEG_CI_SIGNING_STORE_PASSWORD`, `MEIN_WEG_CI_SIGNING_KEY_ALIAS`, `MEIN_WEG_CI_SIGNING_KEY_PASSWORD` |
 | Im Repository | Keine Keystore-Datei, kein Passwort, kein Base64-Blob |
 | Fork-PR-Schutz | Signierung wird in `android.yml` für `pull_request` übersprungen; `release.yml` ist nur `workflow_dispatch` |

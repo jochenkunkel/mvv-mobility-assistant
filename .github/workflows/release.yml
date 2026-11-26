@@ -40,11 +40,13 @@ jobs:
     needs: gate
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    # Reuse the existing stable CI signing secrets. The build script consumes
+    # MEIN_WEG_KEYSTORE_* env names; they are fed from the configured secrets.
     env:
-      MEIN_WEG_KEYSTORE_PASSWORD: ${{ secrets.MEIN_WEG_KEYSTORE_PASSWORD }}
-      MEIN_WEG_KEY_ALIAS: ${{ secrets.MEIN_WEG_KEY_ALIAS }}
-      MEIN_WEG_KEY_PASSWORD: ${{ secrets.MEIN_WEG_KEY_PASSWORD }}
-      MEIN_WEG_KEYSTORE_BASE64: ${{ secrets.MEIN_WEG_KEYSTORE_BASE64 }}
+      MEIN_WEG_KEYSTORE_PASSWORD: ${{ secrets.MEIN_WEG_CI_SIGNING_STORE_PASSWORD }}
+      MEIN_WEG_KEY_ALIAS: ${{ secrets.MEIN_WEG_CI_SIGNING_KEY_ALIAS }}
+      MEIN_WEG_KEY_PASSWORD: ${{ secrets.MEIN_WEG_CI_SIGNING_KEY_PASSWORD }}
+      MEIN_WEG_KEYSTORE_BASE64: ${{ secrets.MEIN_WEG_CI_SIGNING_KEY_B64 }}
       MEIN_WEG_KEYSTORE_PATH: ${{ github.workspace }}/release-keystore.jks
     steps:
       - uses: actions/checkout@v4
@@ -58,8 +60,8 @@ jobs:
       - name: Verify persistent signing secrets
         shell: bash
         run: |
-          test -n "$MEIN_WEG_KEYSTORE_BASE64" || { echo "::error::Missing persistent release keystore secret"; exit 1; }
-          test -n "$MEIN_WEG_KEYSTORE_PASSWORD" && test -n "$MEIN_WEG_KEY_ALIAS" && test -n "$MEIN_WEG_KEY_PASSWORD" || { echo "::error::Missing release signing secrets"; exit 1; }
+          test -n "$MEIN_WEG_KEYSTORE_BASE64" || { echo "::error::Missing stable CI signing key (MEIN_WEG_CI_SIGNING_KEY_B64)"; exit 1; }
+          test -n "$MEIN_WEG_KEYSTORE_PASSWORD" && test -n "$MEIN_WEG_KEY_ALIAS" && test -n "$MEIN_WEG_KEY_PASSWORD" || { echo "::error::Missing stable CI signing secrets"; exit 1; }
           printf '%s' "$MEIN_WEG_KEYSTORE_BASE64" | base64 --decode > "$MEIN_WEG_KEYSTORE_PATH"
           chmod 600 "$MEIN_WEG_KEYSTORE_PATH"
       - name: Build signed APK and AAB
