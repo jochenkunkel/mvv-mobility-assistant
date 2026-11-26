@@ -15,6 +15,7 @@
 | Secrets in der Git-Historie gefunden | **Nein** (590 Commits gescannt) |
 | Signierungsschlüssel im Repository | **Nein** – ausschließlich GitHub Actions Secrets |
 | Personenbezogene Daten in Testdaten | **Nein** (synthetische Koordinaten; ein Adressbeispiel in der Doku anonymisiert) |
+| Private E-Mail-Adresse in Git-Historie | **Ja** – 396 Commits; Freigabe für einen ggf. nötigen Rewrite einholen |
 | History-Rewrite erforderlich | **Nein** |
 | Technische Hindernisse für `public` | Keine Hard-Blocker gefunden |
 | Lizenz entschieden | **Nein** – Eigentümerentscheidung erforderlich |
@@ -126,6 +127,26 @@ Gitleaks 8.30.1 scannte alle 590 Commits und den Arbeitsbaum.
 
 ---
 
+## 8a. Third-Party- und Datenschutzprüfung (fokussierte Nachprüfung)
+
+| Prüfpunkt | Befund | Bewertung |
+| --- | --- | --- |
+| `LICENSE` / GitHub-Lizenzmetadaten | Kein `LICENSE`; API liefert `license: null` | **Blocker** für Open-Source-Veröffentlichung; Eigentümerentscheidung erforderlich |
+| Persönliche E-Mail in Git-Historie | `[alte private E-Mail-Adresse]` in **396** Commits (neben GitHub-Noreply-Adresse) | **Privatsphärenrisiko** bei `public`. GitHub kann die Adresse in der Weboberfläche verbergen, ein `git clone` enthält sie jedoch weiterhin im Klartext. Entfernung erfordert History-Rewrite → **nur mit ausdrücklicher Freigabe** |
+| Echte Kalender-/GPS-/Adressdaten im Repository | Keine. Alle Koordinaten in Tests sind synthetisch (z. B. 48.1000/11.5000); Fallback ist Marienplatz als öffentliches Wahrzeichen | **Sauber** |
+| Adressbeispiel in Dokumentation | Aus Screenshot-Kontext, durch Musteradresse ersetzt | Behoben |
+| Debug-Exporte | `GpsDebugRecorder` und `DebugResponseCapture` nur in Debug-Builds, opt-in, im Speicher begrenzt (2400 Events / 512 KB), Export über Android SAF, keine automatischen Schreib- oder Upload-Vorgänge | **Sauber**, aber bei Weitergabe exportierter Dateien Vorsicht geboten |
+| OSM-Kartenkacheln | `WalkingMiniMap` nutzt `TileSourceFactory.MAPNIK` (OpenStreetMap-Standardkacheln); **keine sichtbare Attribution im Code gefunden** | **Offen** – OSM-Tile-Nutzungsbedingungen verlangen „© OpenStreetMap contributors". Siehe Issue #11 |
+| Routing | `WalkingNavigation` nutzt öffentlichen OSRM-Server `routing.openstreetmap.de/routed-foot` | **Offen** – Nutzungsbedingungen/Rate-Limits und User-Agent zu prüfen (Issue #11) |
+| Geocoding | `DestinationLookup` nutzt Android `Geocoder`, der je nach Gerät einen Online-Dienst abfragen kann; Zieltexte können dabei an Anbieter übertragen werden | **Offen** – Datenschutzhinweis/Transparenz erforderlich (Issue #11) |
+| MVV EFA | Öffentlicher Endpunkt `efa.mvv-muenchen.de`, keine API-Keys im Repo | Kein Secrets-Risiko; Nutzungsbedingungen nicht dokumentiert |
+| Google Maps Link | Reiner `dir/?api=1`-Deeplink ohne API-Key | Unkritisch |
+| Drittanbieter-Lizenzen | Compose/Activity/Glance/osmdroid (Apache-2.0), `org.json` laut POM Public Domain, JUnit 4.13.2 (EPL-1.0, nur Test) | Kein Lizenzkonflikt erkannt; nach Wahl der Hauptlizenz trotzdem `NOTICE`/Abhängigkeitsliste empfehlenswert |
+
+**Fazit:** Inhaltlich liegen keine echten personenbezogenen Daten im Repository. Zwei Punkte sind vor einer öffentlichen Veröffentlichung rechtlich relevant und zu klären: **(1) die fehlende Hauptlizenz** und **(2) die 396 historischen Commits mit privater E-Mail-Adresse**. Drittanbieter-Attribution und Datenschutztransparenz sind offen und in Issue #11 erfasst; sie blockieren die Code-Veröffentlichung nicht, sollten aber vor einer Store-/Produktfreigabe geklärt werden.
+
+---
+
 ## 9. Testergebnisse dieser Runde (lokal)
 
 Folgende Befehle wurden **lokal auf diesem Checkout ausgeführt** (JDK 17, Gradle 8.13, Android SDK 35):
@@ -139,7 +160,10 @@ Folgende Befehle wurden **lokal auf diesem Checkout ausgeführt** (JDK 17, Gradl
 | `gitleaks detect --source . --no-git` (nach Bereinigung) | exit 0 – keine Funde im Worktree |
 | `gitleaks detect --source .` (Historie, nach Bereinigung) | 1 bekannter historischer False Positive aus `8f8cb49`, keine Secrets |
 
-Kotlin-/Gradle-Ergebnisse und Artefakte werden nach Abschluss des lokalen Builds in `docs/PROJECT_STATUS.md` dokumentiert. **Ein lokaler Erfolg ersetzt keinen GitHub-Actions-Lauch und keine Geräteabnahme.**
+| `gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug` (lokal) | 85 Unit-Tests bestanden (0 Fehler/errors/skipped), Debug-APK erzeugt |
+| `apksigner verify --print-certs app/build/outputs/apk/debug/app-debug.apk` | bestanden; Signatur ist das übliche Android-Debug-Zertifikat, **keine** stabile Update-Signatur |
+
+Android-Lint lief bei Erstellung dieses Berichts noch; das Ergebnis ist in `docs/PROJECT_STATUS.md` nachzutragen. **Ein lokaler Erfolg ersetzt keinen GitHub-Actions-Lauf und keine Geräteabnahme.**
 
 ---
 
@@ -150,7 +174,9 @@ Kotlin-/Gradle-Ergebnisse und Artefakte werden nach Abschluss des lokalen Builds
 3. **Artefakte (R-06):** Sollen signierte Update-APKs/AABs in öffentlich sichtbaren Actions-Runs als Artefakt verfügbar bleiben? Falls nein: Upload auf manuelle/tag-basierte Läufe beschränken oder Entfernung alter Artefakte prüfen. Keine Änderung ohne Freigabe.
 4. **Actions-Kontingent/Billing:** Die historische Blockade war laut dokumentierter Fehlermeldung ein Abrechnungs-/Budgetproblem. Ob `public` dieses Problem tatsächlich löst, ist **nicht** automatisch anzunehmen; nach Freigabe real prüfen.
 5. **CI-Logs:** Runner-/Policy-Diagnose administrativ klären, da Logs nicht abrufbar waren.
-6. **Rotationsprüfung:** Da keine Secrets gefunden wurden, besteht kein rotierender Bedarf. Falls der Eigentümer außerhalb des Repos vermutet, dass ein Key je exponiert war, ist er extern zu rotieren.
+6. **Persönliche E-Mail-Adresse:** `[alte private E-Mail-Adresse]` steht in 396 Commits. Soll sie vor `public` aus der Historie entfernt werden? Das erfordert einen History-Rewrite (z. B. `git filter-repo`) mit anschließendem Force-Push und **ausdrücklicher Freigabe**. Alternativ genügt ggf. die GitHub-Einstellung „E-Mail-Adressen privat halten" für die Weboberfläche – ein Clone bleibt davon unberührt.
+7. **OSM-/Routing-Attribution (Issue #11):** Soll die sichtbare „© OpenStreetMap contributors"-Attribution noch vor Veröffentlichung ergänzt werden? Sie ist nicht nur für die Veröffentlichung des Codes, sondern für die Kartennutzung selbst relevant.
+8. **Rotationsprüfung:** Da keine Secrets gefunden wurden, besteht kein rotierender Bedarf. Falls der Eigentümer außerhalb des Repos vermutet, dass ein Key je exponiert war, ist er extern zu rotieren.
 
 ---
 
@@ -162,6 +188,7 @@ Kotlin-/Gradle-Ergebnisse und Artefakte werden nach Abschluss des lokalen Builds
 
 - [ ] ausdrückliche Freigabe des Eigentümers,
 - [ ] Lizenzentscheidung und `LICENSE`-Datei,
+- [ ] Entscheidung zur privaten E-Mail-Adresse in 396 historischen Commits,
 - [ ] Entscheidung zur Sichtbarkeit signierter Artefakte (R-06).
 
 Erst nach diesen Schritten darf das Repository öffentlich geschaltet werden. Danach ist der tatsächliche CI-Status erneut zu prüfen und die vollständige Build-/Testkette zu dokumentieren; ein erfolgreicher GitHub-Actions-Lauf liegt zum Zeitpunkt dieses Berichts **nicht** vor.
