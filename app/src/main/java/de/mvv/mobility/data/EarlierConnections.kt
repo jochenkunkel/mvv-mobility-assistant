@@ -25,13 +25,14 @@ object EarlierConnectionsResolver {
         previous: List<JourneyOption>,
         loaded: List<JourneyOption>,
         nowMillis: Long,
+        referenceMillis: Long = nowMillis,
         zone: ZoneId = EfaTime.BERLIN
     ): List<EarlierJourney> {
         val seen = LinkedHashSet<List<String>>()
         val all = (previous + loaded).filter { seen.add(key(it)) }
         return all.map { option ->
             val first = option.steps.firstOrNull { !it.walking }?.departure ?: option.departure
-            val departure = option.departureInstantMillis ?: EfaTime.forNow(first, nowMillis, zone)
+            val departure = option.departureInstantMillis ?: EfaTime.forNow(first, referenceMillis, zone)
             EarlierJourney(option, departure, departure != null && departure < nowMillis)
         }.sortedWith(
             compareBy<EarlierJourney> { it.departureMillis ?: Long.MAX_VALUE }

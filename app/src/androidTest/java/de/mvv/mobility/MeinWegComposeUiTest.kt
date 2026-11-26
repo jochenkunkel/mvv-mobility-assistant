@@ -236,6 +236,25 @@ class MeinWegComposeUiTest {
         }
     }
 
+    /** #20: capture the actually rendered fullscreen dashboard for design review. */
+    @Test fun captureFullscreenDashboardForDesignReview() {
+        val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra("mein_weg_test_fixture", true)
+        ActivityScenario.launch<MainActivity>(intent).use { scenario ->
+            scenario.onActivity { activity ->
+                ViewModelProvider(activity)[NavigationSessionViewModel::class.java]
+                    .fullscreenMode = FullscreenMode.DASHBOARD
+            }
+            compose.waitForIdle()
+            compose.onNodeWithTag("fullscreen_dashboard").assertExists()
+            val folder = File(context.getExternalFilesDir(null), "design-review").apply { mkdirs() }
+            compose.onRoot().captureToImage().asAndroidBitmap()
+                .let { bitmap -> File(folder, "fullscreen-dashboard.png")
+                    .outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) } }
+        }
+    }
+
     /** #17: compact dashboard opens fullscreen without the app tab bar. */
     @Test fun fullscreenDashboardShowsDynamicJourneyState() {
         val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
@@ -316,6 +335,29 @@ class MeinWegComposeUiTest {
         compose.onNodeWithTag("earlier_connections_button").performClick()
         compose.waitForIdle()
         compose.onNodeWithTag("journey_past_badge").performScrollTo().assertExists()
+    }
+
+    /** #19: the selected appointment day must survive rotation and be visible. */
+    @Test fun searchDateSurvivesActivityRecreation() {
+        val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra("mein_weg_test_fixture", true)
+        ActivityScenario.launch<MainActivity>(intent).use { scenario ->
+            val tomorrow = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("Europe/Berlin"))
+                .apply { add(java.util.Calendar.DAY_OF_MONTH, 1) }.timeInMillis
+            scenario.onActivity { activity ->
+                val s = ViewModelProvider(activity)[NavigationSessionViewModel::class.java]
+                s.journeyTimingMode = "planned"
+                s.plannedAtMillis = tomorrow
+            }
+            compose.waitForIdle()
+            compose.onNodeWithTag("search_time_label").assertExists()
+            compose.onNodeWithTag("search_time_label").assertTextContains(
+                java.text.SimpleDateFormat("dd.MM.", java.util.Locale.GERMANY).format(java.util.Date(tomorrow)), substring = true)
+            scenario.recreate()
+            compose.onNodeWithTag("search_time_label").assertTextContains(
+                java.text.SimpleDateFormat("dd.MM.", java.util.Locale.GERMANY).format(java.util.Date(tomorrow)), substring = true)
+        }
     }
 
     @Test fun settingsOpenFromEveryTabAndCloseCleanly() = launchFixture {

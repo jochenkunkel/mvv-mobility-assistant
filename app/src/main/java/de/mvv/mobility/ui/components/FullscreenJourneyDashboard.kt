@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import de.mvv.mobility.data.ConnectionCheckState
 import de.mvv.mobility.data.UpcomingConnection
@@ -20,6 +21,8 @@ import de.mvv.mobility.data.UpcomingConnection
 @Composable
 fun FullscreenJourneyDashboard(
     countdown: String,
+    countdownContext: String,
+    gpsStatus: String,
     leaveAt: String,
     line: String,
     departure: String,
@@ -50,17 +53,21 @@ fun FullscreenJourneyDashboard(
                 .testTag("fullscreen_dashboard_back")) { Text("← Zurück") }
             Text("Meine Verbindung", style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            Text(warnings.firstOrNull { it.startsWith("GPS") } ?: "GPS-Status",
+            Text(gpsStatus,
+                color = if (gpsStatus == "GPS LIVE") Color(0xFF17733C) else Color(0xFF9A661B),
                 style = MaterialTheme.typography.labelSmall)
         }
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF5635B1))) {
-            Column(Modifier.padding(18.dp)) {
-                Text("NÄCHSTER SCHRITT", color = Color.White,
+            Column(Modifier.padding(14.dp)) {
+                Text("NÄCHSTE AKTION", color = Color.White,
                     style = MaterialTheme.typography.labelMedium)
                 Text(countdown, color = Color.White,
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.testTag("fullscreen_countdown"))
+                Text(countdownContext, color = Color.White,
+                    style = MaterialTheme.typography.titleMedium)
             }
         }
         InfoCard("LOSGEHEN", leaveAt, "fullscreen_leave")
@@ -104,6 +111,7 @@ fun FullscreenJourneyDashboard(
         TextButton(onClick = onEndSession, modifier = Modifier.testTag("fullscreen_end_session")) {
             Text("Navigation beenden und Spur löschen")
         }
+        Spacer(Modifier.height(24.dp))
     }
 }
 
@@ -111,12 +119,15 @@ private fun newSearchOffered(state: ConnectionCheckState?) = state == Connection
 
 @Composable
 private fun InfoCard(label: String, value: String, tag: String) {
-    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
-        Column(Modifier.padding(14.dp)) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+        Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(label, style = MaterialTheme.typography.labelSmall,
-                color = Color(0xFF62577D))
-            Text(value.ifBlank { "unbekannt" }, style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.testTag(tag))
+                color = Color(0xFF62577D), modifier = Modifier.width(96.dp))
+            Text(value.ifBlank { "unbekannt" }, style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium, textAlign = TextAlign.End,
+                modifier = Modifier.weight(1f).testTag(tag))
         }
     }
 }

@@ -58,6 +58,7 @@ import de.mvv.mobility.data.ConnectionCheckState
 import de.mvv.mobility.data.ConnectionStatusResolver
 import de.mvv.mobility.data.EarlierConnectionsResolver
 import de.mvv.mobility.data.EfaTime
+import de.mvv.mobility.data.JourneyTime
 import de.mvv.mobility.ui.components.FullscreenJourneyDashboard
 import de.mvv.mobility.ui.components.FullscreenWalkNavigation
 import androidx.activity.compose.BackHandler
@@ -108,6 +109,11 @@ class MainActivity : ComponentActivity() {
             }
         }
         val session = ViewModelProvider(this, sessionFactory)[NavigationSessionViewModel::class.java]
+        // QA hook for reproducible design-review screenshots; ignored in normal use.
+        when (intent.getStringExtra("mein_weg_test_fullscreen")) {
+            "dashboard" -> session.fullscreenMode = FullscreenMode.DASHBOARD
+            "navigation" -> session.fullscreenMode = FullscreenMode.NAVIGATION
+        }
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
@@ -1096,7 +1102,8 @@ class MainActivity : ComponentActivity() {
                                                 it.destinationCoordinates?.let { point -> resolvedWalkingTarget = destination to point }
                                                 journeys = if (earlierSearchOffsetMinutes > 0) {
                                                     EarlierConnectionsResolver.merge(
-                                                        previousJourneys, it.options, nowMillis).map { entry -> entry.option }
+                                                        previousJourneys, it.options, nowMillis,
+                                                        searchTimeMillis ?: nowMillis).map { entry -> entry.option }
                                                 } else if (journeyTimingMode == "now") {
                                                     reachableNowJourneys(it.options, nowDepartureMillis ?: nowMillis)
                                                 } else it.options
@@ -1153,6 +1160,14 @@ class MainActivity : ComponentActivity() {
                         }
                         if (!settingsExpanded && (selectedTab == CockpitTab.CONNECTIONS || (fixture && !visualFixture))) {
                         Text("Verbindungen", style = MaterialTheme.typography.titleLarge)
+                        val searchDateLabel = searchTimeMillis?.let {
+                            java.text.SimpleDateFormat("EEE, dd.MM. HH:mm", java.util.Locale.GERMANY)
+                                .apply { timeZone = java.util.TimeZone.getTimeZone("Europe/Berlin") }
+                                .format(java.util.Date(it))
+                        } ?: "Jetzt"
+                        Text("Suchzeitpunkt: $searchDateLabel",
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.testTag("search_time_label"))
                         LaunchedEffect(pendingNewSearch) {
                             if (pendingNewSearch) {
                                 pendingNewSearch = false
@@ -2113,16 +2128,34 @@ class MainActivity : ComponentActivity() {
                                     val remaining = (upcoming.departureMillis - clockMillis) / 60_000L - knownWalkMin
                                     if (remaining >= 0) "ca. $remaining Min. (Planwert)" else "unbekannt – Abfahrt erreicht"
                                 } else "unbekannt – Abfahrt oder Gehzeit unbekannt"
+                                val departureInstant = chosen?.let {
+                                    JourneyTime.departureMillis(it, searchTimeMillis ?: clockMillis)
+                                }
+                                val nextInstant: Long? = listOfNotNull<Long>(
+                                    upcoming?.departureMillis, departureInstant)
+                                    .filter { it >= clockMillis }.minOrNull()
+                                val countdownLabel = when {
+                                    upcoming != null && upcoming.departureMillis >= clockMillis ->
+                                        "Noch ${((upcoming.departureMillis - clockMillis) / 60_000L).coerceAtLeast(0)} Min. bis Anschluss"
+                                    nextInstant != null ->
+                                        "Noch ${((nextInstant - clockMillis) / 60_000L).coerceAtLeast(0)} Min. bis Abfahrt"
+                                    departureInstant != null -> "Abfahrt vorbei"
+                                    else -> "Zeitpunkt unbekannt"
+                                }
+                                val countdownContext = when {
+                                    upcoming != null && upcoming.departureMillis >= clockMillis ->
+                                        "${upcoming.step.line} · ${upcoming.step.departure} · ${upcoming.step.to}"
+                                    else -> "${chosen?.lines?.joinToString(", ").orBlank()} · ${chosen?.departure.orBlank()}"
+                                }
                                 val warningsFull = buildList {
                                     if (resolvedWalkingTarget?.second == null) add("⚠ MVV-Koordinaten fehlen – Einstieg auf Karte prüfen")
                                     if (navigationLocation == null) add("⚠ GPS nicht aktuell – Anzeige kann veraltet sein")
-                                    if (walkingRouteStatus.isNotBlank()) add(walkingRouteStatus)
+                                    if (chosen?.steps?.firstOrNull { !it.walking }?.toStop?.platform.isNullOrBlank()) add("⚠ Steig nicht eindeutig")
                                 }
                                 FullscreenJourneyDashboard(
-                                    countdown = if (upcoming != null) {
-                                        val minutes = ((upcoming.departureMillis - clockMillis) / 60_000L).coerceAtLeast(0)
-                                        "Noch $minutes Min. bis Anschluss"
-                                    } else routeStatus.ifBlank { "Route wird vorbereitet" },
+                                    countdown = countdownLabel,
+                                    countdownContext = countdownContext,
+                                    gpsStatus = if (navigationLocation != null) "GPS LIVE" else "GPS veraltet",
                                     leaveAt = chosen?.steps?.firstOrNull { it.walking }?.departure.orBlank(),
                                     line = chosen?.lines?.joinToString(", ").orBlank(),
                                     departure = departureClock,

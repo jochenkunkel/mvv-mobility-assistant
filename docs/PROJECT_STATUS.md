@@ -1,3 +1,11 @@
+## Neue Tickets #19/#20 – 26.11.2026 (Umsetzung)
+
+- **#19 Datumsverlust:** `JourneyTime.departureMillis/arrivalMillis` nutzt absolute EFA-Instants oder löst HH:mm gegen den **gewählten Suchzeitpunkt** auf, nicht gegen „heute"; `earlier_connections` erhält denselben Referenzzeitpunkt. Suchdatum wird als `search_time_label` sichtbar und überlebt Rotation. „Abgefahren" vergleicht jetzt vollständige Instants. Icon-Mapping: unbekannter Verkehrsmitteltyp zeigt neutrales `🚏` statt fälschlich Bus.
+- **#20 Dashboard 5:** Vollbild-Dashboard an die SVG angeglichen: dominanter Countdown mit Kontext, kompakte Informationszeilen, echter GPS-Status, sichtbare Warnungen, keine falsch eingefärbten Statusmeldungen, vollständig sichtbare Beenden-Aktion. Vorher-/Nachher-Screenshots und Abgleich: `docs/design/review/DASHBOARD-5-REVIEW.md`.
+- **Verifikation:** `:app:testDebugUnitTest` erfolgreich (neue `JourneyTimeTest`), `:app:connectedDebugAndroidTest` **38 Tests, 0 Fehler** (neuer Datumstest, Screenshot-Test), Golden-Bilder neu erfasst und lokal grün. Emulator-Sichtprüfung gegen die SVG durchgeführt; echtes S25-Gerät weiterhin offen.
+
+---
+
 ## Neue Tickets #15–#18 – 26.11.2026 (Umsetzung)
 
 - **#15 Check-in/verpasster Anschluss:** `ConnectionStatusResolver` findet nur echte, anstehende Umstiege (manuell, idempotent); `NavigationSessionViewModel` hält `connectionChecks`, `newSearchOffered` und `pendingNewSearch`. „Neue Suche" nutzt bestehendes Ziel und aktuellen Start, übernimmt keine Route automatisch.

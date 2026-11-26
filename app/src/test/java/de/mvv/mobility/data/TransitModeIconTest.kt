@@ -15,8 +15,8 @@ class TransitModeIconTest {
     @Test fun fallsBackToRecognizableLinePrefixesOnly() {
         assertEquals("🚇", TransitModeIcon.symbol("", "U6"))
         assertEquals("Ⓢ", TransitModeIcon.symbol("", "S8"))
-        assertEquals("🚍", TransitModeIcon.symbol("", "56"))
-        assertEquals("🚍", TransitModeIcon.symbol("", "U"))
+        assertEquals("🚏", TransitModeIcon.symbol("", "56"))
+        assertEquals("🚏", TransitModeIcon.symbol("", "U"))
     }
 
     @Test fun walkingOverridesProductAndUsesOwnIcon() {

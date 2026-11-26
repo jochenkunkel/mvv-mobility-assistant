@@ -18,7 +18,8 @@ object TransitModeIcon {
             mode.contains("bus") -> "🚌"
             route.matches(Regex("S\\d{1,2}[A-Z]?")) -> "Ⓢ"
             route.matches(Regex("U\\d{1,2}[A-Z]?")) -> "🚇"
-            else -> "🚍"
+            // Unknown product must not be presented as a bus.
+            else -> "🚏"
         }
     }
 
@@ -29,6 +30,7 @@ object TransitModeIcon {
             "🚇" -> "U-Bahn"
             "🚋" -> "Tram"
             "🚌" -> "Bus"
+            "🚏" -> "ÖPNV (Typ unbekannt)"
             else -> "ÖPNV"
         }
     }
