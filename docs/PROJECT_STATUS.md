@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 26.11.2026, 02:22 MEZ (wiederholte Activity-Recreation)
+
+- **Live-Prüfung:** main vor Änderung `5cc77f8`; README, Roadmap, Testmatrix, NavigationTraceViewModel, Instrumentierungstest, Issues und PRs geprüft. Elf offene Issues, keine offenen PRs; Main-/Schedule-Chats nicht vollständig live zugänglich.
+- **Codepaket:** [98031a4](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/98031a4fb83c1acfb5b37db278e9ce31e8cc6420) erweitert `NavigationTraceRecreationTest`: Nach erster Activity-Neuerstellung einen dritten GPS-Fix anhängen und nach zweiter Neuerstellung die fortlaufende Spur sowie die ursprüngliche ViewModel-Instanz prüfen. Dies testet wiederholte Recreation, **nicht** echte Orientierungswechsel, Route/Ziel/Puffer oder Prozessneustart.
+- **Tests/CI:** Instrumentierungstest nicht ausgeführt. Letzter Commit-Status vor Änderung: `statuses=[]`, kein Buildnachweis. Zuletzt dokumentierter Android-CI-Lauf #548 mit Preflight-Fehler; Ursache weiterhin nicht belegt. Keine APK-Freigabe.
+- **Nächste Priorität:** Test auf API-35-Emulator ausführen und Portrait→Landscape→Portrait mit aktiver Route, Ziel, Puffer und Spur ergänzen. Runner-Setup-Annotations prüfen; keine Workflow-/Signing-/Secrets-Änderung auf Verdacht.
+
 ## Entwicklungsabgleich – 26.11.2026, 00:24 MEZ (GPS-Regressionen erweitert)
 
 - **Live-Baseline:** main vor Änderung `45e3904`; README, Roadmap, Status, NavigationTraceViewModel, WalkedTrace, Testdatei, Issues und PRs geprüft. Elf offene Issues, keine offenen PRs. Main-/Schedule-Chats nicht vollständig live verfügbar.
