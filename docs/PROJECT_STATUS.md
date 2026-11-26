@@ -1,3 +1,14 @@
+## Implementierungsanalyse #17 – 26.11.2026, 18:25 MEZ
+
+- **Live-Stand vor Änderung:** main `1426132d954c15cccb0890fc51ec49971b2187b1`. [Push-CI #45857928001](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45857928001) ist `completed/success` für genau diesen Commit. Das ist **kein** Nachweis für #17 oder vollständige Release-/Emulator-Abnahme. Vier offene Issues #15–#18, keine Feature-Umsetzung durch diesen Lauf.
+- **Codebefund (konkret):** `MainActivity.kt` zeigt die globale Kopfzeile in der Haupt-`Column` (ca. Z. 520–540) und `CockpitNavigation(selectedTab)` bedingungslos am Ende (ca. Z. 2033). Die Fahrtansicht wird nur über `selectedTab == CockpitTab.JOURNEY` eingeblendet (ca. Z. 1361), der Verbindungs-Button setzt `dashboardJourney = index; selectedTab = JOURNEY` (ca. Z. 1896). **Die App-Tab-Leiste ist deshalb aktuell auch bei ausgewählter Fahrt sichtbar**, im Widerspruch zu #17.
+- **Test-Konflikt vor Änderung beheben:** `MeinWegComposeUiTest.kt` enthält Tests, die nach `open_walking_dashboard` noch `tab_journey` anklicken (ca. Z. 163 und 271). Ein bloßes Verstecken der Bottom-Leiste würde diese Tests brechen. `bottomNavigationKeepsThreeDestinationsAccessible` soll für normale Tabs erhalten bleiben.
+- **Kleinstes sicheres Codepaket:** Einen expliziten UI-Zustand `isActiveJourneyFullscreen = selectedTab == JOURNEY && (dashboardJourney != null || walkingOnlyDashboard)` einführen, `CockpitNavigation` nur bei `!isActiveJourneyFullscreen` rendern und im Vollbild einen zugänglichen Zurück-Button anbieten, der zu Verbindungen wechselt **ohne** `dashboardJourney`/Spur zu löschen. Android-Statusleiste nicht ausblenden. Sicherstellen, dass kein Debug-/Fixture-Sonderfall die visuelle Referenz verfälscht. Danach die zwei oben genannten Tests anpassen und Assertions für versteckte Tabs, Back und `ActivityScenario.recreate()` ergänzen.
+- **Weiterer UX-Schritt:** Kompaktes Layout/Countdown aus echten Zustandswerten, ohne Puffer zu erfinden. #18 danach, #15/#16 unverändert. **Keine Codeänderung in diesem Lauf**, da zuerst die vorhandenen Instrumentierungstest-Annahmen erfasst wurden; keine Tests lokal ausgeführt. Kein Signing-/Secret-Eingriff, keine APK-Freigabe.
+- **Andere Chats:** Vollständige Main-/Schedule-Chatverläufe nicht live abrufbar; nur sichtbare Entscheidungen #15–#18 übernommen.
+
+---
+
 ## CI-Abgleich – 26.11.2026, 17:20 MEZ
 
 - **Live geprüft:** GitHub Actions [Push-CI #45847703945](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45847703945) auf `d769a2e` ist **completed/success**; `preflight` und `build-and-test` erfolgreich. Die Jobs `mvv-live-probe`, `door-to-door-live-probe`, `emulator-smoke-test` und `release-acceptance` wurden in diesem Push-Lauf **übersprungen**. Somit ist **kein vollständiger Release-/Emulator-Gate-Nachweis** für `d769a2e` vorhanden.
