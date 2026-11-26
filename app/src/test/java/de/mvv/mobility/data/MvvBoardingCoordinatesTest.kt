@@ -4,6 +4,21 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class MvvBoardingCoordinatesTest {
+    @Test fun stopCandidatesCarryEfaCoordinates() {
+        val json = """
+            {"destination":{"points":[
+              {"stateless":"de:09162:1","name":"Olympiapark West","anyType":"stop",
+               "quality":"300","coord":{"x":11.5536,"y":48.1775},"platform":"2"}
+            ]}}
+        """.trimIndent()
+        val candidate = MvvJourneyRepository.candidates(json).single()
+        val position = requireNotNull(candidate.position)
+        assertEquals(48.1775, position.latitude, 0.000001)
+        assertEquals(11.5536, position.longitude, 0.000001)
+        assertEquals("de:09162:1", position.stopId)
+        assertEquals("2", position.platform)
+    }
+
     @Test fun retainsBoardingStopCoordinatesAndPlatform() {
         val json = """
             {"trips":{"trip":{"legs":[

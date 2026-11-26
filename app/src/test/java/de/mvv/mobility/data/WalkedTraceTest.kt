@@ -8,6 +8,29 @@ class WalkedTraceTest {
     private fun fix(time: Long, lat: Double = 48.1, accuracy: Float = 5f) =
         TraceFix(lat, 11.5, time, accuracy)
 
+    @Test fun monotonicElapsedTimeSurvivesWallClockChange() {
+        val first = TraceFix(48.1, 11.5, 1_000L, 5f, 1_000_000_000L)
+        // Wall clock jumps backwards (DST/manual change); monotonic clock still advances.
+        val second = TraceFix(48.10001, 11.5, 500L, 5f, 12_000_000_000L)
+        val trace = WalkedTrace().accept(first).accept(second)
+        assertEquals(2, trace.fixes.size)
+        assertEquals(1, trace.segments.size)
+    }
+
+    @Test fun mixedClockBasesAreRejectedInsteadOfMisordered() {
+        val first = TraceFix(48.1, 11.5, 1_000L, 5f, 1_000_000_000L)
+        val secondNoElapsed = TraceFix(48.10001, 11.5, 2_000L, 5f)
+        val trace = WalkedTrace().accept(first)
+        assertSame(trace, trace.accept(secondNoElapsed))
+    }
+
+    @Test fun gapBoundaryUsesMonotonicElapsedTime() {
+        val first = TraceFix(48.1, 11.5, 1_000L, 5f, 1_000_000_000L)
+        val afterGap = TraceFix(48.1001, 11.5, 100L, 5f, 200_000_000_000L)
+        val trace = WalkedTrace().accept(first).accept(afterGap)
+        assertEquals(2, trace.segments.size)
+    }
+
     @Test fun orderedFixesStayInOneSegment() {
         val trace = WalkedTrace().accept(fix(1000)).accept(fix(2000, 48.10001)).accept(fix(3000, 48.10002))
         assertEquals(listOf(48.1, 48.10001, 48.10002), trace.fixes.map { it.latitude })

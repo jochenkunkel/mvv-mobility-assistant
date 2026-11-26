@@ -11,7 +11,9 @@ data class TraceFix(
     val latitude: Double,
     val longitude: Double,
     val timestampMillis: Long,
-    val accuracyMeters: Float
+    val accuracyMeters: Float,
+    /** Monotonic clock from Location.elapsedRealtimeNanos; preferred for ordering. */
+    val elapsedRealtimeNanos: Long? = null
 )
 
 data class WalkedTrace(
@@ -57,10 +59,21 @@ data class WalkedTrace(
             gapMillis < 0L) return this
 
         val previous = segments.lastOrNull()?.lastOrNull()
-        if (previous != null && fix.timestampMillis <= previous.timestampMillis) return this
+        if (previous != null) {
+            val previousElapsed = previous.elapsedRealtimeNanos
+            val currentElapsed = fix.elapsedRealtimeNanos
+            // Mixed clock bases cannot be compared safely; fail closed instead
+            // of accepting an out-of-order point after a wall-clock change.
+            if ((previousElapsed == null) != (currentElapsed == null)) return this
+            val currentKey = currentElapsed ?: fix.timestampMillis
+            val previousKey = previousElapsed ?: previous.timestampMillis
+            if (currentKey <= previousKey) return this
+        }
         if (previous == null) return WalkedTrace(listOf(listOf(fix)))
 
-        val elapsedMillis = fix.timestampMillis - previous.timestampMillis
+        val elapsedMillis = if (fix.elapsedRealtimeNanos != null && previous.elapsedRealtimeNanos != null)
+            (fix.elapsedRealtimeNanos - previous.elapsedRealtimeNanos) / 1_000_000L
+        else fix.timestampMillis - previous.timestampMillis
         // A long outage starts a new segment; never interpolate across the gap.
         if (elapsedMillis > gapMillis) return WalkedTrace(segments + listOf(listOf(fix)))
 

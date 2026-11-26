@@ -28,11 +28,19 @@ object CurrentLocationRepository {
     fun isFreshFix(fix: Location, maxAgeMillis: Long = LocationFreshness.MAX_AGE_MILLIS): Boolean =
         ageMillis(fix)?.let { it <= maxAgeMillis } ?: false
 
-    /** Prefer monotonic timestamps when both fixes have them. */
-    fun isNewer(fix: Location, previous: Location): Boolean =
-        if (fix.elapsedRealtimeNanos > 0L && previous.elapsedRealtimeNanos > 0L)
+    /**
+     * Prefer monotonic timestamps when both fixes have them. Mixed clock bases
+     * cannot be compared safely after a wall-clock change, so reject the
+     * candidate rather than replacing a good fix with an older one.
+     */
+    fun isNewer(fix: Location, previous: Location): Boolean {
+        val currentElapsed = fix.elapsedRealtimeNanos > 0L
+        val previousElapsed = previous.elapsedRealtimeNanos > 0L
+        if (currentElapsed != previousElapsed) return false
+        return if (currentElapsed)
             fix.elapsedRealtimeNanos > previous.elapsedRealtimeNanos
         else fix.time > previous.time
+    }
 
     fun request(context: Context, onResult: (Location?) -> Unit) {
         if (!hasPermission(context)) {
@@ -53,7 +61,11 @@ object CurrentLocationRepository {
         }
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                manager.getCurrentLocation(provider, CancellationSignal(), context.mainExecutor) { onResult(it) }
+                manager.getCurrentLocation(provider, CancellationSignal(), context.mainExecutor) {
+                    // getCurrentLocation can return a cached fix; never present an
+                    // old position as current navigation input.
+                    onResult(it?.takeIf { fix -> isFreshFix(fix, 30_000L) })
+                }
             } else {
                 @Suppress("DEPRECATION")
                 onResult(manager.getLastKnownLocation(provider)?.takeIf {

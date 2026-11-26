@@ -92,6 +92,13 @@ class MainActivity : ComponentActivity() {
         GpsDebugRecorder.enabled = gpsDebugEnabled
         GpsDebugRecorder.clear()
         val navigationTraceViewModel = ViewModelProvider(this)[NavigationTraceViewModel::class.java]
+        val sessionFactory = object : ViewModelProvider.Factory {
+            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                @Suppress("UNCHECKED_CAST")
+                return NavigationSessionViewModel(getPreferences(MODE_PRIVATE), fixture) as T
+            }
+        }
+        val session = ViewModelProvider(this, sessionFactory)[NavigationSessionViewModel::class.java]
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
@@ -140,18 +147,18 @@ class MainActivity : ComponentActivity() {
                     var visibleAppointments by remember { mutableIntStateOf(10) }
                     var appointmentPickerExpanded by remember { mutableStateOf(false) }
                     var advancedExpanded by remember { mutableStateOf(false) }
-                    var selectedAppointmentStart by remember { mutableStateOf<Long?>(null) }
+                    var selectedAppointmentStart by session::selectedAppointmentStart
                     val fixtureBaseTime = remember { System.currentTimeMillis() }
                     val appointments = remember(allowed, refresh, visibleAppointments) {
                         if (fixture) (1..visibleAppointments).map { index ->
                             UpcomingAppointment("Testtermin $index", "Olympiapark München", fixtureBaseTime + index * 3600000L)
                         } else if (allowed) DeviceCalendarRepository.appointments(this, visibleAppointments) else emptyList()
                     }
-                    var arrivalBufferMinutes by remember { mutableIntStateOf(getPreferences(MODE_PRIVATE).getInt("arrival_buffer_minutes", 10).coerceIn(5, 60)) }
+                    var arrivalBufferMinutes by session::arrivalBufferMinutes
                     // The calendar must never influence "Jetzt" or "Geplant".
-                    var journeyTimingMode by remember { mutableStateOf<String?>(null) }
-                    var plannedArrival by remember { mutableStateOf(false) }
-                    var plannedAtMillis by remember { mutableLongStateOf(System.currentTimeMillis() + 60 * 60000L) }
+                    var journeyTimingMode by session::journeyTimingMode
+                    var plannedArrival by session::plannedArrival
+                    var plannedAtMillis by session::plannedAtMillis
                     val appointment = if (journeyTimingMode == "calendar")
                         (appointments.firstOrNull { it.startMillis == selectedAppointmentStart } ?: appointments.firstOrNull())
                         else null
@@ -163,10 +170,10 @@ class MainActivity : ComponentActivity() {
                         "planned" -> plannedAtMillis
                         else -> null
                     }
-                    var confirmedDestination by remember { mutableStateOf("") }
-                    var addressSuggestions by remember { mutableStateOf<List<String>>(emptyList()) }
-                    var lookupStatus by remember { mutableStateOf("") }
-                    var lookupRequest by remember { mutableIntStateOf(0) }
+                    var confirmedDestination by session::confirmedDestination
+                    var addressSuggestions by session::addressSuggestions
+                    var lookupStatus by session::lookupStatus
+                    var lookupRequest by session::lookupRequest
                     val destinationFocus = LocalFocusManager.current
                     LaunchedEffect(confirmedDestination) {
                         val query = confirmedDestination.trim()
@@ -216,18 +223,18 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-                    var walkingSpeed by remember { mutableFloatStateOf(getPreferences(MODE_PRIVATE).getFloat("walking_speed_kmh", 3.0f)) }
-                    var routeStatus by remember { mutableStateOf("") }
-                    var journeys by remember { mutableStateOf<List<JourneyOption>>(emptyList()) }
-                    var expandedJourney by remember { mutableStateOf<Int?>(null) }
-                    var dashboardJourney by remember { mutableStateOf<Int?>(null) }
-                    var walkingRoute by remember { mutableStateOf<WalkingRoute?>(null) }
-                    var resolvedWalkingTarget by remember { mutableStateOf<Pair<String, de.mvv.mobility.data.StopPosition>?>(null) }
-                    var walkingOnlyFallback by remember { mutableStateOf(false) }
-                    var walkingOnlyDashboard by remember { mutableStateOf(false) }
-                    var walkingRouteStatus by remember { mutableStateOf("") }
-                    var walkingNavigationOpen by remember { mutableStateOf(false) }
-                    var walkingRequestId by remember { mutableIntStateOf(0) }
+                    var walkingSpeed by session::walkingSpeed
+                    var routeStatus by session::routeStatus
+                    var journeys by session::journeys
+                    var expandedJourney by session::expandedJourney
+                    var dashboardJourney by session::dashboardJourney
+                    var walkingRoute by session::walkingRoute
+                    var resolvedWalkingTarget by session::resolvedWalkingTarget
+                    var walkingOnlyFallback by session::walkingOnlyFallback
+                    var walkingOnlyDashboard by session::walkingOnlyDashboard
+                    var walkingRouteStatus by session::walkingRouteStatus
+                    var walkingNavigationOpen by session::walkingNavigationOpen
+                    var walkingRequestId by session::walkingRequestId
                     var clockMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
                     LaunchedEffect(Unit) {
                         while (true) {
@@ -235,30 +242,19 @@ class MainActivity : ComponentActivity() {
                             delay(5_000L)
                         }
                     }
-                    var journeyLoading by remember { mutableStateOf(false) }
-                    var searchGeneration by remember { mutableIntStateOf(0) }
+                    var journeyLoading by session::journeyLoading
+                    var searchGeneration by session::searchGeneration
                     val settings = remember { getPreferences(MODE_PRIVATE) }
-                    var routeFilterMode by remember {
-                        mutableStateOf(
-                            runCatching {
-                                RouteFilterMode.valueOf(settings.getString("route_filter_mode", RouteFilterMode.ANY.name) ?: RouteFilterMode.ANY.name)
-                            }.getOrDefault(RouteFilterMode.ANY)
-                        )
-                    }
-                    var routeFilterQuery by remember {
-                        mutableStateOf(settings.getString("route_filter_query", "") ?: "")
-                    }
+                    var routeFilterMode by session::routeFilterMode
+                    var routeFilterQuery by session::routeFilterQuery
                     var settingsExpanded by remember { mutableStateOf(false) }
                     var homeAddress by remember { mutableStateOf(settings.getString("home_address", "") ?: "") }
                     var homeSaved by remember { mutableStateOf(homeAddress.isNotBlank()) }
                     var languageChoice by remember { mutableStateOf(settings.getString("language_choice", "system") ?: "system") }
 
-                    var mvvCandidates by remember { mutableStateOf<List<MvvJourneyRepository.StopCandidate>>(emptyList()) }
-                    var location by remember { mutableStateOf<Location?>(if (fixture) Location("test").apply {
-                        latitude = 48.137154
-                        longitude = 11.576124
-                    } else null) }
-                    var locationStatus by remember { mutableStateOf("Noch kein Standort abgerufen") }
+                    var mvvCandidates by session::mvvCandidates
+                    var location by session::location
+                    var locationStatus by session::locationStatus
                     var locationPermissionGranted by remember {
                         mutableStateOf(CurrentLocationRepository.hasPermission(this@MainActivity))
                     }
@@ -392,9 +388,14 @@ class MainActivity : ComponentActivity() {
                                             found.hasAccuracy() && found.accuracy <= 35f) {
                                             // Keep real GPS history independent of planned route geometry.
                                              // A missing provider timestamp must not be fabricated.
-                                             if (found.time > 0L) {
+                                             val elapsed = found.elapsedRealtimeNanos
+                                             if (found.time > 0L || elapsed > 0L) {
                                                  val fix = de.mvv.mobility.data.TraceFix(
-                                                     found.latitude, found.longitude, found.time, found.accuracy
+                                                     latitude = found.latitude,
+                                                     longitude = found.longitude,
+                                                     timestampMillis = found.time,
+                                                     accuracyMeters = found.accuracy,
+                                                     elapsedRealtimeNanos = elapsed.takeIf { it > 0L }
                                                  )
                                                  navigationTraceViewModel.acceptFix(fix)
                                              }
@@ -417,18 +418,15 @@ class MainActivity : ComponentActivity() {
                     val appointmentAnchor = remember { BringIntoViewRequester() }
                     val connectionsAnchor = remember { BringIntoViewRequester() }
                     val journeyAnchor = remember { BringIntoViewRequester() }
-                    var selectedTab by remember { mutableStateOf(CockpitTab.START) }
+                    var selectedTab by session::selectedTab
 
                     // Re-route only after three distinct, reliable off-route GPS fixes.
                     // A cooldown prevents repeated network requests in narrow streets.
-                    var offRouteFixes by remember { mutableIntStateOf(0) }
-                    var lastOffRouteFixTime by remember { mutableLongStateOf(0L) }
-                    var lastRerouteAt by remember { mutableLongStateOf(0L) }
-                    var rerouting by remember { mutableStateOf(false) }
-                    LaunchedEffect(walkingRoute) {
-                        offRouteFixes = 0
-                        lastOffRouteFixTime = 0L
-                    }
+                    var offRouteFixes by session::offRouteFixes
+                    var lastOffRouteFixTime by session::lastOffRouteFixTime
+                    var lastRerouteAt by session::lastRerouteAt
+                    var rerouting by session::rerouting
+                    LaunchedEffect(walkingRoute) { session.noteRouteForEvidenceReset(walkingRoute) }
                     LaunchedEffect(navigationLocation?.time, walkingRoute, walkingOnlyDashboard,
                         walkingNavigationOpen, selectedTab, appForeground) {
                         val fix = navigationLocation
@@ -470,10 +468,8 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    var voiceMuted by remember {
-                        mutableStateOf(getPreferences(MODE_PRIVATE).getBoolean("walking_voice_muted", false))
-                    }
-                    var speechReady by remember { mutableStateOf(false) }
+                    var voiceMuted by session::voiceMuted
+                    var speechReady by session::speechReady
                     val speech = remember { arrayOfNulls<TextToSpeech>(1) }
                     DisposableEffect(Unit) {
                         val engine = TextToSpeech(this@MainActivity) { status ->
@@ -492,9 +488,9 @@ class MainActivity : ComponentActivity() {
                     val spokenTurnKey = spokenTurn?.first?.let {
                         "${it.latitude},${it.longitude},${it.instruction}"
                     }
-                    var lastSpokenTurnKey by remember { mutableStateOf<String?>(null) }
+                    var lastSpokenTurnKey by session::lastSpokenTurnKey
                     LaunchedEffect(walkingRoute, walkingOnlyDashboard, walkingNavigationOpen) {
-                        lastSpokenTurnKey = null
+                        session.noteVoiceSession(walkingRoute, walkingOnlyDashboard, walkingNavigationOpen)
                     }
                     LaunchedEffect(spokenTurnKey, voiceMuted, speechReady, selectedTab) {
                         if (!voiceMuted && speechReady && spokenTurnKey != null &&
@@ -517,7 +513,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    var activeSetupStep by remember { mutableIntStateOf(0) }
+                    var activeSetupStep by session::activeSetupStep
                     Column(Modifier.fillMaxSize().background(Color(0xFFF7F6FB))) {
                     Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(
@@ -1426,7 +1422,7 @@ class MainActivity : ComponentActivity() {
                                             color = Color.White
                                         ) {
                                             WalkingMiniMap(
-                                                                     route, location,
+                                                                     route, navigationLocation,
                                                                      walkedSegments = navigationTraceViewModel.walkedTrace.segments.map { segment ->
                                                                          segment.map { it.latitude to it.longitude }
                                                                      }
@@ -1438,9 +1434,15 @@ class MainActivity : ComponentActivity() {
                                     Text("OSM-Fußwegführung ist experimentell. Weg und Ziel bitte prüfen.",
                                         style = MaterialTheme.typography.labelSmall)
                                     OutlinedButton(onClick = {
+                                        // Explicit session end is the only operation that clears recorded GPS history.
+                                        navigationTraceViewModel.clearSession()
+                                        walkingRouteStatus = ""
                                         walkingOnlyDashboard = false
+                                        walkingNavigationOpen = false
                                         selectedTab = CockpitTab.CONNECTIONS
-                                    }) { Text("Zurück zu Verbindungen") }
+                                    }, modifier = Modifier.fillMaxWidth().testTag("end_walking_session")) {
+                                        Text("Navigation beenden und Spur löschen")
+                                    }
                                 }
                             }
                         }
@@ -1720,7 +1722,7 @@ class MainActivity : ComponentActivity() {
                                                                 shape = RoundedCornerShape(14.dp),
                                                                 color = Color(0xFFF2EFFA)) {
                                                                 WalkingMiniMap(
-                                                                     route, location,
+                                                                     route, navigationLocation,
                                                                      walkedSegments = navigationTraceViewModel.walkedTrace.segments.map { segment ->
                                                                          segment.map { it.latitude to it.longitude }
                                                                      }
@@ -1743,6 +1745,11 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             }
                                         }
+                                        TextButton(onClick = {
+                                            navigationTraceViewModel.clearSession()
+                                            dashboardJourney = null
+                                            selectedTab = CockpitTab.CONNECTIONS
+                                        }, modifier = Modifier.testTag("end_walking_session")) { Text("Navigation beenden und Spur löschen") }
                                         TextButton(onClick = { dashboardJourney = null; selectedTab = CockpitTab.CONNECTIONS }) { Text("Dashboard schließen") }
                                     }
                                 }
@@ -1774,7 +1781,7 @@ class MainActivity : ComponentActivity() {
                             }
                             val busIn = firstBus?.let { minutesUntil(it.departure) }
                             Card(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth().testTag("journey_summary"),
                                 shape = RoundedCornerShape(20.dp),
                                 colors = CardDefaults.cardColors(containerColor = if (index == 0) Color(0xFFF0ECFF) else Color.White),
                                 elevation = CardDefaults.cardElevation(defaultElevation = if (index == 0) 4.dp else 2.dp)

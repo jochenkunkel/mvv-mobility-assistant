@@ -1,3 +1,15 @@
+## Entwicklungsrunde – 26.11.2026, Tickets [01]–[11] (Umsetzung)
+
+- **Neuer State-Owner:** `NavigationSessionViewModel.kt` hält Konfiguration, Ziel, Auswahl, Route, Tab, Request-Generations und Off-Route-Evidenz Activity-scoped; `MainActivity` nutzt ihn über delegierte Properties. Beide ViewModels überleben Rotation; Prozessende bleibt bewusst nicht persistiert. Explizites Session-Ende löscht die Spur (`end_walking_session`).
+- **GPS-Spur (#14/#6):** `TraceFix` hat optionale monotone `elapsedRealtimeNanos`; `WalkedTrace` nutzt sie für Ordnung/Lücken und lehnt gemischte Zeitbasen ab. `CurrentLocationRepository.request()` verwirft alte getCurrentLocation-Fixes, `isNewer` fail-closed bei gemischten Zeitbasen. Karte zeigt Einzelfix-Punkte statt sie zu verwerfen, kein künstliches Verbinden über Lücken.
+- **Navigation (#3/#4):** Karte bekommt nur `navigationLocation`; Heading/Kamera ohne gültige Richtung kein 70-m-Offset; `RouteProgress.Projection.fraction` wird von Karte und Abbiegungen gemeinsam genutzt; 180°/270°-Tests. EFA-Kandidaten tragen Koordinaten/Stop-ID, `search()` reicht sie ans Routing durch; Geocoder-Fallback lehnt mehrere gleichnamige Stopps ab.
+- **Zeit (#5):** `EfaTime` löst DST-Lücke/Doppelstunde via `ZoneRules`, EFA-`rtTime` vor `time`, absolute Instants in `JourneyOption`, Mitternacht/Tageswechsel in Auswahl- und Jetzt-Filtern.
+- **Architektur/UI/Test/Doku (#7/#9/#10/#11):** Golden-Screenshots unter `design/golden/`, `scripts/compare-golden.py` im Release-Workflow, Datenschutzhinweis, Roadmap-Statuskopf, OSM-Attribution.
+- **Lokale Verifikation (ABI api35-Emulator, JDK 17, Gradle 8.13):** `:app:testDebugUnitTest` **97 Tests, 0 Fehler, 0 Errors, 0 Skipped**; `:app:lintDebug` **0 Errors / 41 Warnings**; `:app:assembleDebug` erzeugte APK; `:app:connectedDebugAndroidTest` **32 Tests, 0 Fehler** (inkl. Rotation-/Session-State, OSM-Attribution, explizites Session-Ende, monotone GPS-Zeit). `python3 scripts/test-ci-concurrency.py` und `bash scripts/preflight.sh` grün; Golden-Vergleich gegen `design/golden/` lokal grün. **Lokale Ergebnisse, kein GitHub-Actions-Nachweis.**
+- **Bekannte Grenze:** Physisches Gerät (SM-G970F, Android 31) und echte Fußwege sind nicht abgenommen; Golden-Screenshots stammen aus dem API-35-Emulator. Ein Release-Lauf mit `test_level=release` steht nach diesem Push aus.
+
+---
+
 ## Entwicklungsrunde – 26.11.2026, Ticket [02] CI-01
 
 - **Ursache:** `release.yml` konnte unabhängig von den Android-Release-Gates signieren und nutzte eine veraltete globale Concurrency-Gruppe mit Abbruch laufender Läufe.

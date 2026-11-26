@@ -206,6 +206,9 @@ jobs:
             sleep 3
             adb exec-out screencap -p > test-results/ui-screenshots/03-meine-fahrt-real.png
             python3 -c 'import hashlib; from pathlib import Path; p=Path("test-results/ui-screenshots"); files=[p/n for n in ("01-start-real.png","02-verbindungen-real.png","03-meine-fahrt-real.png")]; assert all(f.stat().st_size>10000 for f in files), "Screenshot missing"; assert len({hashlib.sha256(f.read_bytes()).digest() for f in files})==3, "Cockpit tabs did not produce three distinct screenshots"; print("Three cockpit screenshots validated")'
+            # Additive visual regression against versioned golden references.
+            python3 -m pip install --quiet pillow
+            python3 scripts/compare-golden.py test-results/ui-screenshots design/golden
             # Device-class layout smoke captures. S25 is an approximate viewport, NOT real Samsung/One UI.
             adb shell wm size 1080x2340
             adb shell wm density 420

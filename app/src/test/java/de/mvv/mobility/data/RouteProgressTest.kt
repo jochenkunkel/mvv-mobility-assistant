@@ -66,6 +66,19 @@ class RouteProgressTest {
         assertEquals(0.0f, requireNotNull(RouteProgress.heading(path, 48.1005, 11.5010)), 1.0f)
     }
 
+    @Test fun headingCoversSouthAndWestSegments() {
+        val south = listOf(48.1010 to 11.5010, 48.1000 to 11.5010)
+        val west = listOf(48.1000 to 11.5010, 48.1000 to 11.5000)
+        assertEquals(180.0f, requireNotNull(RouteProgress.heading(south, 48.1005, 11.5010)), 1.0f)
+        assertEquals(270.0f, requireNotNull(RouteProgress.heading(west, 48.1000, 11.5005)), 1.0f)
+    }
+
+    @Test fun projectionExposesInterpolationFraction() {
+        val projected = requireNotNull(RouteProgress.project(path, 48.1000, 11.5005))
+        assertEquals(0.5, projected.fraction, 0.02)
+        assertEquals(0, projected.segmentIndex)
+    }
+
     @Test fun mapHeadingIsUnavailableFarOffRoute() {
         assertNull(RouteProgress.heading(path, 48.1050, 11.5050))
     }

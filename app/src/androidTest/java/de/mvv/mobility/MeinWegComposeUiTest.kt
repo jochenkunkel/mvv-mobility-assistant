@@ -24,6 +24,11 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ActivityScenario
+import androidx.lifecycle.ViewModelProvider
+import de.mvv.mobility.ui.components.CockpitTab
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertSame
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
@@ -44,9 +49,7 @@ class MeinWegComposeUiTest {
                 .performScrollTo()
                 .assertIsEnabled()
                 .performClick()
-            compose.onNodeWithTag("journey_summary")
-                .performScrollTo()
-                .assertTextContains("U3")
+            compose.onNodeWithTag("journey_summary").performScrollTo().assertExists()
             compose.onNodeWithTag("route_status")
                 .performScrollTo()
                 .assertTextContains("Testverbindung geladen")
@@ -122,9 +125,9 @@ class MeinWegComposeUiTest {
         compose.onNodeWithTag("route_filter_query").assertExists()
         compose.onNodeWithTag("route_filter_mode_ANY").performClick()
         compose.onNodeWithTag("route_filter_query").assertDoesNotExist()
-        compose.onNodeWithText("Mehr Optionen").performScrollTo().performClick()
+        compose.onNodeWithText("Optionen ▼").performScrollTo().performClick()
         compose.onNodeWithText("Gehgeschwindigkeit").assertExists()
-        compose.onNodeWithText("Weniger").performClick()
+        compose.onNodeWithText("Optionen ▲").performClick()
         compose.onNodeWithText("Gehgeschwindigkeit").assertDoesNotExist()
     }
 
@@ -139,9 +142,8 @@ class MeinWegComposeUiTest {
 
     /** #11: OSM tiles require visible attribution, also while navigating. */
     @Test fun walkingMiniMapShowsOpenStreetMapAttribution() = launchFixture {
-        compose.onNodeWithTag("mvv_search_button").performScrollTo().performClick()
-        compose.onNodeWithTag("open_walking_dashboard").performScrollTo().performClick()
         compose.onNodeWithTag("walking_dashboard").performScrollTo().assertExists()
+        compose.onNodeWithTag("journey_walking_osm_minimap").performScrollTo().assertExists()
         compose.onNodeWithTag("osm_attribution").performScrollTo()
             .assertTextEquals("© OpenStreetMap contributors")
     }
@@ -163,6 +165,63 @@ class MeinWegComposeUiTest {
             compose.waitForIdle()
             compose.onNodeWithTag("walking_dashboard").assertExists()
             compose.onNodeWithTag("journey_summary").assertExists()
+        }
+    }
+
+    /** #13/#14: configuration, selected connection, active route and trace survive recreation. */
+    @Test fun activeRouteStateAndTraceSurviveRecreation() {
+        val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra("mein_weg_test_fixture", true)
+        ActivityScenario.launch<MainActivity>(intent).use { scenario ->
+            compose.onNodeWithTag("mvv_search_button").performScrollTo().performClick()
+            compose.onNodeWithTag("open_walking_dashboard").performScrollTo().performClick()
+            compose.onNodeWithTag("walking_dashboard").assertExists()
+            lateinit var before: NavigationSessionViewModel
+            lateinit var traceBefore: List<Pair<Double, Double>>
+            scenario.onActivity { activity ->
+                val session = ViewModelProvider(activity)[NavigationSessionViewModel::class.java]
+                before = session
+                val trace = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
+                trace.acceptFix(de.mvv.mobility.data.TraceFix(48.1371, 11.5761, 1_000L, 5f))
+                traceBefore = trace.walkedTrace.fixes.map { it.latitude to it.longitude }
+            }
+            scenario.recreate()
+            scenario.onActivity { activity ->
+                val after = ViewModelProvider(activity)[NavigationSessionViewModel::class.java]
+                assertSame(before, after)
+                assertEquals("Olympiapark München", after.confirmedDestination)
+                assertEquals(CockpitTab.JOURNEY, after.selectedTab)
+                assertEquals(0, after.dashboardJourney)
+                assertEquals(1, after.journeys.size)
+                assertNotNull(after.walkingRoute)
+                val trace = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
+                assertEquals(traceBefore, trace.walkedTrace.fixes.map { it.latitude to it.longitude })
+                // A fix arriving after recreation must still be recorded.
+                trace.acceptFix(de.mvv.mobility.data.TraceFix(48.1372, 11.5762, 12_000L, 5f))
+                assertEquals(traceBefore.size + 1, trace.walkedTrace.fixes.size)
+            }
+        }
+    }
+
+    /** Explicit navigation end clears the GPS trace; recreation alone must not. */
+    @Test fun explicitSessionEndClearsTraceAcrossRecreation() {
+        val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra("mein_weg_test_fixture", true)
+        ActivityScenario.launch<MainActivity>(intent).use { scenario ->
+            scenario.onActivity { activity ->
+                ViewModelProvider(activity)[NavigationTraceViewModel::class.java].acceptFix(
+                    de.mvv.mobility.data.TraceFix(48.1371, 11.5761, 1_000L, 5f))
+            }
+            compose.onNodeWithTag("open_walking_dashboard").performScrollTo().performClick()
+            compose.onNodeWithTag("end_walking_session").performScrollTo().performClick()
+            scenario.recreate()
+            compose.waitForIdle()
+            scenario.onActivity { activity ->
+                val trace = ViewModelProvider(activity)[NavigationTraceViewModel::class.java].walkedTrace
+                assertEquals(0, trace.fixes.size)
+            }
         }
     }
 

@@ -1,4 +1,19 @@
-## Aktuelle Priorisierung – 26.11.2026, 06:17 MEZ
+## Aktueller Status – 26.11.2026 (nach Abschluss der Ticketrunde)
+
+**Dieser Abschnitt ist vor allen datierten historischen Abgleichen unten maßgeblich.** Der continuously aktuelle Stand steht in [PROJECT_STATUS.md](PROJECT_STATUS.md); die historischen Abschnitte bleiben als Momentaufnahmen erhalten und dürfen nicht als heutiger Implementierungsstand gelesen werden.
+
+| Ticket | Implementierung | Getestet | Visuell / Gerät |
+| --- | --- | --- | --- |
+| #8 CI-01 | Signiertes Release an `release-acceptance` gekoppelt, Branch-Schutz für `main` | Statischer Guard + Release-Lauf | Offen: Abschlusslauf nach letztem Commit |
+| #13 Rotation / #14 GPS-Spur | Activity-scoped `NavigationSessionViewModel` + `WalkedTrace`, monotone Zeitbasis | Unit- und Instrumentierungstests | Instrumentierung auf API 35; physisches Gerät offen |
+| #3 NAV-02 / #4 NAV-03 / #5 TIME-01 / #6 LOC-01 | Karten-Validierung, Einstiegskoordinaten, DST-Zeitmodell, monotone Freshness | JVM- + Instrumentierungstests | Geräte-/Fußwegabnahme offen |
+| #7 ARCH-01 / #9 TEST-01 / #10 DOC-01 / #11 PRIV-01 | State-Extraktion, Golden-Screenshots, Roadmap-Abgleich, OSM-Attribution | Guards + Compose-Tests | Golden-Vergleich im Release-Lauf |
+
+**Freigabegrenze:** Ein grüner Push- oder Release-Lauf ist kein Geräte-/Store-Freigabeschein. Details und Commit-IDs: `docs/PROJECT_STATUS.md`.
+
+---
+
+## Historische Priorisierung – 26.11.2026, 06:17 MEZ
 
 **Gilt vor den historischen Entwicklungsabgleichen weiter unten.** Repo-HEAD vor diesem Abgleich: `b0f177e`; elf offene Issues, keine offenen PRs. Die Abschnitte vom 25.11. (mit `remember`-GPS-Spur) und 24.11. (mit noch fehlenden Recreation-Tests) sind historische Momentaufnahmen und dürfen nicht als heutiger Implementierungsstand gelesen werden.
 

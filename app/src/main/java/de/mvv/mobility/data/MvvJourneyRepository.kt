@@ -16,7 +16,9 @@ data class JourneyOption(
     val departure: String, val arrival: String, val summary: String,
     val changes: Int, val walkingMinutes: Int,
     val lines: List<String> = emptyList(), val products: List<String> = emptyList(),
-    val steps: List<JourneyStep> = emptyList()
+    val steps: List<JourneyStep> = emptyList(),
+    /** Absolute instants parsed from EFA date/time when available. */
+    val departureInstantMillis: Long? = null, val arrivalInstantMillis: Long? = null
 )
 data class JourneyStep(val line: String, val product: String, val from: String, val to: String,
     val departure: String, val arrival: String, val walking: Boolean, val minutes: Int,
@@ -56,34 +58,16 @@ fun filterJourneys(options: List<JourneyOption>, preference: RoutePreference): L
 
 fun selectAppointmentJourneys(options: List<JourneyOption>, arrivalByMillis: Long,
     maximumMinutesEarly: Int = 120, maximumResults: Int = 3): List<JourneyOption> {
-    val zone = TimeZone.getTimeZone("Europe/Berlin")
-    fun epoch(clock: String): Long? {
-        val parts = clock.split(":")
-        if (parts.size != 2) return null
-        val hour = parts[0].toIntOrNull() ?: return null
-        val minute = parts[1].toIntOrNull() ?: return null
-        if (hour !in 0..23 || minute !in 0..59) return null
-        return java.util.Calendar.getInstance(zone).apply {
-            timeInMillis = arrivalByMillis
-            set(java.util.Calendar.HOUR_OF_DAY, hour)
-            set(java.util.Calendar.MINUTE, minute)
-            set(java.util.Calendar.SECOND, 0)
-            set(java.util.Calendar.MILLISECOND, 0)
-        }.timeInMillis
-    }
     return options.mapNotNull { trip ->
-        val sameDayArrival = epoch(trip.arrival) ?: return@mapNotNull null
-        // EFA clock-only fixtures may cross midnight. Consider the preceding
-        // calendar day instead of silently dropping a valid late connection.
-        val calendar = java.util.Calendar.getInstance(zone).apply { timeInMillis = sameDayArrival }
-        calendar.add(java.util.Calendar.DAY_OF_MONTH, -1)
-        val previousDayArrival = calendar.timeInMillis
-        val arrival = listOf(sameDayArrival, previousDayArrival)
+        // Prefer an explicit absolute arrival from EFA when available; the
+        // clock-only fallback resolves DST explicitly across neighbouring days.
+        val candidates = trip.arrivalInstantMillis?.let { listOf(it) }
+            ?: EfaTime.arrivalCandidates(trip.arrival, arrivalByMillis)
+        val arrival = candidates
             .filter { it <= arrivalByMillis && arrivalByMillis - it <= maximumMinutesEarly * 60000L }
             .maxOrNull() ?: return@mapNotNull null
         trip to arrival
     }.distinctBy { (trip, arrival) ->
-        // Keep distinct departures even when they use the same line and arrive together.
         listOf(arrival.toString(), trip.departure, trip.arrival, trip.summary,
             trip.changes.toString(), trip.walkingMinutes.toString(), trip.lines.joinToString("|"))
     }.sortedWith(
@@ -95,30 +79,16 @@ fun selectAppointmentJourneys(options: List<JourneyOption>, arrivalByMillis: Lon
 
 /**
  * For "Jetzt starten": never recommend a journey whose initial walk must already
- * have started. EFA sometimes returns connections departing before the request time.
- * Compare the FIRST leg's departure, not just the first vehicle departure.
+ * have started. Absolute EFA instants win; clock-only values are resolved with
+ * DST rules and checked on the following day as well.
  */
 fun reachableNowJourneys(options: List<JourneyOption>, nowMillis: Long,
     minimumPreparationMillis: Long = 60_000L): List<JourneyOption> {
-    val zone = TimeZone.getTimeZone("Europe/Berlin")
     return options.filter { trip ->
         val first = trip.steps.firstOrNull() ?: return@filter false
-        val match = Regex("""^([0-9]{1,2}):([0-9]{2})$""").matchEntire(first.departure)
+        val departure = trip.departureInstantMillis ?: EfaTime.forNow(first.departure, nowMillis)
             ?: return@filter false
-        val hour = match.groupValues[1].toInt()
-        val minute = match.groupValues[2].toInt()
-        if (hour !in 0..23 || minute !in 0..59) return@filter false
-        val calendar = java.util.Calendar.getInstance(zone).apply {
-            timeInMillis = nowMillis
-            set(java.util.Calendar.HOUR_OF_DAY, hour)
-            set(java.util.Calendar.MINUTE, minute)
-            set(java.util.Calendar.SECOND, 0)
-            set(java.util.Calendar.MILLISECOND, 0)
-        }
-        val firstDeparture = calendar.timeInMillis
-        // Midnight crossover: 00:xx after 23:xx, not yesterday's journey.
-        if (firstDeparture < nowMillis - 12 * 60 * 60_000L) calendar.add(java.util.Calendar.DAY_OF_MONTH, 1)
-        calendar.timeInMillis >= nowMillis + minimumPreparationMillis
+        departure >= nowMillis + minimumPreparationMillis
     }
 }
 
@@ -247,12 +217,15 @@ object MvvJourneyRepository {
                 summary = names.joinToString(" → ").ifBlank { if (vehicles == 0) "Nur zu Fuß" else "Verbindung ohne Linienangabe" },
                 changes = (vehicles - 1).coerceAtLeast(0),
                 walkingMinutes = walkingMinutes,
-                lines = names.toList(), products = products.toList(), steps = steps.toList()
+                lines = names.toList(), products = products.toList(), steps = steps.toList(),
+                departureInstantMillis = EfaTime.fromEfaPoint(endpoint(first, true)),
+                arrivalInstantMillis = EfaTime.fromEfaPoint(endpoint(last, false))
             ))
         }
         return results
     }
-    data class StopCandidate(val id: String, val name: String, val quality: Int)
+    data class StopCandidate(val id: String, val name: String, val quality: Int,
+        val position: StopPosition? = null)
     data class ResolvedJourney(val options: List<JourneyOption>, val destination: StopCandidate,
         val destinationCoordinates: StopPosition? = null)
     class AmbiguousDestination(val candidates: List<StopCandidate>) :
@@ -297,7 +270,16 @@ object MvvJourneyRepository {
             val name = point.optString("name")
             if (id.isNotBlank() && name.isNotBlank() &&
                 (point.optString("anyType") == "stop" || point.optString("type") == "stop")) {
-                found.add(StopCandidate(id, name, point.optInt("quality", 0)))
+                val coord = point.optJSONObject("coord")
+                val position = if (coord != null) {
+                    val lon = coord.optDouble("x", Double.NaN)
+                    val lat = coord.optDouble("y", Double.NaN)
+                    if (lon.isFinite() && lat.isFinite() &&
+                        lat in -90.0..90.0 && lon in -180.0..180.0) {
+                        StopPosition(lat, lon, id, point.optString("platform").ifBlank { null })
+                    } else null
+                } else null
+                found.add(StopCandidate(id, name, point.optInt("quality", 0), position))
             }
         }
         return found.distinctBy { it.id }.sortedByDescending { it.quality }
@@ -386,7 +368,7 @@ object MvvJourneyRepository {
                     error("MVV hat eine andere Zielhaltestelle zurückgegeben.")
                 }
                 val trips = parseTrips(response, walkingKmh)
-                callback(Result.success(ResolvedJourney(trips, selected)))
+                callback(Result.success(ResolvedJourney(trips, selected, selected.position)))
             } catch (e: Exception) { callback(Result.failure(e)) }
         }.start()
     }

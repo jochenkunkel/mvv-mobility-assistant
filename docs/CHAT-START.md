@@ -25,6 +25,12 @@ Akzeptanzkriterien erfüllt und Nachweise vorhanden sind.
 nicht live synchronisiert. GitHub-Code, Issues, CI und diese Dateien sind
 der gemeinsame, persistente Übergabepunkt.
 
+## 1a. Neue zentrale Artefakte
+
+- `docs/PRIVACY_NOTICE.md` – nutzerseitiger Datenschutzhinweis; `docs/PRIVACY-AND-PROVIDER-POLICY.md` – Anbieterabgleich.
+- `design/golden/` – versionierte Referenz-Screenshots für `scripts/compare-golden.py`.
+- State-Owner: `NavigationSessionViewModel.kt` (Konfiguration, Auswahl, Route, Flags) und `NavigationTraceViewModel.kt` (GPS-Spur). Beide überleben Activity-Recreation, nicht aber Prozessende.
+
 ## 2. Pflichtlektüre in dieser Reihenfolge
 
 0. `docs/PUBLIC_RELEASE_READINESS.md` – Sicherheitsbewertung, Freigabegrenzen und offene Entscheidungen (Lizenz, Artefakte, `public`-Umsstellung).

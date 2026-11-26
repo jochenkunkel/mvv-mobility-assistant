@@ -1,6 +1,8 @@
 package de.mvv.mobility
 
+import android.content.Intent
 import androidx.lifecycle.ViewModelProvider
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.mvv.mobility.data.TraceFix
@@ -15,8 +17,16 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class NavigationTraceRecreationTest {
+
+    /** Fixture mode avoids a runtime permission dialog that would pause the Activity. */
+    private fun launchFixture(block: (ActivityScenario<MainActivity>) -> Unit) {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra("mein_weg_test_fixture", true)
+        ActivityScenario.launch<MainActivity>(intent).use(block)
+    }
     @Test fun nonEmptyGpsTraceSurvivesActivityRecreation() {
-        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+        launchFixture { scenario ->
             val fixes = listOf(
                 TraceFix(48.1000, 11.5000, 1_000L, 5f),
                 TraceFix(48.1001, 11.5000, 12_000L, 5f)
@@ -49,7 +59,7 @@ class NavigationTraceRecreationTest {
     }
 
     @Test fun boundedGpsHistorySurvivesRecreationWithoutRestoringDiscardedFixes() {
-        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+        launchFixture { scenario ->
             scenario.onActivity { activity ->
                 val trace = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
                 // Separate fixes by a gap to avoid GPS speed filtering.
@@ -70,7 +80,7 @@ class NavigationTraceRecreationTest {
     }
 
     @Test fun explicitSessionEndClearsRetainedTraceAcrossRecreation() {
-        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+        launchFixture { scenario ->
             scenario.onActivity { activity ->
                 val owner = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
                 owner.acceptFix(TraceFix(48.1000, 11.5000, 1_000L, 5f))
@@ -90,7 +100,7 @@ class NavigationTraceRecreationTest {
         }
     }
     @Test fun gpsGapSegmentsRemainSeparateAfterRecreation() {
-        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+        launchFixture { scenario ->
             val first = TraceFix(48.1000, 11.5000, 1_000L, 5f)
             val afterGap = TraceFix(48.1001, 11.5001, 200_000L, 5f)
             scenario.onActivity { activity ->
@@ -109,7 +119,7 @@ class NavigationTraceRecreationTest {
     }
 
     @Test fun gpsGapAfterRecreationStartsNewSegmentWithoutLosingHistory() {
-        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+        launchFixture { scenario ->
             val before = TraceFix(48.1000, 11.5000, 1_000L, 5f)
             val after = TraceFix(48.1001, 11.5001, 200_000L, 5f)
             scenario.onActivity { activity ->
@@ -133,7 +143,7 @@ class NavigationTraceRecreationTest {
     }
 
     @Test fun rejectedGpsFixAfterRecreationDoesNotEraseRecordedHistory() {
-        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+        launchFixture { scenario ->
             val accepted = TraceFix(48.1000, 11.5000, 1_000L, 5f)
             scenario.onActivity { activity ->
                 val trace = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]

@@ -41,7 +41,7 @@ object WalkingNavigation {
                         latitude = other.latitude
                         longitude = other.longitude
                     }
-                    firstLocation.distanceTo(candidate) > 75f
+                    firstLocation.distanceTo(candidate) > 25f
                 }) { "Ziel mehrdeutig – bitte Ziel prüfen" }
                 StopPosition(first.latitude, first.longitude)
             }

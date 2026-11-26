@@ -11,7 +11,12 @@ import kotlin.math.*
  * off-route detection and monotonic progress across successive location fixes.
  */
 internal object RouteProgress {
-    data class Projection(val alongMeters: Double, val lateralMeters: Double, val segmentIndex: Int)
+    data class Projection(
+        val alongMeters: Double,
+        val lateralMeters: Double,
+        val segmentIndex: Int,
+        val fraction: Double
+    )
 
     fun project(path: List<Pair<Double, Double>>, latitude: Double, longitude: Double): Projection? {
         if (path.size < 2 || !latitude.isFinite() || !longitude.isFinite() ||
@@ -35,7 +40,7 @@ internal object RouteProgress {
             val py = ay + fraction * dy
             val lateral = hypot(px, py)
             val length = sqrt(lengthSquared)
-            val candidate = Projection(accumulated + fraction * length, lateral, index)
+            val candidate = Projection(accumulated + fraction * length, lateral, index, fraction)
             if (best == null || candidate.lateralMeters < best.lateralMeters) best = candidate
             accumulated += length
         }

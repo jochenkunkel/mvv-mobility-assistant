@@ -74,20 +74,11 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, walkedTrack: List<P
                 val i = p.segmentIndex
                 val a = route.path[i]
                 val b = route.path[i + 1]
-                val latitude = position!!.latitude
-                val cosLat = kotlin.math.cos(Math.toRadians(latitude)).coerceAtLeast(0.01)
-                val ax = a.second * cosLat
-                val ay = a.first
-                val bx = b.second * cosLat
-                val by = b.first
-                val dx = bx - ax
-                val dy = by - ay
-                val fraction = if (dx * dx + dy * dy < 1e-16) 0.0 else
-                    (((position.longitude * cosLat - ax) * dx +
-                        (latitude - ay) * dy) / (dx * dx + dy * dy)).coerceIn(0.0, 1.0)
+                // Use the same projection as the turn engine; do not recompute
+                // a second fraction that can disagree at knots and loops.
                 i to GeoPoint(
-                    a.first + fraction * (b.first - a.first),
-                    a.second + fraction * (b.second - a.second)
+                    a.first + (b.first - a.first) * p.fraction,
+                    a.second + (b.second - a.second) * p.fraction
                 )
             }
             fun drawLine(points: List<GeoPoint>, color: Int, width: Float) {
@@ -116,8 +107,25 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, walkedTrack: List<P
         // Keep each accepted GPS segment separate. Never bridge a GPS outage
         // with an invented straight line. Legacy callers still pass walkedTrack
         // until the navigation session owns WalkedTrace.
+        fun drawWalkedDot(point: Pair<Double, Double>) {
+            // A single accepted fix after a GPS outage is real history. Show it
+            // as a dot instead of silently dropping it or connecting a gap.
+            val bitmap = Bitmap.createBitmap(14, 14, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+            dotPaint.color = Color.rgb(33, 135, 128)
+            canvas.drawCircle(7f, 7f, 6f, dotPaint)
+            view.overlays.add(Marker(view).apply {
+                this.position = GeoPoint(point.first, point.second)
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                icon = BitmapDrawable(context.resources, bitmap)
+            })
+        }
         for (segment in (walkedSegments ?: listOf(walkedTrack))) {
-            if (segment.size < 2) continue
+            if (segment.size < 2) {
+                segment.firstOrNull()?.let(::drawWalkedDot)
+                continue
+            }
             view.overlays.add(Polyline().apply {
                 setPoints(segment.map { GeoPoint(it.first, it.second) })
                 outlinePaint.color = Color.rgb(33, 135, 128)
@@ -137,7 +145,8 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, walkedTrack: List<P
             it.hasBearing() && it.hasSpeed() && it.speed >= 1.2f &&
                 (!it.hasAccuracy() || it.accuracy <= 25f)
         }?.bearing
-        val proposed = gpsHeading ?: routeHeading ?: lastHeading.floatValue.takeUnless { it.isNaN() }
+        if (position == null) lastHeading.floatValue = Float.NaN
+        val proposed = gpsHeading ?: routeHeading
         if (proposed != null) {
             val previous = lastHeading.floatValue
             val delta = if (previous.isNaN()) 180f else
@@ -147,7 +156,9 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, walkedTrack: List<P
         }
         // Shift camera 70m forward so the current position sits below center.
         val cameraPoint = origin?.let { point ->
-            val heading = lastHeading.floatValue.takeUnless { it.isNaN() } ?: 0f
+            // Without a trustworthy direction do not pretend the camera is
+            // forward-looking; centre on the known position instead.
+            val heading = lastHeading.floatValue.takeUnless { it.isNaN() } ?: return@let null
             val radians = Math.toRadians(heading.toDouble())
             val latOffset = 70.0 * kotlin.math.cos(radians) / 111_320.0
             val lonOffset = 70.0 * kotlin.math.sin(radians) /
