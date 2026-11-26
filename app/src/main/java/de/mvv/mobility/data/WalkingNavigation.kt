@@ -31,19 +31,9 @@ object WalkingNavigation {
                 @Suppress("DEPRECATION")
                 val matches = Geocoder(context).getFromLocationName(
                     MobilityProviderConfig.geocodingQuery(name), 3).orEmpty()
-                val first = matches.firstOrNull() ?: error("Ziel konnte nicht lokalisiert werden")
-                val firstLocation = Location("geocoder").apply {
-                    latitude = first.latitude
-                    longitude = first.longitude
-                }
-                check(matches.drop(1).none { other ->
-                    val candidate = Location("geocoder").apply {
-                        latitude = other.latitude
-                        longitude = other.longitude
-                    }
-                    firstLocation.distanceTo(candidate) > 25f
-                }) { "Ziel mehrdeutig – bitte Ziel prüfen" }
-                StopPosition(first.latitude, first.longitude)
+                val positions = matches.map { StopPosition(it.latitude, it.longitude) }
+                GeocoderTargetResolver.pick(positions)
+                    ?: error("Ziel mehrdeutig – bitte Ziel prüfen")
             }
             resolved.fold(
                 onSuccess = { point ->

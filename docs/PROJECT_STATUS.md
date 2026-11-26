@@ -1,3 +1,11 @@
+## Nachbesserung – 26.11.2026 (OSM-Ziel nicht mehr fälschlich mehrdeutig)
+
+- **Gemeldetes Problem:** Nach der NAV-03-Verschärfung (25 m) wurden normale Geocoder-Treffer mehrerer naher Adresspunkte als „Ziel mehrdeutig" abgelehnt.
+- **Fix:** `GeocoderTargetResolver` mit akzeptierter Streuung von 75 m und haversine-basierter, JVM-testbarer Entscheidung; `WalkingNavigation.fetch` nutzt ihn. Exakte EFA-Einstiegskoordinaten haben weiterhin Vorrang, echte Namensambiguität (>75 m) bleibt fail-closed.
+- **Verifiziert:** `:app:testDebugUnitTest` und `:app:compileDebugKotlin` `BUILD SUCCESSFUL` (neue Resolver-Tests inklusive). Keine Signierungs- oder Secret-Änderung.
+
+---
+
 ## ABSCHLUSSRUNDE – 26.11.2026 (alle Tickets geschlossen)
 
 - **Commit:** `4e95f8d` auf `main` (lokaler HEAD = `origin/main`). Die vorherige CI-Gate-Änderung ist in `035bcdb` enthalten.
