@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import de.mvv.mobility.data.ConnectionCheckState
 import de.mvv.mobility.data.JourneyOption
 import de.mvv.mobility.data.JourneyStep
 import de.mvv.mobility.data.MvvJourneyRepository
@@ -17,6 +18,9 @@ import de.mvv.mobility.data.WalkingRoute
 import de.mvv.mobility.data.WalkingTurn
 import de.mvv.mobility.data.RouteFilterMode
 import de.mvv.mobility.ui.components.CockpitTab
+
+/** Active fullscreen journey view; the app tab bar is hidden in both modes. */
+enum class FullscreenMode { NONE, DASHBOARD, NAVIGATION }
 
 /**
  * Activity-scoped owner of the navigation session.
@@ -92,6 +96,29 @@ class NavigationSessionViewModel(
     )
     var locationStatus by mutableStateOf("Noch kein Standort abgerufen")
     var locationPromptFinished by mutableStateOf(fixture)
+
+    // #15/#16/#17/#18: explicit, manually triggered journey state.
+    var fullscreenMode by mutableStateOf(FullscreenMode.NONE)
+    var connectionChecks by mutableStateOf<Map<Int, ConnectionCheckState>>(emptyMap())
+    var newSearchOffered by mutableStateOf(false)
+    var pendingNewSearch by mutableStateOf(false)
+    var earlierSearchOffsetMinutes by mutableIntStateOf(0)
+
+    fun checkIn(stepIndex: Int) {
+        connectionChecks = connectionChecks + (stepIndex to ConnectionCheckState.CHECKED_IN)
+        newSearchOffered = false
+    }
+
+    fun markConnectionMissed(stepIndex: Int) {
+        connectionChecks = connectionChecks + (stepIndex to ConnectionCheckState.MISSED)
+        newSearchOffered = true
+    }
+
+    fun resetConnectionChecksForNewJourney() {
+        connectionChecks = emptyMap()
+        newSearchOffered = false
+        earlierSearchOffsetMinutes = 0
+    }
 
     init {
         if (fixture) {

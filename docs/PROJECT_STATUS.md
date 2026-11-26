@@ -1,3 +1,15 @@
+## Neue Tickets #15–#18 – 26.11.2026 (Umsetzung)
+
+- **#15 Check-in/verpasster Anschluss:** `ConnectionStatusResolver` findet nur echte, anstehende Umstiege (manuell, idempotent); `NavigationSessionViewModel` hält `connectionChecks`, `newSearchOffered` und `pendingNewSearch`. „Neue Suche" nutzt bestehendes Ziel und aktuellen Start, übernimmt keine Route automatisch.
+- **#16 Frühere Verbindungen:** `EarlierConnectionsResolver` führt chronologisch sortierte, duplicate-freie Zusammenführung früher Suchfenster durch; Aktion „← Frühere Verbindungen" im Tab Verbindungen, abgefahrene Abfahrten erhalten `journey_past_badge`.
+- **#17 Dashboard Design 5:** `FullscreenJourneyDashboard` als Vollbild ohne App-Tab-Leiste, Android-Statusleiste bleibt; Countdown, dynamische Werte, ehrlicher Puffer, Warnungen, Check-in-Aktionen, Zurück/Beenden.
+- **#18 Navigation Design 1:** `FullscreenWalkNavigation` mit großer Abbiegeanweisung, dominanter OSM-Karte, fixen Infokarten, Rezentrieren, Warnungen und getrenntem Zurück/Beenden.
+- **Zustand:** Vollbildmodus, Check-ins und Suchfenster liegen im Activity-scoped ViewModel und überleben Rotation; kein Check-in nach Prozessende.
+- **Design-Referenzen:** `docs/design/dashboard-design-5-kompakt.svg` und `docs/design/navigation-design-1-karte-im-fokus.svg` versioniert (illustrative Skizzen).
+- **Lokale Verifikation:** `:app:testDebugUnitTest` **BUILD SUCCESSFUL** (neue Resolver-Tests für Check-in und frühere Verbindungen), `:app:connectedDebugAndroidTest` **36 Tests, 0 Fehler** (davon vier neue UI-Tests für Vollbild-Dashboard, Vollbild-Navigation, Check-in und frühere Verbindungen). LOC / Emulator API 35. Ein vollständiger GitHub-Release-Lauf folgt nach diesem Push.
+
+---
+
 ## Implementierungsanalyse #17 – 26.11.2026, 18:25 MEZ
 
 - **Live-Stand vor Änderung:** main `1426132d954c15cccb0890fc51ec49971b2187b1`. [Push-CI #45857928001](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45857928001) ist `completed/success` für genau diesen Commit. Das ist **kein** Nachweis für #17 oder vollständige Release-/Emulator-Abnahme. Vier offene Issues #15–#18, keine Feature-Umsetzung durch diesen Lauf.

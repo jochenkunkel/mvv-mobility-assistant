@@ -26,6 +26,11 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ActivityScenario
 import androidx.lifecycle.ViewModelProvider
 import de.mvv.mobility.ui.components.CockpitTab
+import de.mvv.mobility.data.JourneyOption
+import de.mvv.mobility.data.JourneyStep
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
@@ -136,8 +141,12 @@ class MeinWegComposeUiTest {
         compose.onNodeWithTag("open_walking_dashboard").performScrollTo().performClick()
         compose.onNodeWithTag("walking_dashboard").performScrollTo().assertExists()
         compose.onNodeWithTag("walking_dashboard").assertExists()
-        compose.onNodeWithText("Dashboard schließen").performScrollTo().performClick()
-        compose.onNodeWithTag("walking_dashboard").assertDoesNotExist()
+        // Design 5: the visible fullscreen back action closes the dashboard.
+        compose.onNodeWithTag("fullscreen_dashboard_back").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag("fullscreen_dashboard").assertDoesNotExist()
+        // Back returns to the regular app without discarding the active journey.
+        compose.onNodeWithTag("walking_dashboard").assertExists()
     }
 
     /** #11: OSM tiles require visible attribution, also while navigating. */
@@ -158,8 +167,7 @@ class MeinWegComposeUiTest {
             compose.onNodeWithTag("journey_summary").performScrollTo().assertExists()
             compose.onNodeWithTag("open_walking_dashboard").performScrollTo().performClick()
             compose.onNodeWithTag("walking_dashboard").assertExists()
-            compose.onNodeWithTag("tab_journey").performClick()
-            compose.onNodeWithTag("walking_dashboard").assertExists()
+            compose.onNodeWithTag("fullscreen_dashboard").assertExists()
 
             scenario.recreate()
             compose.waitForIdle()
@@ -214,8 +222,11 @@ class MeinWegComposeUiTest {
                 ViewModelProvider(activity)[NavigationTraceViewModel::class.java].acceptFix(
                     de.mvv.mobility.data.TraceFix(48.1371, 11.5761, 1_000L, 5f))
             }
-            compose.onNodeWithTag("open_walking_dashboard").performScrollTo().performClick()
-            compose.onNodeWithTag("end_walking_session").performScrollTo().performClick()
+            scenario.onActivity { activity ->
+                ViewModelProvider(activity)[NavigationSessionViewModel::class.java]
+                    .fullscreenMode = FullscreenMode.DASHBOARD
+            }
+            compose.onNodeWithTag("fullscreen_end_session").performClick()
             scenario.recreate()
             compose.waitForIdle()
             scenario.onActivity { activity ->
@@ -223,6 +234,88 @@ class MeinWegComposeUiTest {
                 assertEquals(0, trace.fixes.size)
             }
         }
+    }
+
+    /** #17: compact dashboard opens fullscreen without the app tab bar. */
+    @Test fun fullscreenDashboardShowsDynamicJourneyState() {
+        val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra("mein_weg_test_fixture", true)
+        ActivityScenario.launch<MainActivity>(intent).use { scenario ->
+            scenario.onActivity { activity ->
+                val s = ViewModelProvider(activity)[NavigationSessionViewModel::class.java]
+                s.fullscreenMode = FullscreenMode.DASHBOARD
+            }
+            compose.onNodeWithTag("fullscreen_dashboard").assertExists()
+            compose.onNodeWithTag("fullscreen_departure").assertExists()
+            compose.onNodeWithTag("fullscreen_buffer").assertExists()
+            compose.onNodeWithTag("fullscreen_navigate").assertExists()
+            compose.onNodeWithTag("cockpit_bottom_navigation").assertDoesNotExist()
+            compose.onNodeWithTag("fullscreen_dashboard_back").performClick()
+            compose.onNodeWithTag("cockpit_bottom_navigation").assertExists()
+        }
+    }
+
+    /** #15: a real upcoming transfer can be checked in once; missed offers a new search. */
+    @Test fun upcomingConnectionCheckInAndMissedAreIdempotent() {
+        val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra("mein_weg_test_fixture", true)
+        val departure = SimpleDateFormat("HH:mm", Locale.GERMANY).apply {
+                timeZone = java.util.TimeZone.getTimeZone("Europe/Berlin")
+            }.format(Date(System.currentTimeMillis() + 10 * 60_000L))
+        ActivityScenario.launch<MainActivity>(intent).use { scenario ->
+            scenario.onActivity { activity ->
+                val s = ViewModelProvider(activity)[NavigationSessionViewModel::class.java]
+                s.journeys = listOf(JourneyOption(departure, "23:59", "U3", 0, 5,
+                    listOf("U3"), listOf("U-Bahn"),
+                    listOf(JourneyStep("U3", "U-Bahn", "A", "B", departure, "23:59", false, 10))))
+                s.dashboardJourney = 0
+                s.fullscreenMode = FullscreenMode.DASHBOARD
+            }
+            compose.onNodeWithTag("connection_checkin").performClick()
+            compose.onNodeWithTag("connection_checkin").assertTextEquals("✓ Check-in")
+            scenario.onActivity { activity ->
+                val s = ViewModelProvider(activity)[NavigationSessionViewModel::class.java]
+                s.resetConnectionChecksForNewJourney()
+            }
+            compose.onNodeWithTag("connection_missed").performClick()
+            compose.onNodeWithTag("new_connection_search").assertExists()
+            compose.onNodeWithTag("new_connection_search").performClick()
+            compose.waitForIdle()
+            compose.onNodeWithTag("fullscreen_dashboard").assertDoesNotExist()
+        }
+    }
+
+    /** #18: map-focused fullscreen navigation can return without losing the journey. */
+    @Test fun fullscreenNavigationBackKeepsSelectedJourney() {
+        val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra("mein_weg_test_fixture", true)
+        ActivityScenario.launch<MainActivity>(intent).use { scenario ->
+            scenario.onActivity { activity ->
+                val s = ViewModelProvider(activity)[NavigationSessionViewModel::class.java]
+                s.dashboardJourney = 0
+                s.fullscreenMode = FullscreenMode.NAVIGATION
+            }
+            compose.onNodeWithTag("fullscreen_navigation").assertExists()
+            compose.onNodeWithTag("navigation_turn_banner").assertExists()
+            compose.onNodeWithTag("fullscreen_nav_back").performClick()
+            compose.onNodeWithTag("fullscreen_dashboard").assertExists()
+            scenario.onActivity { activity ->
+                val s = ViewModelProvider(activity)[NavigationSessionViewModel::class.java]
+                assertEquals(0, s.dashboardJourney)
+                assertEquals(FullscreenMode.DASHBOARD, s.fullscreenMode)
+            }
+        }
+    }
+
+    /** #16: earlier-connections action is visible and marks past departures. */
+    @Test fun earlierConnectionsActionMarksPastDepartures() = launchFixture {
+        compose.onNodeWithTag("earlier_connections_button").performScrollTo().assertExists()
+        compose.onNodeWithTag("earlier_connections_button").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag("journey_past_badge").performScrollTo().assertExists()
     }
 
     @Test fun settingsOpenFromEveryTabAndCloseCleanly() = launchFixture {
@@ -266,8 +359,7 @@ class MeinWegComposeUiTest {
         save("02-verbindungen.png")
         compose.onNodeWithTag("open_walking_dashboard").performScrollTo().performClick()
         compose.onNodeWithTag("walking_dashboard").performScrollTo().assertExists()
-        compose.onNodeWithTag("tab_journey").performClick()
-        compose.onNodeWithTag("walking_dashboard").assertExists()
+        compose.onNodeWithTag("fullscreen_dashboard").assertExists()
         save("03-dashboard.png")
         org.junit.Assert.assertEquals(3, folder.listFiles()?.count { it.extension == "png" })
         }

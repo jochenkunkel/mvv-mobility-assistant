@@ -25,7 +25,11 @@ Akzeptanzkriterien erfüllt und Nachweise vorhanden sind.
 nicht live synchronisiert. GitHub-Code, Issues, CI und diese Dateien sind
 der gemeinsame, persistente Übergabepunkt.
 
-## 1a. Neue zentrale Artefakte
+## 1a. Aktive Vollbildansichten
+
+`NavigationSessionViewModel.fullscreenMode` steuert `NONE`, `DASHBOARD` (Design 5) und `NAVIGATION` (Design 1). Die App-Tab-Leiste ist in den beiden Vollbildmodi ausgeblendet, die Android-Systemleisten bleiben sichtbar. Check-in/Anschlussstatus und das frühere Suchfenster liegen ebenfalls in diesem ViewModel. Design-Skizzen: `docs/design/dashboard-design-5-kompakt.svg`, `docs/design/navigation-design-1-karte-im-fokus.svg`.
+
+## 1b. Neue zentrale Artefakte
 
 - `docs/PRIVACY_NOTICE.md` – nutzerseitiger Datenschutzhinweis; `docs/PRIVACY-AND-PROVIDER-POLICY.md` – Anbieterabgleich.
 - `design/golden/` – versionierte Referenz-Screenshots für `scripts/compare-golden.py`.

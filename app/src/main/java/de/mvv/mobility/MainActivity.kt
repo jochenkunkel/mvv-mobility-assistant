@@ -54,6 +54,13 @@ import de.mvv.mobility.data.WalkingRoute
 import de.mvv.mobility.data.DeviceCalendarRepository
 import de.mvv.mobility.data.DestinationLookup
 import de.mvv.mobility.data.GpsDebugRecorder
+import de.mvv.mobility.data.ConnectionCheckState
+import de.mvv.mobility.data.ConnectionStatusResolver
+import de.mvv.mobility.data.EarlierConnectionsResolver
+import de.mvv.mobility.data.EfaTime
+import de.mvv.mobility.ui.components.FullscreenJourneyDashboard
+import de.mvv.mobility.ui.components.FullscreenWalkNavigation
+import androidx.activity.compose.BackHandler
 import de.mvv.mobility.data.DebugResponseCapture
 import de.mvv.mobility.data.MvvJourneyRepository
 import de.mvv.mobility.data.isCurrentSearchResponse
@@ -71,6 +78,8 @@ import de.mvv.mobility.widget.JourneyWidget
 import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+
+private fun String?.orBlank(): String = this ?: ""
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -244,6 +253,20 @@ class MainActivity : ComponentActivity() {
                             clockMillis = System.currentTimeMillis()
                             delay(5_000L)
                         }
+                    }
+                    var fullscreenMode by session::fullscreenMode
+                    var connectionChecks by session::connectionChecks
+                    var newSearchOffered by session::newSearchOffered
+                    var pendingNewSearch by session::pendingNewSearch
+                    var earlierSearchOffsetMinutes by session::earlierSearchOffsetMinutes
+                    val selectedJourney = journeys.getOrNull(dashboardJourney ?: expandedJourney ?: 0)
+                    val upcomingConnection = selectedJourney?.steps?.let { steps ->
+                        ConnectionStatusResolver.upcoming(steps, clockMillis, connectionChecks)
+                    }
+                    // Keep the confirmed connection visible after the action so
+                    // the user gets stable feedback instead of a vanishing button.
+                    val displayConnection = selectedJourney?.steps?.let { steps ->
+                        ConnectionStatusResolver.upcoming(steps, clockMillis, emptyMap())
                     }
                     var journeyLoading by session::journeyLoading
                     var searchGeneration by session::searchGeneration
@@ -1047,9 +1070,13 @@ class MainActivity : ComponentActivity() {
                                 if (start != null) {
                                 // Capture a fresh departure instant for EVERY "Jetzt" search,
                                 // including retries after the user has been delayed.
-                                val nowDepartureMillis = if (journeyTimingMode == "now") System.currentTimeMillis() else null
+                                val nowMillis = System.currentTimeMillis()
+                                val searchBaseMillis = if (earlierSearchOffsetMinutes > 0)
+                                    nowMillis - earlierSearchOffsetMinutes * 60_000L else nowMillis
+                                val nowDepartureMillis = if (journeyTimingMode == "now") searchBaseMillis else null
                                 val arrivalBy = if (journeyTimingMode == "planned" && !plannedArrival) null else searchTimeMillis
                                 val requestId = ++searchGeneration
+                                val previousJourneys = journeys
                                 journeyLoading = true
                                 journeys = emptyList()
                                 mvvCandidates = emptyList()
@@ -1067,7 +1094,12 @@ class MainActivity : ComponentActivity() {
                                         result.fold(
                                             onSuccess = {
                                                 it.destinationCoordinates?.let { point -> resolvedWalkingTarget = destination to point }
-                                                journeys = if (journeyTimingMode == "now") reachableNowJourneys(it.options, nowDepartureMillis ?: System.currentTimeMillis()) else it.options
+                                                journeys = if (earlierSearchOffsetMinutes > 0) {
+                                                    EarlierConnectionsResolver.merge(
+                                                        previousJourneys, it.options, nowMillis).map { entry -> entry.option }
+                                                } else if (journeyTimingMode == "now") {
+                                                    reachableNowJourneys(it.options, nowDepartureMillis ?: nowMillis)
+                                                } else it.options
                                                 if (journeys.isEmpty()) {
                                                     startWalkingFallback("Keine aktuell noch erreichbare ÖPNV-Verbindung. Bitte Suche erneut starten oder Fußweg zum Ziel prüfen.")
                                                 } else {
@@ -1121,6 +1153,13 @@ class MainActivity : ComponentActivity() {
                         }
                         if (!settingsExpanded && (selectedTab == CockpitTab.CONNECTIONS || (fixture && !visualFixture))) {
                         Text("Verbindungen", style = MaterialTheme.typography.titleLarge)
+                        LaunchedEffect(pendingNewSearch) {
+                            if (pendingNewSearch) {
+                                pendingNewSearch = false
+                                session.resetConnectionChecksForNewJourney()
+                                searchConnections()
+                            }
+                        }
                         // Start already launched the search before switching tabs. Do not
                         // demand a second identical primary click on the results screen.
                         // Keep an explicit retry action after completion or changed inputs.
@@ -1134,6 +1173,15 @@ class MainActivity : ComponentActivity() {
                                     (routeFilterMode == RouteFilterMode.ANY || routeFilterQuery.isNotBlank()),
                                 onClick = searchConnections
                             ) { Text("↻ Verbindung erneut suchen") }
+                            TextButton(
+                                modifier = Modifier.testTag("earlier_connections_button"),
+                                enabled = usableLocation != null && destination.isNotBlank(),
+                                onClick = {
+                                    earlierSearchOffsetMinutes += 30
+                                    routeStatus = "Frühere Verbindungen werden geladen …"
+                                    searchConnections()
+                                }
+                            ) { Text("← Frühere Verbindungen") }
                         } else {
                             Button(
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("mvv_search_button"),
@@ -1266,6 +1314,7 @@ class MainActivity : ComponentActivity() {
                                                 walkingOnlyDashboard = true
                                                 walkingNavigationOpen = true
                                                 selectedTab = CockpitTab.JOURNEY
+                                                fullscreenMode = FullscreenMode.NAVIGATION
                                             }
                                         ) { Text("🚶 Navigation starten  →") }
                                         Text("OSM-Fußwegführung ist experimentell. Bitte Weg und Ziel prüfen.",
@@ -1663,6 +1712,7 @@ class MainActivity : ComponentActivity() {
                                                 val requestId = ++walkingRequestId
                                                 walkingRoute = null
                                                 walkingNavigationOpen = true
+                                                fullscreenMode = FullscreenMode.NAVIGATION
                                                 walkingRouteStatus = if (stop != null) "Fußweg zum MVV-Einstiegspunkt wird berechnet …" else "⚠ Position anhand des Haltestellennamens geschätzt – Karte prüfen"
                                                 val onRoute: (Result<de.mvv.mobility.data.WalkingRoute>) -> Unit = { result ->
                                                     if (walkingRequestId == requestId) {
@@ -1753,7 +1803,7 @@ class MainActivity : ComponentActivity() {
                                             dashboardJourney = null
                                             selectedTab = CockpitTab.CONNECTIONS
                                         }, modifier = Modifier.testTag("end_walking_session")) { Text("Navigation beenden und Spur löschen") }
-                                        TextButton(onClick = { dashboardJourney = null; selectedTab = CockpitTab.CONNECTIONS }) { Text("Dashboard schließen") }
+                                        TextButton(onClick = { dashboardJourney = null; fullscreenMode = FullscreenMode.NONE; selectedTab = CockpitTab.CONNECTIONS }) { Text("Dashboard schließen") }
                                     }
                                 }
                             }
@@ -1790,6 +1840,12 @@ class MainActivity : ComponentActivity() {
                                 elevation = CardDefaults.cardElevation(defaultElevation = if (index == 0) 4.dp else 2.dp)
                             ) {
                                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    val pastDeparture = EfaTime.forNow(trip.departure, clockMillis)
+                                        ?.let { it < clockMillis } ?: false
+                                    if (pastDeparture) Text("ABGEFAHREN – nicht mehr erreichbar",
+                                        color = MaterialTheme.colorScheme.error,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        modifier = Modifier.testTag("journey_past_badge"))
                                     if (index == 0) Text("ERSTE VERBINDUNG", color = Color(0xFF5635B1),
                                         fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
                                     Row(
@@ -1892,7 +1948,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                     OutlinedButton(
-                                        onClick = { dashboardJourney = index; selectedTab = CockpitTab.JOURNEY },
+                                        onClick = { dashboardJourney = index; selectedTab = CockpitTab.JOURNEY; fullscreenMode = FullscreenMode.DASHBOARD },
                                         modifier = Modifier.fillMaxWidth().testTag("open_walking_dashboard")
                                     ) { Text("Meine Fahrt öffnen") }
                                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -2030,7 +2086,126 @@ class MainActivity : ComponentActivity() {
                         Text("Die Route öffnet sich zunächst in Google Maps mit ÖPNV-Auswahl. Die Einstellung für 3,0 km/h wird in Mein Weg gespeichert, aber vom externen Routenplaner noch nicht berücksichtigt. Eine eigene MVV-Routenbewertung folgt.")
                         }
                     }
-                    CockpitNavigation(selectedTab) { tab -> selectedTab = tab }
+                    fun walkingNavigationLocationTurn(): Pair<de.mvv.mobility.data.WalkingTurn, Int>? {
+                        val fix = navigationLocation ?: return null
+                        val route = walkingRoute ?: return null
+                        return de.mvv.mobility.data.WalkingNavigation.nextTurn(route, fix)
+                    }
+                    if (fullscreenMode == FullscreenMode.NONE) {
+                        CockpitNavigation(selectedTab) { tab -> selectedTab = tab }
+                    }
+                    if (fullscreenMode != FullscreenMode.NONE) {
+                        BackHandler {
+                            fullscreenMode = if (fullscreenMode == FullscreenMode.NAVIGATION)
+                                FullscreenMode.DASHBOARD else FullscreenMode.NONE
+                        }
+                        Box(Modifier.fillMaxSize().background(Color(0xFFF7F5FC))) {
+                            if (fullscreenMode == FullscreenMode.DASHBOARD) {
+                                val chosen = journeys.getOrNull(dashboardJourney ?: 0)
+                                val upcoming = displayConnection
+                                val departureClock = upcoming?.step?.departure
+                                    ?: chosen?.departure.orEmpty()
+                                val boardingName = chosen?.steps?.firstOrNull { !it.walking }?.from.orEmpty()
+                                val platform = resolvedWalkingTarget?.second?.platform.orEmpty()
+                                val knownWalkMin = if (navigationLocation != null)
+                                    chosen?.walkingMinutes else chosen?.walkingMinutes
+                                val bufferText = if (upcoming != null && knownWalkMin != null) {
+                                    val remaining = (upcoming.departureMillis - clockMillis) / 60_000L - knownWalkMin
+                                    if (remaining >= 0) "ca. $remaining Min. (Planwert)" else "unbekannt – Abfahrt erreicht"
+                                } else "unbekannt – Abfahrt oder Gehzeit unbekannt"
+                                val warningsFull = buildList {
+                                    if (resolvedWalkingTarget?.second == null) add("⚠ MVV-Koordinaten fehlen – Einstieg auf Karte prüfen")
+                                    if (navigationLocation == null) add("⚠ GPS nicht aktuell – Anzeige kann veraltet sein")
+                                    if (walkingRouteStatus.isNotBlank()) add(walkingRouteStatus)
+                                }
+                                FullscreenJourneyDashboard(
+                                    countdown = if (upcoming != null) {
+                                        val minutes = ((upcoming.departureMillis - clockMillis) / 60_000L).coerceAtLeast(0)
+                                        "Noch $minutes Min. bis Anschluss"
+                                    } else routeStatus.ifBlank { "Route wird vorbereitet" },
+                                    leaveAt = chosen?.steps?.firstOrNull { it.walking }?.departure.orBlank(),
+                                    line = chosen?.lines?.joinToString(", ").orBlank(),
+                                    departure = departureClock,
+                                    boarding = boardingName,
+                                    platform = platform,
+                                    walking = knownWalkMin?.let { "$it Min." }.orBlank(),
+                                    distance = walkingRoute?.totalMeters?.let { "ca. $it m" }.orBlank(),
+                                    buffer = bufferText,
+                                    arrival = chosen?.arrival.orBlank(),
+                                    warnings = warningsFull,
+                                    upcoming = upcoming,
+                                    checkState = displayConnection?.stepIndex?.let { connectionChecks[it] },
+                                    onBack = { fullscreenMode = FullscreenMode.NONE },
+                                    onCheckIn = { upcoming?.let { session.checkIn(it.stepIndex) } },
+                                    onMissed = { upcoming?.let { session.markConnectionMissed(it.stepIndex) } },
+                                    onNewSearch = {
+                                        session.resetConnectionChecksForNewJourney()
+                                        fullscreenMode = FullscreenMode.NONE
+                                        selectedTab = CockpitTab.CONNECTIONS
+                                        pendingNewSearch = true
+                                    },
+                                    onNavigate = {
+                                        if (walkingRoute == null) {
+                                            val start = usableLocation
+                                            val stop = resolvedWalkingTarget?.second
+                                            val fallback = chosen?.steps?.firstOrNull { !it.walking }?.from
+                                            if (start != null && (stop != null || !fallback.isNullOrBlank())) {
+                                                val requestId = ++walkingRequestId
+                                                walkingRouteStatus = "Fußweg wird berechnet …"
+                                                WalkingNavigation.fetch(this@MainActivity,
+                                                    start, fallback.orEmpty(), stop) { result ->
+                                                    if (walkingRequestId == requestId) {
+                                                        walkingRoute = result.getOrNull()
+                                                        walkingRouteStatus = result.exceptionOrNull()?.localizedMessage.orEmpty()
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        fullscreenMode = FullscreenMode.NAVIGATION
+                                    },
+                                    onEndSession = {
+                                        navigationTraceViewModel.clearSession()
+                                        fullscreenMode = FullscreenMode.NONE
+                                    }
+                                )
+                            } else {
+                                val route = walkingRoute
+                                if (route != null) {
+                                    val next = walkingNavigationLocationTurn()
+                                    FullscreenWalkNavigation(
+                                        route = route,
+                                        position = navigationLocation,
+                                        walkedSegments = navigationTraceViewModel.walkedTrace.segments.map { segment ->
+                                            segment.map { it.latitude to it.longitude }
+                                        },
+                                        turn = next,
+                                        distanceText = next?.second?.let { "$it m" }.orBlank(),
+                                        walkingTimeText = "GPS-basiert",
+                                        departureText = selectedJourney?.departure.orBlank(),
+                                        bufferText = "unbekannt – Gehzeit nicht belegt",
+                                        boardingText = route.destination?.platform?.let { "Steig $it" }
+                                            ?: "Haltestelle prüfen",
+                                        warnings = buildList {
+                                            if (navigationLocation == null) add("⚠ GPS nicht aktuell – Position veraltet")
+                                            if (route.estimatedDestination) add("⚠ Ziel nur anhand des Namens geschätzt")
+                                        },
+                                        onBack = { fullscreenMode = FullscreenMode.DASHBOARD },
+                                        onEnd = {
+                                            navigationTraceViewModel.clearSession()
+                                            fullscreenMode = FullscreenMode.NONE
+                                            walkingNavigationOpen = false
+                                            walkingOnlyDashboard = false
+                                        },
+                                        onRecenter = { }
+                                    )
+                                } else {
+                                    Text("Fußwegroute wird geladen …",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.testTag("fullscreen_navigation_loading"))
+                                }
+                            }
+                        }
+                    }
                 }
                 }
             }
