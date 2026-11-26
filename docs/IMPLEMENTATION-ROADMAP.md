@@ -1,3 +1,15 @@
+## Aktuelle Priorisierung – 26.11.2026, 06:17 MEZ
+
+**Gilt vor den historischen Entwicklungsabgleichen weiter unten.** Repo-HEAD vor diesem Abgleich: `b0f177e`; elf offene Issues, keine offenen PRs. Die Abschnitte vom 25.11. (mit `remember`-GPS-Spur) und 24.11. (mit noch fehlenden Recreation-Tests) sind historische Momentaufnahmen und dürfen nicht als heutiger Implementierungsstand gelesen werden.
+
+1. **P0 CI-Runner/Preflight (#8):** Android-CI-Lauf [#548](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45632319389) erneut über Jobs geprüft: `preflight=failure`, `steps=null`; fünf andere Jobs `skipped`. Die API liefert damit keinen Beleg für einen Skriptfehler. Die verfügbare Commit-Workflow-Abfrage sieht nur PR-Runs und bestätigt keine Push-Runs. Admin soll **neuesten** Push-Lauf, Setup-Job/Annotations, Runner-Policy und Kontingente prüfen; erst dann Fehlerursache beheben. Diagnose: [CI-PREFLIGHT-EVIDENCE-2026-11-26.md](CI-PREFLIGHT-EVIDENCE-2026-11-26.md).
+2. **P0 GPS-Lifecycle (#13/#14):** Seit `5f5ee53` ist `NavigationTraceViewModel` produktiv angebunden. JVM-Regressionen für GPS-Lücken/Reset und Android-`ActivityScenario.recreate()`-Tests für Spur-Erhalt, Fortsetzung und expliziten Reset wurden in `bbbb7bb`, `800c584`, `98031a4`, `3ef5648` eingecheckt. **Nicht ausgeführt**: API-35-Instrumentierung, echte Orientierungswechsel und Tests mit aktiver Route/Verbindung/Ziel/Puffer. Nächste Codearbeit: kleinen Lifecycle-Test mit aktivem Navigationszustand vorbereiten; kein Ticket schließen.
+3. **P1 nach grünen Gates:** Routengebundener Fortschritt/OSM (#3), Zielhaltestelle (#4), MVV-Zeitzonen (#5), GPS-Freshness (#6), modulare Architektur (#7), visuelle Gerätematrix (#9), Roadmap-Konsistenz (#10) und OSM-Datenschutz (#11) anhand bestehender Akzeptanzkriterien bearbeiten.
+
+**Qualitätsgrenze:** Keine Tests in diesem Dokumentationslauf ausgeführt, kein neuer grüner Build nachgewiesen, keine APK-Installationsfreigabe. Andere Projekt-Chats (Main/Schedule) sind nicht vollständig live lesbar; keine daraus erfundenen Anforderungen.
+
+---
+
 ## Entwicklungsabgleich – 25.11.2026, 16:20 MEZ (nach GPS-Integration)
 
 - **Verifiziert:** `main=2a04798fa78bc500667530740477bf916a03e6e9`; elf offene Issues, keine offenen PRs. README, Roadmap, GPS-Integrationsübergabe, Lifecycle-State-Vertrag, MainActivity und Actions geprüft. Vollständige andere Projekt-Chats nicht live zugänglich.
