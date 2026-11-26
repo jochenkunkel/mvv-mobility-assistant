@@ -68,4 +68,23 @@ class NavigationTraceRecreationTest {
             }
         }
     }
+    @Test fun gpsGapSegmentsRemainSeparateAfterRecreation() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            val first = TraceFix(48.1000, 11.5000, 1_000L, 5f)
+            val afterGap = TraceFix(48.1001, 11.5001, 200_000L, 5f)
+            scenario.onActivity { activity ->
+                val trace = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
+                trace.acceptFix(first)
+                trace.acceptFix(afterGap)
+                assertEquals(listOf(listOf(first), listOf(afterGap)), trace.walkedTrace.segments)
+            }
+            scenario.recreate()
+            scenario.onActivity { activity ->
+                val trace = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
+                assertEquals(listOf(first, afterGap), trace.walkedTrace.fixes)
+                assertEquals(listOf(listOf(first), listOf(afterGap)), trace.walkedTrace.segments)
+            }
+        }
+    }
+
 }
