@@ -65,7 +65,11 @@ dürfen den aktuellen `main`-Stand nicht überschreiben.
 - **Achtung:** „Gradle erfolgreich“ ersetzt weder reale Navigation
   noch optische Sichtprüfung und Geräte-Tests.
 
-## 4. Letzter dokumentierter Fortschritt
+## 4. Aktueller Abschluss (26.11.2026)
+
+Alle 11 vereinbarten Issues sind geschlossen (`0 open`). Commit `4e95f8d`; vollständiger Release-CI-Lauf `45813033231` mit allen sechs Jobs grün. Essentieller State-Owner: `NavigationSessionViewModel` für Konfiguration/Route/Auswahl und `NavigationTraceViewModel` für die GPS-Spur. Offen bleibt ausschließlich die Konfiguration der Release-Keystore-Secrets für signierte AABs (Gate `gate` im Lauf `45814284873` war grün) sowie eine Geräte-/Fußwegabnahme. Details: `docs/PROJECT_STATUS.md`.
+
+## 4a. Historischer dokumentierter Fortschritt
 
 - Issue #2 NAV-01: Routengebundene Abbiegeauswahl (`f38ef6e`);
   geschlossen, reale Geräteabnahme weiterhin wichtig.

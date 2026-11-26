@@ -1,3 +1,15 @@
+## ABSCHLUSSRUNDE – 26.11.2026 (alle Tickets geschlossen)
+
+- **Commit:** `4e95f8d` auf `main` (lokaler HEAD = `origin/main`). Die vorherige CI-Gate-Änderung ist in `035bcdb` enthalten.
+- **Issues:** Alle 11 offenen Tickets (#3, #4, #5, #6, #7, #8, #9, #10, #11, #13, #14) wurden nach Abschlusskommentar geschlossen. Live-Abfrage: **0 offene Issues**.
+- **Vollständiger GitHub-Actions-Nachweis:** [Android CI #45813033231](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45813033231) (`workflow_dispatch`, `test_level=release`) auf `4e95f8d` = **success**; alle sechs Jobs `success`: `preflight` (9 Schritte), `build-and-test` (15 Schritte), `mvv-live-probe`, `door-to-door-live-probe`, `emulator-smoke-test` (inkl. Golden-Vergleich), `release-acceptance`.
+- **Artefakte:** `mein-weg-debug-apk-not-update-guaranteed`, `mein-weg-signed-update-apk` (stabil signiert mit `CN=MeinWeg2`), `emulator-test-results`. Version: `versionCode=github.run_number` (hier `45813033231`), `versionName=0.2.0_build45813033231`.
+- **Signierter Release-Workflow:** [Lauf #45814284873](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45814284873) – das neue `gate`-Job war **success** (nachgewiesene `release-acceptance` für denselben Commit). Der anschließende Signierungsschritt scheiterte ausschließlich an **nicht konfigurierten `MEIN_WEG_KEYSTORE_*`-Secrets**. Kein Keystore und keine Secrets wurden angelegt, überschrieben oder veröffentlicht. Für eine signierte AAB/Release-APK ist eine einmalige Eigentümerkonfiguration erforderlich.
+- **Lokale Prüfungen:** 97 Unit-Tests, 32 Instrumentierungstests, Lint 0 Errors/41 Warnings, Preflight-Guards, Golden-Vergleich – alle grün. Physisches Gerät (SM-G970F/Android 31) und echte Fußwegabnahme bleiben offen; die Ticket-Akzeptanzkriterien wurden über API-35-Emulator und deterministische Tests erfüllt.
+- **Nächste Schritte (außerhalb des vereinbarten Umfangs):** Release-Keystore-Secrets konfigurieren und signierten AAB-Lauf wiederholen; Geräte-/Fußwegabnahme und Store-Freigabe.
+
+---
+
 ## Entwicklungsrunde – 26.11.2026, Tickets [01]–[11] (Umsetzung)
 
 - **Neuer State-Owner:** `NavigationSessionViewModel.kt` hält Konfiguration, Ziel, Auswahl, Route, Tab, Request-Generations und Off-Route-Evidenz Activity-scoped; `MainActivity` nutzt ihn über delegierte Properties. Beide ViewModels überleben Rotation; Prozessende bleibt bewusst nicht persistiert. Explizites Session-Ende löscht die Spur (`end_walking_session`).
