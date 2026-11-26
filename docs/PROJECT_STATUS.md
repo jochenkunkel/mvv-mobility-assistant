@@ -1,3 +1,14 @@
+## CI-Abgleich und nächste Abnahme – 26.11.2026, 22:20 MEZ
+
+- **Live geprüfte GitHub-Actions-Jobs:** [vollständiger Release-CI #45893175285](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45893175285) hat **6/6 Jobs erfolgreich** abgeschlossen: `preflight`, `build-and-test`, `emulator-smoke-test`, `mvv-live-probe`, `door-to-door-live-probe`, `release-acceptance`. Der parallel gestartete [Push-CI #45893162384](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45893162384) wurde **teilweise abgebrochen** (`build-and-test` und `release-acceptance` cancelled; `preflight` success; übrige skipped). Ein abgebrochener Lauf darf nicht als grün bezeichnet werden.
+- **Codebasis:** Korrekturen `8d1182f` für Boarding-Einstieg, Suchzeitpunkt und Anschlusspuffer; Dokumentations-HEAD vor diesem Abgleich `8c90cf8`. Der grüne Release-Lauf belegt die getestete Codeänderung, nicht automatisch die nachfolgende Dokumentationsänderung oder eine physische S25-Abnahme.
+- **Offene Issues / PRs:** GitHub-Suche jeweils **0**. Die physischen Tests in [DEVICE-ACCEPTANCE-ISSUES-19-20.md](DEVICE-ACCEPTANCE-ISSUES-19-20.md) bleiben ausdrücklich offen.
+- **Priorität:** (1) S25: Samstagstermin DATE-01, Bus 56/U6 ICON-01 und visuelle Design-5-Abnahme UI-01; (2) echter Fußweg mit GPS/OSM-Fortschritt NAV-01 und Rezentrieren; (3) Anschluss mit nicht verfügbarer spezifischer Gehzeit prüfen: Puffer muss „unbekannt“ bleiben. Bei Fehlschlag reproduzierbaren Bug mit Datum, Build-SHA und anonymisiertem Nachweis öffnen.
+- **Freigabe:** Keine neue APK-Installations-/Store-Freigabe durch diesen CI-Abgleich. Signing/Secrets unverändert.
+- **Chat-Grenze:** Vollständige externe Projekt-Chats Main/Schedule konnten nicht direkt abgerufen werden; berücksichtigt sind nur der hier sichtbare Verlauf und die im Repository dokumentierten Entscheidungen.
+
+---
+
 ## Code-Review-Nachbesserungen – 26.11.2026
 
 - **Code-Commit:** `8d1182f` auf `main`. Push-CI [45893162384](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45893162384) und vollständiger Release-CI [45893175285](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45893175285) wurden für diesen Commit gestartet; Ergebnisse beim Eintrag noch offen.
