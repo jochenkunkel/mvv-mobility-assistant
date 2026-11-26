@@ -163,7 +163,9 @@ Folgende Befehle wurden **lokal auf diesem Checkout ausgeführt** (JDK 17, Gradl
 | `gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug` (lokal) | 85 Unit-Tests bestanden (0 Fehler/errors/skipped), Debug-APK erzeugt |
 | `apksigner verify --print-certs app/build/outputs/apk/debug/app-debug.apk` | bestanden; Signatur ist das übliche Android-Debug-Zertifikat, **keine** stabile Update-Signatur |
 
-Android-Lint lief bei Erstellung dieses Berichts noch; das Ergebnis ist in `docs/PROJECT_STATUS.md` nachzutragen. **Ein lokaler Erfolg ersetzt keinen GitHub-Actions-Lauf und keine Geräteabnahme.**
+| `gradle --no-daemon :app:lintDebug` (lokal) | `BUILD SUCCESSFUL` – 0 Errors, 37 Warnings |
+
+Der vollständige lokale Lauf dauerte 11m 31s (53 Tasks) und endete mit `BUILD SUCCESSFUL`. **Ein lokaler Erfolg ersetzt keinen GitHub-Actions-Lauf und keine Geräteabnahme.**
 
 ---
 
