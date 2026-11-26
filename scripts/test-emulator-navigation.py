@@ -36,7 +36,7 @@ class EmulatorNavigationTests(unittest.TestCase):
                '<node text="Start" enabled="false" bounds="[0,0][100,100]"/>'
                '<node text="Start" enabled="true" bounds="[100,200][300,260]"/>'
                '</hierarchy>')
-        self.assertEqual((200, 230), module.center_for_label(xml, "Start")
+        self.assertEqual((200, 230), module.center_for_label(xml, "Start"))
 
     def test_skips_invalid_duplicate_bounds_before_valid_label(self):
         xml = ('<hierarchy>'
