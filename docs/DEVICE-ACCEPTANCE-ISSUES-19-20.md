@@ -1,6 +1,6 @@
 # Geräteabnahme nach Datums- und Dashboard-Fix (#19/#20)
 
-Stand: 26.11.2026, 20:20 MEZ. Grundlage: `main` `adb8fd8`, [Designvergleich](design/review/DASHBOARD-5-REVIEW.md), [Dashboard-Vorgabe](design/dashboard-design-5-kompakt.svg). **Keine Gerätefreigabe durch dieses Dokument.**
+Stand: 26.11.2026, 21:20 MEZ. Grundlage: `main` `892297b` (Fix-Ausgangspunkt `adb8fd8`), [Designvergleich](design/review/DASHBOARD-5-REVIEW.md), [Dashboard-Vorgabe](design/dashboard-design-5-kompakt.svg). **Keine Gerätefreigabe durch dieses Dokument.**
 
 ## Priorisierte reale Prüfschritte (Samsung S25)
 
@@ -22,14 +22,20 @@ Stand: 26.11.2026, 20:20 MEZ. Grundlage: `main` `adb8fd8`, [Designvergleich](des
 
 - Screenshots nur nach Prüfung auf private Standort-, Adress- und Termindaten veröffentlichen; andernfalls anonymisierte Ausschnitte oder rein textuelle Testergebnisse.
 - Je Test: Gerät/Android-Version, App-Commit und Build-ID, tatsächlicher Suchzeitpunkt mit Zeitzone, erwartetes/angezeigtes Datum, Ergebnis und ggf. Ticket vermerken.
-- Aktuelle CI-Läufe für `adb8fd8`: [Push](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45882640638) und [manuell](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45882671572) waren bei Erstellung noch **in progress**. Der vorherige [Push-CI](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45874880421) war erfolgreich, deckt den neuen Fix aber nicht ab.
+- **Aktueller verifizierter CI-Stand (26.11., 21:20 MEZ):** Vollständiger Release-CI [45884444181](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45884444181) auf `046d56d` ist `completed/success`; signierter Release [45885298819](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45885298819) auf demselben Commit ebenfalls `completed/success`. Neuester Push-CI [45886089003](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45886089003) auf `892297b` ist `completed/success`. Diese Ergebnisse bestätigen **nicht** die reale S25-Abnahme.
 - Emulator: 38 Instrumentierungstests laut Projektstatus erfolgreich; physische S25-Abnahme weiterhin ausstehend. Bis zum vollständigen Nachweis keine neue APK-Installationsfreigabe.
 
 ## Weitere Priorität
 
-1. CI für `adb8fd8` bis Abschluss prüfen; Fehlschläge mit Job-Logs dokumentieren und reparieren.
+1. CI-Gates sind auf den oben genannten Commits grün; bei weiteren Codeänderungen den zugehörigen neuen Lauf erneut prüfen.
 2. DATE-01 und ICON-01 auf dem S25 priorisieren, da das ursprüngliche Nutzerfeedback genau diese Fehler beschreibt.
-3. UI-01 gegen echte S25-Aufnahme und Design 5 prüfen; #20 erst nach visueller Abnahme schließen.
+3. UI-01 gegen echte S25-Aufnahme und Design 5 prüfen. **#20 wurde bereits nach Emulator-Abgleich geschlossen**; reale S25-Sichtprüfung bleibt als ausdrücklich offener Geräteabnahmepunkt bestehen. Bei sichtbarer Abweichung neues Regressionsticket eröffnen oder #20 wieder öffnen.
 4. Danach GPS-/OSM-Fortschritt und Puffer mit echten Fußwegen validieren.
 
 **Chat-Grenze:** Vollständige externe Projekt-Chats „Main“/„Schedule“ sind hier nicht direkt auslesbar; berücksichtigt sind die im aktuellen Verlauf und Repository dokumentierten Nutzerentscheidungen, keine angenommenen zusätzlichen Anforderungen.
+
+## Abnahme-Grenze (Abgleich 21:20 MEZ)
+
+- GitHub meldet **0 offene Issues und 0 offene PRs**; das ist keine Aussage über erfolgreiche physische Navigation.
+- Die drei oben genannten Actions-Läufe wurden live auf Status und Commit geprüft. Eine neue APK wird hiermit **nicht zur Installation freigegeben**.
+- **Nächstes kleines Arbeitspaket:** DATE-01, ICON-01 und UI-01 auf dem Samsung S25 mit nichtprivaten Belegen durchführen; danach NAV-01 auf realem Fußweg. Die hier aufgeführten Prüffälle bleiben bis zu tatsächlichem Test auf **OFFEN**.
