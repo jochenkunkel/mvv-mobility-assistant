@@ -25,7 +25,7 @@ params = {
 url = "https://efa.mvv-muenchen.de/ng/XML_TRIP_REQUEST2?" + urllib.parse.urlencode(params)
 req = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": "MeinWeg-CI-live-probe/1.0"})
 with urllib.request.urlopen(req, timeout=25) as response:
-    body = response.read(250000)
+    body = response.read()
     print("HTTP:", response.status, "Content-Type:", response.headers.get("Content-Type"))
 print("Body length:", len(body))
 try:
