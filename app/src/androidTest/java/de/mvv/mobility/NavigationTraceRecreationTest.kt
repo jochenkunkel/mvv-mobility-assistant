@@ -48,6 +48,27 @@ class NavigationTraceRecreationTest {
         }
     }
 
+    @Test fun boundedGpsHistorySurvivesRecreationWithoutRestoringDiscardedFixes() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                val trace = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
+                // Separate fixes by a gap to avoid GPS speed filtering.
+                repeat(1_501) { index ->
+                    trace.acceptFix(TraceFix(48.1000, 11.5000, index * 121_000L, 5f))
+                }
+                assertEquals(1_500, trace.walkedTrace.fixes.size)
+                assertEquals(121_000L, trace.walkedTrace.fixes.first().timestampMillis)
+            }
+            scenario.recreate()
+            scenario.onActivity { activity ->
+                val trace = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
+                assertEquals(1_500, trace.walkedTrace.fixes.size)
+                assertEquals(121_000L, trace.walkedTrace.fixes.first().timestampMillis)
+                assertEquals(1_500, trace.walkedTrace.segments.size)
+            }
+        }
+    }
+
     @Test fun explicitSessionEndClearsRetainedTraceAcrossRecreation() {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
