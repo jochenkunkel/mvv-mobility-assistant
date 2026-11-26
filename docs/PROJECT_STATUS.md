@@ -1,3 +1,12 @@
+## Entwicklungsabgleich – 26.11.2026, 09:25 MEZ (GPS-History-Limit bei Recreation)
+
+- **Baseline:** main vor Änderung `f3453fd`; README, Implementierungs-Roadmap, Status, Android-Workflow, GPS-ViewModel/WalkedTrace, Instrumentierung, letzte Commits und Issues/PRs geprüft. Elf offene Issues, keine offenen PRs. Andere Main-/Schedule-Chats nicht vollständig live zugänglich.
+- **Testpaket:** [f1c640f](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/f1c640f5a56c77f495418751ebe77d669e879efe) ergänzt `boundedGpsHistorySurvivesRecreationWithoutRestoringDiscardedFixes`. Nach 1501 akzeptierten, zeitlich getrennten Fixes darf das ViewModel nur die letzten 1500 behalten; `ActivityScenario.recreate()` darf den verworfenen ersten Fix nicht zurückholen. Dies prüft die produktive `retainLast(1500)`-Grenze, nicht echte Rotation oder Route/Tab/Puffer.
+- **CI:** Test nicht ausgeführt. Die verfügbare Commit-Workflow-Abfrage erfasst nur PR-Läufe und eignet sich nicht als Push-CI-Nachweis; letzter dokumentierter Run #548 scheiterte im Preflight ohne auslesbare Schritte. Kein grüner Build, keine APK-Freigabe.
+- **Nächste Priorität:** neuesten Push-Run und Runner-Setup über GitHub-Actions-UI prüfen, API-35-Instrumentierung ausführen; anschließend aktiven Navigationszustand bei echter Rotation absichern. Keine spekulativen CI-/Signing-Änderungen.
+
+---
+
 ## Entwicklungsabgleich – 26.11.2026, 08:22 MEZ (GPS-Lücke nach Activity-Recreation)
 
 - **Repo-Abgleich:** main vor Änderung `3bacf05`; README, Implementierungs-Roadmap, zentraler Status, Android-Workflow, GPS-Instrumentierung, Issues und letzte Commits geprüft. Elf offene Issues, keine offenen PRs. Andere Projekt-Chats nicht vollständig live abrufbar.
