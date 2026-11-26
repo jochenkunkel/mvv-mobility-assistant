@@ -248,7 +248,7 @@ assert "check-runs" in release_workflow, (
 print("Signed release gate source contract passed")
 
 # The live probe must not truncate a valid EFA JSON body at an arbitrary byte limit.
-live_probe = (workflow.parents[1] / "scripts/mvv-live-probe.py").read_text(encoding="utf-8")
+live_probe = (workflow.parents[2] / "scripts/mvv-live-probe.py").read_text(encoding="utf-8")
 assert "response.read()" in live_probe, "Live probe must read the full EFA response"
 assert not re.search(r"response\.read\(\s*\d+\s*\)", live_probe), (
     "Live probe must not truncate the EFA response at a fixed byte count"
