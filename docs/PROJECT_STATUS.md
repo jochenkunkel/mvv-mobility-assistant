@@ -1,3 +1,12 @@
+## Entwicklungsabgleich – 26.11.2026, 10:20 MEZ (ungenaue GPS-Fixes nach Recreation)
+
+- **Baseline:** `main=0d28c30` vor Änderung; README, Roadmap, Status, Testcode, GPS-Filter, Android-Workflow, Issues/PRs und jüngste Commits geprüft. Elf offene Issues, keine offenen PRs. Vollständige Main-/Schedule-Chats nicht live zugänglich.
+- **Neuer Regressionstest:** [89af5ca](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/89af5ca3937a1daf553cd8e5bf0285f934c3d473) ergänzt `rejectedGpsFixAfterRecreationDoesNotEraseRecordedHistory`. Nach Activity-Neuerstellung wird ein GPS-Fix mit 500 m Genauigkeit abgewiesen (Filterlimit 35 m); die zuvor akzeptierte Spur muss auch nach einer zweiten Recreation unverändert bleiben. Das testet nur GPS-Historie, **nicht** echte Rotation, aktive Route oder Navigationseinstellungen.
+- **CI:** Test nicht ausgeführt; Commit-Workflow-Abfrage liefert `[]`, ist jedoch auf PR-Runs beschränkt und sagt nichts über Push-CI. Historischer Run #548: Preflight fehlgeschlagen, keine Jobschritte verfügbar. Kein grüner Buildnachweis, keine APK-Freigabe.
+- **Nächste Priorität:** Neuesten Push-Run in Actions-UI samt Runner-Setup untersuchen; API-35-Instrumentierung tatsächlich ausführen. Anschließend #13 mit aktiver Route, Verbindung, Ziel, Tab und Puffer bei Portrait–Landscape–Portrait absichern.
+
+---
+
 ## Entwicklungsabgleich – 26.11.2026, 09:25 MEZ (GPS-History-Limit bei Recreation)
 
 - **Baseline:** main vor Änderung `f3453fd`; README, Implementierungs-Roadmap, Status, Android-Workflow, GPS-ViewModel/WalkedTrace, Instrumentierung, letzte Commits und Issues/PRs geprüft. Elf offene Issues, keine offenen PRs. Andere Main-/Schedule-Chats nicht vollständig live zugänglich.
