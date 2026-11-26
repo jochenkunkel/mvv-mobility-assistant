@@ -6,7 +6,7 @@
 - **#18 Navigation Design 1:** `FullscreenWalkNavigation` mit großer Abbiegeanweisung, dominanter OSM-Karte, fixen Infokarten, Rezentrieren, Warnungen und getrenntem Zurück/Beenden.
 - **Zustand:** Vollbildmodus, Check-ins und Suchfenster liegen im Activity-scoped ViewModel und überleben Rotation; kein Check-in nach Prozessende.
 - **Design-Referenzen:** `docs/design/dashboard-design-5-kompakt.svg` und `docs/design/navigation-design-1-karte-im-fokus.svg` versioniert (illustrative Skizzen).
-- **Lokale Verifikation:** `:app:testDebugUnitTest` **BUILD SUCCESSFUL** (neue Resolver-Tests für Check-in und frühere Verbindungen), `:app:connectedDebugAndroidTest` **36 Tests, 0 Fehler** (davon vier neue UI-Tests für Vollbild-Dashboard, Vollbild-Navigation, Check-in und frühere Verbindungen). LOC / Emulator API 35. Ein vollständiger GitHub-Release-Lauf folgt nach diesem Push.
+- **Verifikation:** `:app:testDebugUnitTest` erfolgreich, `:app:connectedDebugAndroidTest` **36 Tests, 0 Fehler** (vier neue UI-Tests). Vollständiger Release-CI [45869130850](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45869130850) auf `a44c9db`: alle 6 Jobs grün. Signierter Release [45869989480](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45869989480): `gate` + `signed-release` grün, APK/AAB `versionCode=1000004`, `versionName=0.2.4`, Signatur `CN=MeinWeg2`. Alle vier Issues #15–#18 wurden mit Abschlusskommentar geschlossen; **0 offene Issues**. Physisches Gerät und echte Fußwege weiterhin offen.
 
 ---
 
