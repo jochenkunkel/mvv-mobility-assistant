@@ -1,7 +1,7 @@
 # Public Release Readiness – Mein Weg (MeinWeg2)
 
 **Prüfdatum:** 26.11.2026
-**Geprüfter Stand:** `main` bei `a796545` („docs: record inaccurate GPS recreation regression and unverified CI"), Working Tree vor den hier dokumentierten Änderungen sauber
+**Geprüfter Stand:** `main` bei `96065c9` („docs: record inaccurate GPS recreation regression and unverified CI"), Working Tree vor den hier dokumentierten Änderungen sauber
 **Repository:** `jochenkunkel/mvv-mobility-assistant` (zum Prüfzeitpunkt **privat**, `licenseInfo: null`)
 **Zweck:** Technische und sicherheitliche Vorbereitung einer öffentlichen Veröffentlichung. **Dieses Dokument ist keine Freigabe zur Umstellung auf `public`.**
 
@@ -43,7 +43,7 @@
 
 - Die in dieser Runde verwendeten lokalen Werkzeuge und Scan-Reports liegen persistent unter `.work/tools/` und `.work/reports/` (durch `.gitignore` ausgeschlossen, nicht Teil des Repositories). Gitleaks 8.30.1 kann dort als `.work/tools/gitleaks` erneut ausgeführt werden; Gradle 8.13 liegt unter `.work/tools/gradle-8.13/`.
 - Gitleaks erkennt Muster und Entropie; es ersetzt keine manuelle Prüfung und keine Rotationsprüfung bei externen Diensten.
-- GitHub-Actions-Job-Logs waren über die CLI nicht abrufbar (`gh run view … --log-failed` lieferte keine Ausgabe). CI-Ergebnisse wurden daher **nicht** als erfolgreicher Nachweis verwendet. Der neue Lauf `45795582864` auf `2b13c4a` bestätigt jedoch erneut einen Preflight-Abbruch nach ~2 s mit `steps=[]` und fünf übersprungenen Jobs – ein externes Runner-/Kontingentproblem, kein Kotlin- oder Skriptfehler.
+- GitHub-Actions-Job-Logs waren über die CLI nicht abrufbar (`gh run view … --log-failed` lieferte keine Ausgabe). CI-Ergebnisse wurden daher **nicht** als erfolgreicher Nachweis verwendet. Der neue Lauf `45795582864` auf `df9bb04` bestätigt jedoch erneut einen Preflight-Abbruch nach ~2 s mit `steps=[]` und fünf übersprungenen Jobs – ein externes Runner-/Kontingentproblem, kein Kotlin- oder Skriptfehler.
 - Andere Chatverläufe sind nicht live zugänglich; es wurden keine unbekannten Anforderungen unterstellt.
 
 ---
@@ -55,12 +55,12 @@ Gitleaks 8.30.1 scannte alle 590 Commits und den Arbeitsbaum.
 **Ein Treffer, kein Secret:**
 
 - Datei: `docs/PREFLIGHT-DIAGNOSTICS-RUNBOOK.md`, Zeile 33
-- Commit: `8f8cb49` (23.11.2026)
+- Commit: `5882040` (23.11.2026)
 - Regel: `generic-api-key`
 - Gematchter Text: `API: \`diagnose=failure\``
 - Bewertung: Die Regex interpretierte die Beschreibung eines fehlgeschlagenen Actions-Jobs als API-Key. Der Wert `\`diagnose=failure\`` ist kein Zugangsdatum.
 
-**Maßnahme:** Der Satz wurde im aktuellen Branch umformuliert („Job status: the `diagnose` job failed …"), sodass der Regex-Trigger im Worktree verschwindet, ohne einen breit gefassten Allowlist-Eintrag einzuführen. Der historische Commit `8f8cb49` enthält den alten Text unverändert; ein erneuter Historie-Scan meldet daher weiterhin genau diesen einen False Positive (Fingerprint `8f8cb49:docs/PREFLIGHT-DIAGNOSTICS-RUNBOOK.md:generic-api-key:33`). Ein Worktree-Scan ohne Git-Historie ist sauber. Da es sich nicht um ein Secret handelt, ist kein History-Rewrite und keine Allowlist erforderlich.
+**Maßnahme:** Der Satz wurde im aktuellen Branch umformuliert („Job status: the `diagnose` job failed …"), sodass der Regex-Trigger im Worktree verschwindet, ohne einen breit gefassten Allowlist-Eintrag einzuführen. Der historische Commit `5882040` enthält den alten Text unverändert; ein erneuter Historie-Scan meldet daher weiterhin genau diesen einen False Positive (Fingerprint `5882040:docs/PREFLIGHT-DIAGNOSTICS-RUNBOOK.md:generic-api-key:33`). Ein Worktree-Scan ohne Git-Historie ist sauber. Da es sich nicht um ein Secret handelt, ist kein History-Rewrite und keine Allowlist erforderlich.
 
 **Nicht gefunden:** API-Keys, Passwörter, Tokens (`gho_`/`ghp_`/`github_pat_`), private Schlüssel, Keystores, `.env`-Dateien, Base64-Schlüsselblobs, interne IPs, Debug-Logs mit sensiblen Inhalten, eingecheckte APK/AAB.
 
@@ -100,7 +100,7 @@ Gitleaks 8.30.1 scannte alle 590 Commits und den Arbeitsbaum.
 - **590 Commits** mit Gitleaks gescannt; keine echten Secrets gefunden.
 - Keine Datei mit Keystore-/Secret-Dateinamen wurde jemals hinzugefügt (`git log --all --diff-filter=A`).
 - Keine ungewöhnlichen Binärblobs; größte Objekte sind Quelltext und Statusdokumentation.
-- **Fazit:** Ein History-Rewrite ist **nicht erforderlich**. Es wurde kein Rewrite durchgeführt und keine Freigabe dafür angefordert.
+- **Fazit für Secrets:** Wegen Secrets war kein Rewrite nötig. Der später freigegebene Rewrite diente ausschließlich der Entfernung der privaten E-Mail-Adresse und ist in Abschnitt 12 dokumentiert.
 - Die Historie enthält viele datierte Status-/CI-Dokumente mit veralteten Aussagen. Das ist ein Konsistenz-, kein Sicherheitsproblem; die aktuelle Datei `docs/PROJECT_STATUS.md` ist maßgeblich.
 
 ---
@@ -158,7 +158,7 @@ Folgende Befehle wurden **lokal auf diesem Checkout ausgeführt** (JDK 17, Gradl
 | `bash scripts/preflight.sh` | exit 0 – PASS: shell and Python syntax |
 | `python3 -m unittest discover -s scripts -p 'test_*.py'` | exit 0 – 6 Tests bestanden |
 | `gitleaks detect --source . --no-git` (nach Bereinigung) | exit 0 – keine Funde im Worktree |
-| `gitleaks detect --source .` (Historie, nach Bereinigung) | 1 bekannter historischer False Positive aus `8f8cb49`, keine Secrets |
+| `gitleaks detect --source .` (Historie, nach Bereinigung) | 1 bekannter historischer False Positive aus `5882040`, keine Secrets |
 
 | `gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug` (lokal) | 85 Unit-Tests bestanden (0 Fehler/errors/skipped), Debug-APK erzeugt |
 | `apksigner verify --print-certs app/build/outputs/apk/debug/app-debug.apk` | bestanden; Signatur ist das übliche Android-Debug-Zertifikat, **keine** stabile Update-Signatur |
@@ -198,4 +198,32 @@ Der vollständige lokale Lauf dauerte 11m 31s (53 Tasks) und endete mit `BUILD S
 
 ## 12. History-Rewrite (E-Mail-Adresse)
 
-*Status: wird nach Ausführung des freigegebenen Rewrites mit SHA-Mapping, Verifikation und Force-Push dokumentiert.*
+**Freigabe:** Eigentümer am 26.11.2026 ausdrücklich erteilt. Die alte private
+Adresse wurde durch `354472984+jochenkunkel@users.noreply.github.com` ersetzt.
+
+**Durchführung:** In einem separaten frischen Clone (`.work/history-rewrite/`,
+git-ignoriert) mit `git-filter-repo` (Version `31ebad4c8fb3`):
+
+- `--mailmap`: Ersetzung von Autor- und Committer-E-Mail in **allen** Commits.
+- `--replace-text`: Ersetzung verbliebener Vorkommen in Dateiinhalten.
+- Betroffen: **396** Commit-Metadaten; **597** Commits über alle Refs neu geschrieben.
+- Refs: `main`, `audit/2026-11-16-review`, `fix/route-progress-navigation`.
+- `git filter-repo` schreibt ein `commit-map` (alt → neu); damit wurden 21
+  Dokumentationsdateien aktualisiert. Alle **13** `commit/…`-Links in `docs/`
+  wurden auf existierende neue SHAs geprüft (`git cat-file -e`: 0 Fehler).
+
+**Verifikation nach dem Rewrite:**
+
+- `git log --all --format='%ae|%ce' | sort -u` → ausschließlich
+  `354472984+jochenkunkel@users.noreply.github.com` (sowie `noreply@github.com`
+  als Committer einzelner Commits).
+- `git grep` nach der alten privaten Adresse über alle lokalen Branches → keine Treffer.
+- Keine Secrets, Keystores oder Signierungsdaten verändert; einzige
+  Inhaltsänderung war der Ersatz der E-Mail-Zeichenkette in historischen
+  Dokumenten.
+
+**Folgen:** Alle Commit-SHAs haben sich geändert; alte SHA-URLs sind nicht mehr
+verlässlich auflösbar. Ein Force-Push aller drei Branches ist erforderlich.
+GitHub kann alte Objekte vorübergehend über Caches, PR-Refs oder Reflogs
+vorhalten; eine vollständige Entfernung auf der Serverseite liegt nicht in der
+Hand des Repositories. Lizenz, Tags und Signierungs-Secrets blieben unberührt.
