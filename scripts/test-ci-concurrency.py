@@ -68,6 +68,25 @@ assert re.search(r"(?m)^    needs:\s*preflight\s*$", emulator.group(1)), (
 )
 print("Android CI concurrency static regression guard passed")
 
+# Public repositories expose Actions artifacts to everyone. A validly signed
+# update APK must therefore be uploaded only for explicit release runs.
+signed_upload = re.search(
+    r"(?ms)^      - name: Upload signed in-place update APK\s*\n"
+    r"        if:\s*(.+)$", build.group(1)
+)
+assert signed_upload, "Signed update APK upload step missing"
+signed_condition = signed_upload.group(1)
+for required_expression in (
+    "env.STABLE_UPDATE_SIGNING == 'true'",
+    "github.event_name != 'pull_request'",
+    "inputs.test_level == 'release'",
+    "startsWith(github.ref, 'refs/tags/v')",
+):
+    assert required_expression in signed_condition, (
+        f"Signed artifact upload must require {required_expression}"
+    )
+print("Android CI signed artifact visibility regression guard passed")
+
 # Release acceptance must fail closed when any required job is not successful.
 release = re.search(r"(?ms)^  release-acceptance:\s*\n(.*?)(?=^  [a-zA-Z][\w-]*:|\Z)", source)
 assert release, "Release acceptance job missing"

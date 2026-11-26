@@ -1,0 +1,21 @@
+Mein Weg – Android MVV-Begleiter (MeinWeg2)
+Copyright 2026 Jochen Kunkel
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Third-party components (their own licenses remain in force):
+
+- AndroidX Compose, Activity and Glance – Apache License 2.0
+- osmdroid-android – Apache License 2.0
+- org.json (JSON-java) – Public Domain per its Maven POM
+- JUnit 4 – Eclipse Public License 1.0 (test dependency only)
+
+External data and services:
+
+- Map tiles and map data: (c) OpenStreetMap contributors, available under the
+  Open Database License (ODbL). A visible attribution is shown in the app.
+- Pedestrian routing: OSRM public demo service at routing.openstreetmap.de.
+- Departure data: MVV EFA at efa.mvv-muenchen.de.
+- Location names: Android platform Geocoder (provider depends on the device).
+
+No API keys or signing material are distributed with this project.

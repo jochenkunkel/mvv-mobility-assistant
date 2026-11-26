@@ -7,12 +7,21 @@ import android.graphics.Path
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import de.mvv.mobility.data.WalkingRoute
 import org.osmdroid.config.Configuration
@@ -50,7 +59,8 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, walkedTrack: List<P
             map.onDetach()
         }
     }
-    AndroidView(factory = { map }, modifier = modifier.fillMaxSize(), update = { view ->
+    Box(modifier = modifier.fillMaxSize()) {
+    AndroidView(factory = { map }, modifier = Modifier.fillMaxSize(), update = { view ->
         view.overlays.clear()
         val routePoints = route.path.map { GeoPoint(it.first, it.second) }
         if (routePoints.size >= 2) {
@@ -209,4 +219,18 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, walkedTrack: List<P
         if (cameraPoint != null) view.controller.setCenter(cameraPoint)
         view.invalidate()
     })
+        // TileSourceFactory.MAPNIK uses OpenStreetMap standard tiles. Their usage
+        // policy requires a visible credit; keep it independent of map rotation,
+        // tile cache state and route overlay redraws.
+        Text(
+            text = "© OpenStreetMap contributors",
+            color = ComposeColor(0xFF333333),
+            fontSize = 10.sp,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .background(ComposeColor(0xD9FFFFFF))
+                .padding(horizontal = 4.dp, vertical = 2.dp)
+                .testTag("osm_attribution")
+        )
+    }
 }

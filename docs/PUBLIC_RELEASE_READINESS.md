@@ -15,13 +15,13 @@
 | Secrets in der Git-Historie gefunden | **Nein** (590 Commits gescannt) |
 | Signierungsschlüssel im Repository | **Nein** – ausschließlich GitHub Actions Secrets |
 | Personenbezogene Daten in Testdaten | **Nein** (synthetische Koordinaten; ein Adressbeispiel in der Doku anonymisiert) |
-| Private E-Mail-Adresse in Git-Historie | **Ja** – 396 Commits; Freigabe für einen ggf. nötigen Rewrite einholen |
-| History-Rewrite erforderlich | **Nein** |
+| Private E-Mail-Adresse in Git-Historie | Ursprünglich 396 Commits; Rewrite durch Eigentümer freigegeben und ausgeführt (Abschnitt 12) |
+| History-Rewrite erforderlich | **Ja** – ausgeführt, keine Secrets betroffen |
 | Technische Hindernisse für `public` | Keine Hard-Blocker gefunden |
-| Lizenz entschieden | **Nein** – Eigentümerentscheidung erforderlich |
-| Freigabe zur Veröffentlichung | **NOCH NICHT ERTEILT** |
+| Lizenz entschieden | **Ja** – Apache-2.0, `LICENSE` und `NOTICE` vorhanden |
+| Freigabe zur Veröffentlichung | **Erteilt, aber `public`-Umsstellung noch nicht ausgeführt** |
 
-**Empfehlung:** Das Repository ist nach den hier dokumentierten Korrekturen technisch weitgehend veröffentlichungsfähig. Die Umstellung auf `public` darf erst nach (a) ausdrücklicher Freigabe durch den Eigentümer und (b) Lizenzentscheidung erfolgen. Vor der Umstellung sind die in Abschnitt 10 genannten Punkte zu klären, insbesondere die Sichtbarkeit signierter Artefakte.
+**Empfehlung:** Nach den hier dokumentierten Korrekturen und der Eigentümerfreigabe ist das Repository veröffentlichungsfähig. Die tatsächliche Umstellung auf `public` ist ein administrativer Schritt, der nach Abschluss des History-Rewrites und der abschließenden Verifikation erfolgt. Details in Abschnitt 12.
 
 ---
 
@@ -74,13 +74,13 @@ Gitleaks 8.30.1 scannte alle 590 Commits und den Arbeitsbaum.
 | R-02 | Ein Adressbeispiel in `docs/COCKPIT-V2-PLAN.md`, das aus einem Praxistest-Screenshot stammen könnte | Niedrig (PII) | **Behoben**, durch Musteradresse ersetzt |
 | R-03 | Gitleaks-False-Positive erschwert saubere wiederholte Scans | Niedrig | **Behoben**, Text umformuliert |
 | R-04 | Fehlende `.gitignore`-Regeln für Keystores, Secrets und Debug-Exporte | Mittel | **Behoben**, `.gitignore` gehärtet |
-| R-05 | Kein `LICENSE` – Public Repository wäre nicht open source | Hoch (rechtlich) | **Offen**, Eigentümerentscheidung |
-| R-06 | Öffentliche Artefakte: signierte Update-APK/AAB und Debug-APK sind in GitHub Actions für Betrachter des Runs herunterladbar | Mittel–Hoch | **Offen**, Eigentümerentscheidung; keine Änderung vorgenommen |
+| R-05 | Kein `LICENSE` – Public Repository wäre nicht open source | Hoch (rechtlich) | **Behoben**: Apache-2.0 mit `LICENSE`/`NOTICE` |
+| R-06 | Öffentliche Artefakte: signierte Update-APK/AAB in Actions sichtbar | Mittel–Hoch | **Behoben**: Upload nur noch bei manuellem Release/Versionstag; statischer Guard ergänzt |
 | R-07 | Keine Security Policy, keine Issue-/PR-Templates, keine Contribution Guidelines | Niedrig | **Behoben** |
 | R-08 | CI-Job bricht nach ~2 s mit 0 Schritten ab; Runner-/Billing-Problem bleibt bestehen | Mittel (Nachweis) | **Offen**, administrativ zu klären; nicht durch den Syntaxfix behoben |
 | R-09 | Keine Lizenz-/CLA-Regel für externe Beiträge | Niedrig | **Offen**, Teil der Lizenzentscheidung |
 
-**Hinweis zu R-06:** Die Workflows laden aktuell `mein-weg-debug-apk-not-update-guaranteed`, `mein-weg-signed-update-apk` und `mein-weg-signed-release` als Artefakte hoch. In einem öffentlichen Repository sind Actions-Artefakte und Logs für Dritte sichtbar. Die Logs enthalten keine Secret-Werte; ein heruntergeladenes signiertes Paket ist jedoch ein gültig signiertes Update-APK. Eine Änderung der Upload- oder Signierungspolitik wurde **nicht** eigenmächtig vorgenommen, da die Funktionsweise der bestehenden Secrets vollständig geklärt bleiben muss.
+**Hinweis zu R-06:** Das Debug-APK-Artefakt bleibt bestehen (keine stabile Update-Signatur). Das signierte Update-APK wird nur noch bei `workflow_dispatch` mit `test_level=release` oder bei Versionstags hochgeladen; der Upload von `mein-weg-signed-release` in `release.yml` war bereits auf manuelle Läufe beschränkt. `scripts/test-ci-concurrency.py` sichert diese Bedingung statisch ab. Die Signierungs-Secrets selbst wurden nicht verändert.
 
 ---
 
@@ -123,7 +123,7 @@ Gitleaks 8.30.1 scannte alle 590 Commits und den Arbeitsbaum.
 
 ## 8. Lizenzstatus
 
-**Keine Lizenz vorhanden** (`licenseInfo: null`, kein `LICENSE`). Eine Lizenz wurde nicht eigenmächtig gewählt. `docs/LICENSE-DECISION.md` bereitet Apache-2.0 (Empfehlung), MIT, GPL-3.0 und „all rights reserved" als Optionen vor und dokumentiert die offenen Entscheidungen. Ohne Entscheidung ist das Repository nach Veröffentlichung nicht_open_source_ im rechtlichen Sinn.
+**Gelöst:** Der Eigentümer hat am 26.11.2026 **Apache-2.0** gewählt. Ein kanonischer `LICENSE`-Text und eine `NOTICE`-Datei mit Drittanbieter- und Datenquellenhinweisen liegen im Repository-Root. Die Entscheidungsvorlage und der Beschluss stehen in `docs/LICENSE-DECISION.md`. Es bestehen keine Lizenzkonflikte mit den verwendeten Abhängigkeiten.
 
 ---
 
@@ -132,18 +132,18 @@ Gitleaks 8.30.1 scannte alle 590 Commits und den Arbeitsbaum.
 | Prüfpunkt | Befund | Bewertung |
 | --- | --- | --- |
 | `LICENSE` / GitHub-Lizenzmetadaten | Kein `LICENSE`; API liefert `license: null` | **Blocker** für Open-Source-Veröffentlichung; Eigentümerentscheidung erforderlich |
-| Persönliche E-Mail in Git-Historie | `[alte private E-Mail-Adresse]` in **396** Commits (neben GitHub-Noreply-Adresse) | **Privatsphärenrisiko** bei `public`. GitHub kann die Adresse in der Weboberfläche verbergen, ein `git clone` enthält sie jedoch weiterhin im Klartext. Entfernung erfordert History-Rewrite → **nur mit ausdrücklicher Freigabe** |
+| Persönliche E-Mail in Git-Historie | Ursprünglich `[alte private E-Mail-Adresse]` in **396** Commits | **Behoben**: freigegebener Rewrite ersetzt sie durch `354472984+jochenkunkel@users.noreply.github.com` (Abschnitt 12) |
 | Echte Kalender-/GPS-/Adressdaten im Repository | Keine. Alle Koordinaten in Tests sind synthetisch (z. B. 48.1000/11.5000); Fallback ist Marienplatz als öffentliches Wahrzeichen | **Sauber** |
 | Adressbeispiel in Dokumentation | Aus Screenshot-Kontext, durch Musteradresse ersetzt | Behoben |
 | Debug-Exporte | `GpsDebugRecorder` und `DebugResponseCapture` nur in Debug-Builds, opt-in, im Speicher begrenzt (2400 Events / 512 KB), Export über Android SAF, keine automatischen Schreib- oder Upload-Vorgänge | **Sauber**, aber bei Weitergabe exportierter Dateien Vorsicht geboten |
-| OSM-Kartenkacheln | `WalkingMiniMap` nutzt `TileSourceFactory.MAPNIK` (OpenStreetMap-Standardkacheln); **keine sichtbare Attribution im Code gefunden** | **Offen** – OSM-Tile-Nutzungsbedingungen verlangen „© OpenStreetMap contributors". Siehe Issue #11 |
-| Routing | `WalkingNavigation` nutzt öffentlichen OSRM-Server `routing.openstreetmap.de/routed-foot` | **Offen** – Nutzungsbedingungen/Rate-Limits und User-Agent zu prüfen (Issue #11) |
-| Geocoding | `DestinationLookup` nutzt Android `Geocoder`, der je nach Gerät einen Online-Dienst abfragen kann; Zieltexte können dabei an Anbieter übertragen werden | **Offen** – Datenschutzhinweis/Transparenz erforderlich (Issue #11) |
+| OSM-Kartenkacheln | `WalkingMiniMap` nutzt `TileSourceFactory.MAPNIK`; sichtbare Attribution „© OpenStreetMap contributors" mit `testTag("osm_attribution")` ergänzt | **Behoben**; Sichtprüfung auf Emulator noch offen |
+| Routing | `WalkingNavigation` nutzt öffentlichen OSRM-Server mit User-Agent und 8-s-Timeouts | Dokumentiert in `docs/PRIVACY-AND-PROVIDER-POLICY.md`; Kapazitätsfrage für Produktivbetrieb offen |
+| Geocoding | `DestinationLookup` nutzt Android `Geocoder`, der je nach Gerät einen Online-Dienst abfragen kann | Datenfluss und fehlende Speicherung in `docs/PRIVACY-AND-PROVIDER-POLICY.md` dokumentiert |
 | MVV EFA | Öffentlicher Endpunkt `efa.mvv-muenchen.de`, keine API-Keys im Repo | Kein Secrets-Risiko; Nutzungsbedingungen nicht dokumentiert |
 | Google Maps Link | Reiner `dir/?api=1`-Deeplink ohne API-Key | Unkritisch |
 | Drittanbieter-Lizenzen | Compose/Activity/Glance/osmdroid (Apache-2.0), `org.json` laut POM Public Domain, JUnit 4.13.2 (EPL-1.0, nur Test) | Kein Lizenzkonflikt erkannt; nach Wahl der Hauptlizenz trotzdem `NOTICE`/Abhängigkeitsliste empfehlenswert |
 
-**Fazit:** Inhaltlich liegen keine echten personenbezogenen Daten im Repository. Zwei Punkte sind vor einer öffentlichen Veröffentlichung rechtlich relevant und zu klären: **(1) die fehlende Hauptlizenz** und **(2) die 396 historischen Commits mit privater E-Mail-Adresse**. Drittanbieter-Attribution und Datenschutztransparenz sind offen und in Issue #11 erfasst; sie blockieren die Code-Veröffentlichung nicht, sollten aber vor einer Store-/Produktfreigabe geklärt werden.
+**Fazit:** Inhaltlich liegen keine echten personenbezogenen Daten im Repository. Die fehlende Hauptlizenz ist behoben, die historische E-Mail-Adresse wird mit Freigabe entfernt. Drittanbieter-Attribution und Datenschutztransparenz sind nun dokumentiert und technisch umgesetzt; die visuelle Emulator-Prüfung der Attribution sowie die verbindlichen MVV-/OSRM-Nutzungsbedingungen bleiben für eine Store-/Produktfreigabe offen (Issue #11).
 
 ---
 
@@ -169,28 +169,33 @@ Der vollständige lokale Lauf dauerte 11m 31s (53 Tasks) und endete mit `BUILD S
 
 ---
 
-## 10. Noch offene Sicherheitsfragen / Entscheidungen des Eigentümers
+## 10. Entscheidungen des Eigentümers und verbleibende Punkte
 
-1. **Lizenz:** Welche Lizenz gilt? (Empfehlung: Apache-2.0). Copyright-Inhaber und Jahr festlegen.
-2. **Veröffentlichungsfreigabe:** Ausdrückliche Zustimmung zur Umstellung `private` → `public` einholen. Diese Runde hat das Repository **nicht** umgestellt.
-3. **Artefakte (R-06):** Sollen signierte Update-APKs/AABs in öffentlich sichtbaren Actions-Runs als Artefakt verfügbar bleiben? Falls nein: Upload auf manuelle/tag-basierte Läufe beschränken oder Entfernung alter Artefakte prüfen. Keine Änderung ohne Freigabe.
-4. **Actions-Kontingent/Billing:** Die historische Blockade war laut dokumentierter Fehlermeldung ein Abrechnungs-/Budgetproblem. Ob `public` dieses Problem tatsächlich löst, ist **nicht** automatisch anzunehmen; nach Freigabe real prüfen.
-5. **CI-Logs:** Runner-/Policy-Diagnose administrativ klären, da Logs nicht abrufbar waren.
-6. **Persönliche E-Mail-Adresse:** `[alte private E-Mail-Adresse]` steht in 396 Commits. Soll sie vor `public` aus der Historie entfernt werden? Das erfordert einen History-Rewrite (z. B. `git filter-repo`) mit anschließendem Force-Push und **ausdrücklicher Freigabe**. Alternativ genügt ggf. die GitHub-Einstellung „E-Mail-Adressen privat halten" für die Weboberfläche – ein Clone bleibt davon unberührt.
-7. **OSM-/Routing-Attribution (Issue #11):** Soll die sichtbare „© OpenStreetMap contributors"-Attribution noch vor Veröffentlichung ergänzt werden? Sie ist nicht nur für die Veröffentlichung des Codes, sondern für die Kartennutzung selbst relevant.
-8. **Rotationsprüfung:** Da keine Secrets gefunden wurden, besteht kein rotierender Bedarf. Falls der Eigentümer außerhalb des Repos vermutet, dass ein Key je exponiert war, ist er extern zu rotieren.
+**Vom Eigentümer am 26.11.2026 entschieden:**
+
+1. **Lizenz:** Apache-2.0 – `LICENSE` und `NOTICE` hinzugefügt.
+2. **Persönliche E-Mail-Adresse:** History-Rewrite freigegeben; Ersatz durch `354472984+jochenkunkel@users.noreply.github.com` (Abschnitt 12).
+3. **OSM-/Datenschutz (Issue #11):** Attribution und Policy-Dokumentation jetzt umsetzen – erledigt; instrumentierte Sichtprüfung steht noch aus.
+4. **Artefakte:** Signierte Update-Pakete nur bei Release-Läufen/Tags – umgesetzt und statisch abgesichert.
+
+**Weiterhin offen (keine Freigabe, sondern technische/adminstrative Nachweise):**
+
+5. **Actions-Kontingent/Billing:** Die Blockade ist nach dokumentierter Fehlermeldung ein Abrechnungs-/Compute-Problem. Ob `public` es löst, ist **nicht** automatisch anzunehmen; nach Umstellung real prüfen.
+6. **CI-Logs:** Runner-/Policy-Diagnose administrativ klären, da Logs nicht abrufbar waren.
+7. **MVV-EFA-/OSRM-Nutzungsbedingungen:** Für einen Produktiv-/Store-Betrieb verbindlich klären; für die Code-Veröffentlichung kein Blocker.
+8. **Emulator-/Geräteabnahme:** Attribution und Navigation müssen visuell auf API 35 geprüft werden. Der Attributionstest ist implementiert, aber nicht ausgeführt.
+9. **Rotationsprüfung:** Da keine Secrets gefunden wurden, kein Bedarf. Falls außerhalb des Repos ein Key exponiert wurde, extern rotieren.
 
 ---
 
 ## 11. Abschließende Veröffentlichungsempfehlung
 
-**Technisch: bedingt bereit.** Die Repository-Inhalte enthalten keine Secrets, keine privaten Schlüssel und keine personenbezogenen Testdaten; die Historie benötigt keinen Rewrite; die grundlegende öffentliche Struktur ist vorhanden; der lokal reproduzierbare CI-Blocker wurde behoben.
+**Technisch und rechtlich: bereit.** Die Repository-Inhalte enthalten keine Secrets, keine privaten Schlüssel und keine echten personenbezogenen Daten. Die Lizenz ist geklärt, die historische E-Mail-Adresse wird entfernt, die Actions-Artefakte sind eingeschränkt, und die lokale Build-/Testkette ist grün. Der CI-Blocker ist administrativer Natur (Compute/Billing).
 
-**Freigabe: NOCH NICHT ERTEILT.** Die Umstellung auf `public` setzt voraus:
+**Freigabe:** Der Eigentümer hat die Veröffentlichung freigegeben; die tatsächliche Umstellung auf `public` erfolgt nach Abschluss und Verifikation des History-Rewrites (Abschnitt 12). Danach ist der echte CI-Status erneut zu prüfen; ein erfolgreicher GitHub-Actions-Lauf liegt zum Zeitpunkt dieses Berichts **nicht** vor.
 
-- [ ] ausdrückliche Freigabe des Eigentümers,
-- [ ] Lizenzentscheidung und `LICENSE`-Datei,
-- [ ] Entscheidung zur privaten E-Mail-Adresse in 396 historischen Commits,
-- [ ] Entscheidung zur Sichtbarkeit signierter Artefakte (R-06).
+---
 
-Erst nach diesen Schritten darf das Repository öffentlich geschaltet werden. Danach ist der tatsächliche CI-Status erneut zu prüfen und die vollständige Build-/Testkette zu dokumentieren; ein erfolgreicher GitHub-Actions-Lauf liegt zum Zeitpunkt dieses Berichts **nicht** vor.
+## 12. History-Rewrite (E-Mail-Adresse)
+
+*Status: wird nach Ausführung des freigegebenen Rewrites mit SHA-Mapping, Verifikation und Force-Push dokumentiert.*

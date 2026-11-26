@@ -137,6 +137,15 @@ class MeinWegComposeUiTest {
         compose.onNodeWithTag("walking_dashboard").assertDoesNotExist()
     }
 
+    /** #11: OSM tiles require visible attribution, also while navigating. */
+    @Test fun walkingMiniMapShowsOpenStreetMapAttribution() = launchFixture {
+        compose.onNodeWithTag("mvv_search_button").performScrollTo().performClick()
+        compose.onNodeWithTag("open_walking_dashboard").performScrollTo().performClick()
+        compose.onNodeWithTag("walking_dashboard").performScrollTo().assertExists()
+        compose.onNodeWithTag("osm_attribution").performScrollTo()
+            .assertTextEquals("© OpenStreetMap contributors")
+    }
+
     /** Regression for #13: recreation must not silently discard an active walking dashboard. */
     @Test fun activeWalkingDashboardSurvivesActivityRecreation() {
         val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext

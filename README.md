@@ -4,7 +4,11 @@ Android-App mit Kalenderterminen, automatischer Standortermittlung und Vordergru
 
 ## Veröffentlichungs- und Sicherheitsstatus
 
-Das Repository ist derzeit **privat**. Die vollständige Sicherheitsprüfung inklusive Git-Historie steht in **[docs/PUBLIC_RELEASE_READINESS.md](docs/PUBLIC_RELEASE_READINESS.md)**. Eine Umstellung auf `public` erfolgt **nur mit ausdrücklicher Freigabe des Eigentümers**. Es ist noch **keine Lizenz gewählt**; Optionen und Entscheidungsbedarf stehen in [docs/LICENSE-DECISION.md](docs/LICENSE-DECISION.md). Bis zur Entscheidung gilt: alle Rechte vorbehalten, keine Weiternutzung durch Dritte.
+Das Repository ist derzeit **privat**. Die vollständige Sicherheitsprüfung inklusive Git-Historie steht in **[docs/PUBLIC_RELEASE_READINESS.md](docs/PUBLIC_RELEASE_READINESS.md)**. Eine Umstellung auf `public` erfolgt **nur mit ausdrücklicher Freigabe des Eigentümers**.
+
+## Lizenz
+
+Dieses Projekt steht unter der **Apache License 2.0** ([LICENSE](LICENSE), [NOTICE](NOTICE)); Entscheidung des Eigentümers vom 26.11.2026. Drittanbieter-Lizenzen und Datenquellen sind in `NOTICE` und in [docs/PRIVACY-AND-PROVIDER-POLICY.md](docs/PRIVACY-AND-PROVIDER-POLICY.md) dokumentiert.
 
 Sicherheitshinweise (auch für die Geheimnisvergabe) siehe [.github/SECURITY.md](.github/SECURITY.md); Regeln für Beiträge in [CONTRIBUTING.md](CONTRIBUTING.md) und [AGENTS.md](AGENTS.md).
 

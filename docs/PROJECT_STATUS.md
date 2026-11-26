@@ -1,3 +1,13 @@
+## Entwicklungsrunde – 26.11.2026 (Eigentümerfreigaben umgesetzt)
+
+- **Freigaben:** Apache-2.0 gewählt → `LICENSE` + `NOTICE` angelegt, README/Decision-Doc aktualisiert. History-Rewrite für `[alte private E-Mail-Adresse]` → `354472984+jochenkunkel@users.noreply.github.com` freigegeben (Ausführung folgt als separater, dokumentierter Schritt). OSM-Attribution/Datenschutz (Issue #11) und Einschränkung signierter Artefakte ebenfalls freigegeben.
+- **Code/UI:** `WalkingMiniMap` blendet jetzt sichtbar „© OpenStreetMap contributors" ein (`testTag("osm_attribution")`); instrumentierter Regressionstest `walkingMiniMapShowsOpenStreetMapAttribution` ergänzt (nicht ausgeführt). Neue Policy-Dokumentation `docs/PRIVACY-AND-PROVIDER-POLICY.md`.
+- **CI-Artefakte:** `mein-weg-signed-update-apk` wird nur noch bei manuellem Release/Versionstag hochgeladen; statischer Guard in `scripts/test-ci-concurrency.py` ergänzt. Debug-APK bleibt.
+- **Verifiziert:** `python3 scripts/test-ci-concurrency.py` exit 0 (neuer Guard grün), `bash scripts/preflight.sh` exit 0, `python3 scripts/test-emulator-navigation.py` exit 0, YAML valide. `.work/tools/gradle-8.13/bin/gradle :app:compileDebugKotlin :app:compileDebugAndroidTestKotlin` = `BUILD SUCCESSFUL in 59s`. **Kein Emulator-Lauf, keine Gerätefreigabe.**
+- **Nächster Schritt:** Freigegebenen History-Rewrite auf separatem Pfad ausführen, Commit-SHA-Mapping prüfen, Docs verlinken, force-pushen und anschließend `public`-Umsstellung veranlassen.
+
+---
+
 ## Entwicklungsrunde – 26.11.2026 (Release-Readiness, CI-Blocker, Offline-Tests)
 
 - **Baseline:** Frisch geklont, `main=a796545`, Working Tree sauber, 115 Dateien, 3 Remote-Branches, keine Tags, Repo `PRIVATE`, `licenseInfo=null`. README, CHAT-START,PROJECT_STATUS, Issues (11 offen), Workflows, Build-Dateien, Manifest und jüngste Commits geprüft.

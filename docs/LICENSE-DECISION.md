@@ -1,12 +1,16 @@
-# License decision – pending owner approval
+# License decision – resolved
 
-**Status: NO LICENSE HAS BEEN CHOSEN.** The repository intentionally contains
-no `LICENSE` file yet. The owner must decide before publication; this document
-only prepares the decision and must not be read as a license grant.
+**Status: Apache-2.0, decided by the owner on 26.11.2026.** A canonical
+`LICENSE` (Apache License 2.0) and a `NOTICE` file were added to the repository
+root. The decision replaced the earlier state (`licenseInfo: null`, no
+`LICENSE`) documented in previous readiness snapshots.
 
-Current repository metadata (checked 26.11.2026): `licenseInfo: null`.
-Until a license is chosen, the code is **all rights reserved** and may not be
-reused, copied or distributed by third parties.
+Copyright holder: Jochen Kunkel, year 2026 (derived from repository ownership;
+no other holder was specified). Third-party notices and data sources are listed
+in `NOTICE` and in `docs/PRIVACY-AND-PROVIDER-POLICY.md`.
+
+This document is retained as the decision record and must not be read as a
+replacement for the `LICENSE` file.
 
 ## Why a decision is needed
 
@@ -30,12 +34,13 @@ libraries and may later be distributed through a store. It grants users
 clarity and includes a patent clause, while not forcing derivative apps to be
 published under the same license.
 
-## Decision required from the owner
+## Decision record
 
-- [ ] Choose one: Apache-2.0 / MIT / GPL-3.0 / other / keep all rights reserved
-- [ ] Confirm copyright holder name and year for the license text
-- [ ] Confirm whether an existing CONTRIBUTING/CLA requirement is desired
+- [x] Owner chose **Apache-2.0** on 26.11.2026
+- [x] Copyright holder/year: Jochen Kunkel, 2026
+- [x] `LICENSE` and `NOTICE` added; README links both
+- [ ] Optional: CLA requirement for external contributions – not requested
 
-After the decision, add the chosen `LICENSE` file (and `NOTICE` if required),
-update the README section “License”, and re-run the release readiness check.
-No license file is added in this round.
+The license blocker for a public release is resolved. Other publication gates
+(private email in Git history, artifact visibility) are tracked in
+`docs/PUBLIC_RELEASE_READINESS.md`.
