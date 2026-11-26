@@ -1,3 +1,11 @@
+## Nachbesserung – 26.11.2026 (VersionCode des signierten Releases)
+
+- Release-Lauf `45827643755` war vollständig **success** (`gate` + `signed-release`); APK und AAB als Artefakt `mein-weg-signed-release` vorhanden, Signatur `CN=MeinWeg2` geprüft.
+- Befund: `versionCode=2`, `versionName=0.2.2` – die Release-Run-Nummer war kleiner als der `versionCode=597` der CI-Update-APK. Ein In-Place-Update wäre damit blockiert.
+- Fix: `release.yml` nutzt `versionCode = 1.000.000 + github.run_number`, weiterhin monoton und innerhalb des Android-Limits. Nachweis folgt im nächsten Release-Lauf.
+
+---
+
 ## Nachbesserung – 26.11.2026 (OSM-Ziel nicht mehr fälschlich mehrdeutig)
 
 - **Gemeldetes Problem:** Nach der NAV-03-Verschärfung (25 m) wurden normale Geocoder-Treffer mehrerer naher Adresspunkte als „Ziel mehrdeutig" abgelehnt.

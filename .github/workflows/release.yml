@@ -65,8 +65,13 @@ jobs:
           printf '%s' "$MEIN_WEG_KEYSTORE_BASE64" | base64 --decode > "$MEIN_WEG_KEYSTORE_PATH"
           chmod 600 "$MEIN_WEG_KEYSTORE_PATH"
       - name: Build signed APK and AAB
+        shell: bash
         run: |
-          gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleRelease :app:bundleRelease -PmeinWegVersionCode=${{ github.run_number }} -PmeinWegVersionName=${{ inputs.version_name }}
+          # Release workflow run numbers start at 1 and must not produce a
+          # version code below the debug/update APKs built by Android CI.
+          version_code=$((1000000 + ${{ github.run_number }}))
+          gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleRelease :app:bundleRelease             -PmeinWegVersionCode="$version_code" -PmeinWegVersionName=${{ inputs.version_name }}
+          echo "Signed release versionCode=$version_code" >> "$GITHUB_STEP_SUMMARY"
       - name: Check APK signature
         run: |
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk
