@@ -132,4 +132,28 @@ class NavigationTraceRecreationTest {
         }
     }
 
+    @Test fun rejectedGpsFixAfterRecreationDoesNotEraseRecordedHistory() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            val accepted = TraceFix(48.1000, 11.5000, 1_000L, 5f)
+            scenario.onActivity { activity ->
+                val trace = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
+                trace.acceptFix(accepted)
+                assertEquals(listOf(accepted), trace.walkedTrace.fixes)
+            }
+            scenario.recreate()
+            scenario.onActivity { activity ->
+                val trace = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
+                // An inaccurate fix must not replace the previously recorded track.
+                trace.acceptFix(TraceFix(48.1001, 11.5001, 12_000L, 500f))
+                assertEquals(listOf(accepted), trace.walkedTrace.fixes)
+                assertEquals(listOf(listOf(accepted)), trace.walkedTrace.segments)
+            }
+            scenario.recreate()
+            scenario.onActivity { activity ->
+                val trace = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
+                assertEquals(listOf(accepted), trace.walkedTrace.fixes)
+            }
+        }
+    }
+
 }
