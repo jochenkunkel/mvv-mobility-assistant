@@ -19,9 +19,9 @@
 | History-Rewrite erforderlich | **Ja** – ausgeführt, keine Secrets betroffen |
 | Technische Hindernisse für `public` | Keine Hard-Blocker gefunden |
 | Lizenz entschieden | **Ja** – Apache-2.0, `LICENSE` und `NOTICE` vorhanden |
-| Freigabe zur Veröffentlichung | **Erteilt, aber `public`-Umsstellung noch nicht ausgeführt** |
+| Freigabe zur `public`-Umsstellung | **NOCH NICHT ERTEILT** – wird beim Eigentümer angefordert |
 
-**Empfehlung:** Nach den hier dokumentierten Korrekturen und der Eigentümerfreigabe ist das Repository veröffentlichungsfähig. Die tatsächliche Umstellung auf `public` ist ein administrativer Schritt, der nach Abschluss des History-Rewrites und der abschließenden Verifikation erfolgt. Details in Abschnitt 12.
+**Empfehlung:** Nach den dokumentierten Korrekturen und dem abgeschlossenen, verifizierten History-Rewrite (Abschnitt 12) ist das Repository veröffentlichungsfähig. Die Umstellung auf `public` ist ein administrativer Schritt und setzt die noch ausstehende ausdrückliche Freigabe des Eigentümers voraus. Der aktuelle Commit ist `b3c22e7`; GitHub erkennt `Apache-2.0`.
 
 ---
 
@@ -192,7 +192,7 @@ Der vollständige lokale Lauf dauerte 11m 31s (53 Tasks) und endete mit `BUILD S
 
 **Technisch und rechtlich: bereit.** Die Repository-Inhalte enthalten keine Secrets, keine privaten Schlüssel und keine echten personenbezogenen Daten. Die Lizenz ist geklärt, die historische E-Mail-Adresse wird entfernt, die Actions-Artefakte sind eingeschränkt, und die lokale Build-/Testkette ist grün. Der CI-Blocker ist administrativer Natur (Compute/Billing).
 
-**Freigabe:** Der Eigentümer hat die Veröffentlichung freigegeben; die tatsächliche Umstellung auf `public` erfolgt nach Abschluss und Verifikation des History-Rewrites (Abschnitt 12). Danach ist der echte CI-Status erneut zu prüfen; ein erfolgreicher GitHub-Actions-Lauf liegt zum Zeitpunkt dieses Berichts **nicht** vor.
+**Freigabe:** Der Eigentümer hat Lizenz, History-Rewrite, OSM-/Datenschutzmaßnahmen und Artefakt-Einschränkung entschieden (Abschnitt 10). Die **ausdrückliche Freigabe zur Umstellung auf `public` wurde noch nicht erteilt** und wird hiermit angefordert. Nach der Umstellung ist der echte CI-Status erneut zu prüfen; ein erfolgreicher GitHub-Actions-Lauf liegt zum Zeitpunkt dieses Berichts **nicht** vor.
 
 ---
 
