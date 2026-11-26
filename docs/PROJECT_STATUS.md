@@ -1,3 +1,14 @@
+## Entwicklungsrunde – 26.11.2026, Ticket [02] CI-01
+
+- **Ursache:** `release.yml` konnte unabhängig von den Android-Release-Gates signieren und nutzte eine veraltete globale Concurrency-Gruppe mit Abbruch laufender Läufe.
+- **Fix:** Neuer `gate`-Job prüft per Check-Runs-API eine erfolgreiche `release-acceptance` **für exakt den zu signierenden Commit**; `signed-release` hat `needs: gate`. Concurrency jetzt events-/ref-basiert mit `cancel-in-progress: false`. `permissions: actions: read` ergänzt.
+- **Branch-Schutz:** `main` erfordert jetzt erfolgreiche Checks `preflight` und `build-and-test` für PRs (`strict: true`); Force-Pushes und Löschen gesperrt.
+- **Guard:** `scripts/test-ci-concurrency.py` prüft den neuen Release-Vertrag statisch (4 neue Assertions); lokal grün. YAML validiert.
+- **Laufender Nachweis:** Release-Lauf `45803904803` (`workflow_dispatch`, `test_level=release`) – `preflight`, `mvv-live-probe`, `door-to-door-live-probe` bereits `success`; `build-and-test`/`emulator-smoke-test` liefen zum Dokumentationszeitpunkt noch.
+- **Keine** Änderung an Signierungs-Secrets oder Keystore-Inhalten.
+
+---
+
 ## Entwicklungsabgleich – 26.11.2026, 11:37 MEZ (grüner CI-Lauf nach Veröffentlichung)
 
 - **Live-Befund:** GitHub meldet `visibility=public` und `license=Apache-2.0`. Der vorherige 2-Sekunden-Preflight-Abbruch mit `steps=[]` ist nach der Veröffentlichung **nicht** mehr reproduzierbar: [Android CI #45800089593](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45800089593) auf `c323364` = **success** (5m 8s).

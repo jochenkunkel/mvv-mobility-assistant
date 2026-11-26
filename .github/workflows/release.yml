@@ -6,15 +6,38 @@ on:
         description: 'Version name, e.g. 0.2.0'
         required: true
         default: '0.2.0'
-# New runs in any workflow cancel older runs, including signed releases.
+# Never cancel a manual signed release. Use an event/ref scoped group like the
+# Android workflow instead of the obsolete global cancellation group.
 concurrency:
-  group: single-active-ci
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
+  actions: read
 jobs:
+  # A signed release is only allowed when the complete Android release gate
+  # succeeded for the exact commit that is about to be signed.
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require successful Android release acceptance for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          result=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${SHA}/check-runs" \
+            --jq '[.check_runs[] | select(.name == "release-acceptance" and .status == "completed" and .conclusion == "success")] | length')
+          if [[ "$result" == "0" ]]; then
+            echo "::error::No successful release-acceptance check for ${SHA}. Run Android CI with test_level=release on this commit first."
+            exit 1
+          fi
+          echo "Release gate confirmed for ${SHA} ($result successful check run)."
+
   signed-release:
+    needs: gate
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:

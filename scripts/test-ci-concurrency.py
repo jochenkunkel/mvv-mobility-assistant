@@ -226,3 +226,23 @@ assert r'printf "::error file=scripts/preflight.sh,line=%s,title=Preflight failu
     "Preflight ERR annotation must end with exactly one escaped newline"
 )
 print("Preflight ERR annotation newline regression guard passed")
+
+# A signed release must never bypass the complete Android release gate.
+release_workflow = (workflow.parent / "release.yml").read_text(encoding="utf-8")
+assert "cancel-in-progress: false" in release_workflow, (
+    "Signed release must not cancel in progress"
+)
+assert "single-active-ci" not in release_workflow, (
+    "Obsolete global cancellation group must not return in release workflow"
+)
+assert re.search(r"(?m)^  gate:\s*$", release_workflow), "Release gate job missing"
+assert re.search(r"(?m)^    needs:\s*gate\s*$", release_workflow), (
+    "Signed release must depend on the release gate"
+)
+assert "release-acceptance" in release_workflow, (
+    "Release gate must verify the Android release-acceptance check"
+)
+assert "check-runs" in release_workflow, (
+    "Release gate must inspect check runs for the exact commit"
+)
+print("Signed release gate source contract passed")
