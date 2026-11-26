@@ -157,7 +157,7 @@ Folgende Befehle wurden **lokal auf diesem Checkout ausgeführt** (JDK 17, Gradl
 | `python3 scripts/test-emulator-navigation.py` | exit 0 – **30 Tests bestanden** (nach Syntaxfix) |
 | `bash scripts/preflight.sh` | exit 0 – PASS: shell and Python syntax |
 | `python3 -m unittest discover -s scripts -p 'test_*.py'` | exit 0 – 6 Tests bestanden |
-| `gitleaks detect --source . --no-git` (nach Bereinigung) | exit 0 – keine Funde im Worktree |
+| `gitleaks detect --source . --no-git` (nach Bereinigung) | keine Funde in getrackten Dateien; 4 Treffer ausschließlich in den git-ignorierten, historischen Scan-Reports unter `.work/reports/` |
 | `gitleaks detect --source .` (Historie, nach Bereinigung) | 1 bekannter historischer False Positive aus `5882040`, keine Secrets |
 
 | `gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug` (lokal) | 85 Unit-Tests bestanden (0 Fehler/errors/skipped), Debug-APK erzeugt |
