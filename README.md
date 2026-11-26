@@ -4,7 +4,7 @@ Android-App mit Kalenderterminen, automatischer Standortermittlung und Vordergru
 
 ## Veröffentlichungs- und Sicherheitsstatus
 
-Das Repository ist derzeit **privat**. Die vollständige Sicherheitsprüfung inklusive Git-Historie steht in **[docs/PUBLIC_RELEASE_READINESS.md](docs/PUBLIC_RELEASE_READINESS.md)**. Eine Umstellung auf `public` erfolgt **nur mit ausdrücklicher Freigabe des Eigentümers**.
+Das Repository ist seit dem 26.11.2026 laut GitHub-Repository-Metadaten **öffentlich**. Die vorangegangene Sicherheitsprüfung inklusive Git-Historie steht in **[docs/PUBLIC_RELEASE_READINESS.md](docs/PUBLIC_RELEASE_READINESS.md)**. Dortige Aussagen wie „noch privat“ oder „Freigabe ausstehend“ sind historische Prüf-Snapshots und beschreiben nicht den aktuellen Sichtbarkeitsstatus. **Öffentliches Repository bedeutet keine APK-/Release-Freigabe**: Die GitHub-Actions- und Emulator-Abnahme ist separat nachzuweisen.
 
 ## Lizenz
 
