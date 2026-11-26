@@ -33,6 +33,17 @@ class NavigationTraceRecreationTest {
                 assertSame(original, restored)
                 assertEquals(fixes, restored.walkedTrace.fixes)
                 assertEquals(listOf(fixes), restored.walkedTrace.segments)
+                // A new fix after recreation must append to the retained history.
+                restored.acceptFix(TraceFix(48.1002, 11.5000, 23_000L, 5f))
+                assertEquals(3, restored.walkedTrace.fixes.size)
+            }
+            // A second recreation must not silently start a fresh GPS session.
+            scenario.recreate()
+            scenario.onActivity { activity ->
+                val restoredAgain = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
+                assertSame(original, restoredAgain)
+                assertEquals(3, restoredAgain.walkedTrace.fixes.size)
+                assertEquals(fixes, restoredAgain.walkedTrace.fixes.take(2))
             }
         }
     }
