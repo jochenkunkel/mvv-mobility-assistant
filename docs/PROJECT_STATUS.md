@@ -1,3 +1,12 @@
+## Entwicklungsabgleich – 26.11.2026, 07:16 MEZ (GPS-Segmentgrenzen bei Recreation)
+
+- **Live-Baseline:** main vor Änderung `5b0ed9f`; README, Implementierungs-Roadmap, Projektstatus, Android-Workflow, Testmatrix, MainActivity, offene Issues und letzte Commits geprüft. Elf offene Issues, keine offenen PRs. Andere Projekt-Chats Main/Schedule nicht vollständig live zugänglich.
+- **Kleines Testpaket:** [b86d8dc](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/b86d8dc5dae9a6fbf2d9c0bd49f8592d0cac6658) erweitert `NavigationTraceRecreationTest`: zwei valide GPS-Fixes mit mehr als 120 Sekunden Abstand müssen vor und nach `ActivityScenario.recreate()` zwei getrennte Segmente bleiben. Damit wird neben der Punktpersistenz auch verhindert, dass eine Rotation eine erfundene Verbindung über eine GPS-Lücke erzeugt. Keine echte Orientation-Transition und keine aktive Journey im Test.
+- **CI:** Android-CI #548 erneut über Jobs abgefragt: `preflight=failure`, `steps=null`, fünf Folgejobs übersprungen; konkrete Ursache nicht belegbar. Für den neuen Commit liegt kein ausgeführter JVM-/Emulatortest oder grüner Actions-Lauf vor. Keine APK-Installationsfreigabe.
+- **Nächste Priorität:** API-35-Instrumentierung tatsächlich ausführen, danach ROT-01 mit aktiver Journey, Ziel, Tab und Puffer erweitern. Runner-/Setup-Fehler im neuesten Actions-Push-Lauf administrativ ermitteln; keine blinden Workflow-/Signing-/Secrets-Änderungen.
+
+---
+
 ## Entwicklungsabgleich – 26.11.2026, 03:20 MEZ (explizites Session-Ende)
 
 - **Repo-Baseline:** main vor Änderung `1ba819b`; README, Roadmap, Lifecycle-Vertrag, bestehende Android-Tests, elf offene Issues, keine offenen PRs geprüft. Vollständige Main-/Schedule-Chats nicht live abrufbar.
