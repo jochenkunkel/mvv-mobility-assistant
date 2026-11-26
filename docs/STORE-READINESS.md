@@ -1,3 +1,21 @@
+## Aktueller Abnahmestand – 26.11.2026 (maßgeblich vor historischen Abschnitten)
+
+- **Repository:** öffentlich, Apache-2.0; alle zuvor elf offenen Entwicklungs-Issues geschlossen (Live-Abfrage: 0 offene Issues, 0 offene PRs). Dies ersetzt keine Geräte- oder Store-Abnahme.
+- **CI:** Vollständiger Android-Release-Testlauf [45813033231](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45813033231) ist im zentralen Projektstatus als grün mit sechs Jobs, 97 Unit- und 32 Instrumentierungstests dokumentiert. Das belegt keine physische S25-/S10-Prüfung.
+- **Signing:** Der fehlgeschlagene signierte Release-Lauf [45814284873](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45814284873) bezog sich auf die *vorherige* Secret-Namenszuordnung. Commit [c8c81f6](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/c8c81f6121d89c0ed8493085048beb37c450921b) nutzt die vorhandenen stabilen `MEIN_WEG_CI_SIGNING_*`-Secrets. Ein **neuer erfolgreicher Signed-Release-Lauf nach diesem Fix ist hier nicht belegt**. Keine Secrets ändern oder veröffentlichen.
+- **OSM:** Commit [a9787d2](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/a9787d226c90b52ac5391424878020ecac06c024) lockert die Geocoder-Näheprüfung auf 75 m; JVM-Tests und Kotlin-Kompilierung sind im Projektstatus als lokal erfolgreich dokumentiert. Der Fix ist **nicht** durch einen neuen vollständigen Release-Gate-Lauf oder einen echten Fußweg abgenommen.
+
+### Nächste Freigabeschritte (in Reihenfolge)
+
+1. Für **exakt den aktuellen HEAD** einen vollständigen Android-CI-Release-Testlauf mit `release-acceptance` nachweisen; bei Fehlschlag zuerst Ursache beheben.
+2. Danach den separaten Signed-Release-Workflow für **denselben Commit** ausführen und erfolgreiche Signaturprüfung von APK und AAB sowie Versionsnummer und Artefakt nachweisen. Die bloße Änderung der Secret-Referenzen ist noch kein erfolgreicher Signierungsnachweis.
+3. Primär auf dem **Samsung S25**, ergänzend S10: Erststart, Berechtigungen, Kalenderziel, echte MVV-Verbindung, OSM-Fußweg zur gewählten Haltestelle, Abbiege-/Off-Route-Verhalten, GPS-Lücken, Rotation während aktiver Navigation und dynamischen Ankunftspuffer protokollieren (Datum, Gerät/OS, App-Version, Testschritte, Soll/Ist, Screenshots ohne private Ortsdaten).
+4. Installations-/Updatepfad N→N+1 mit identischer Signatur und höherem `versionCode` sowie Settings-Persistenz prüfen; anschließend Layout-/Schriftgrößenmatrix und Store-Policy abschließen.
+
+**Freigabe:** Bis zum Nachweis aller einschlägigen Gates keine neue APK-Installations- oder Store-Empfehlung. Die folgenden Abschnitte sind historische Planungsstände und können überholte Statusaussagen enthalten; aktuelle Fakten stehen auch in [PROJECT_STATUS.md](PROJECT_STATUS.md).
+
+---
+
 # Mein Weg 2.0 – Geräte-, Installations-, Update- und Store-Freigabeplan
 Stand: 15.11.2026. **Qualitätsanforderung für jede künftige Version; kein Nachweis einer bereits erfolgten Store-Freigabe.**
 
