@@ -1,3 +1,12 @@
+## Entwicklungsabgleich – 26.11.2026, 08:22 MEZ (GPS-Lücke nach Activity-Recreation)
+
+- **Repo-Abgleich:** main vor Änderung `3bacf05`; README, Implementierungs-Roadmap, zentraler Status, Android-Workflow, GPS-Instrumentierung, Issues und letzte Commits geprüft. Elf offene Issues, keine offenen PRs. Andere Projekt-Chats nicht vollständig live abrufbar.
+- **Neues Testpaket:** [bae5f68](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/bae5f681e3a2e5060ad16f862e44dc2439413710) ergänzt `gpsGapAfterRecreationStartsNewSegmentWithoutLosingHistory`. Ein Fix vor `ActivityScenario.recreate()` und ein zeitlich weit entfernter Fix danach müssen getrennte Segmente bilden; eine zweite Recreation muss beide erhalten. Ergänzt den bestehenden Fall, in dem beide Fixes *vor* der Recreation eintreffen.
+- **Tests/CI:** Instrumentierung nicht ausgeführt; kein API-35-Emulator oder grüner Push-Build über die verfügbaren Abfragen bestätigt. Historischer Lauf #548 bleibt fehlgeschlagen, dessen Ursache nicht belegbar; aktuelle Push-Runs konnten hier nicht zuverlässig abgefragt werden. Keine APK-Installationsfreigabe.
+- **Nächste Priorität:** Tatsächliche API-35-Ausführung und CI-Runner-Setup prüfen; anschließend aktive Route, Verbindung, Ziel und Puffer bei echter Portrait–Landscape–Portrait-Rotation absichern. Keine blind vorgenommenen CI-/Signing-Änderungen.
+
+---
+
 ## Entwicklungsabgleich – 26.11.2026, 07:16 MEZ (GPS-Segmentgrenzen bei Recreation)
 
 - **Live-Baseline:** main vor Änderung `5b0ed9f`; README, Implementierungs-Roadmap, Projektstatus, Android-Workflow, Testmatrix, MainActivity, offene Issues und letzte Commits geprüft. Elf offene Issues, keine offenen PRs. Andere Projekt-Chats Main/Schedule nicht vollständig live zugänglich.
