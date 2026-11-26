@@ -1,3 +1,10 @@
+## Entwicklungsabgleich – 26.11.2026, 03:20 MEZ (explizites Session-Ende)
+
+- **Repo-Baseline:** main vor Änderung `1ba819b`; README, Roadmap, Lifecycle-Vertrag, bestehende Android-Tests, elf offene Issues, keine offenen PRs geprüft. Vollständige Main-/Schedule-Chats nicht live abrufbar.
+- **Testpaket:** [3ef5648](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/3ef56488c9ee800dd5d1cc0ff8dd487daee8edcb) ergänzt einen instrumentierten Test: aufgezeichnete GPS-Spur explizit löschen, Activity neu erstellen, leere Spur verifizieren und einen neuen Fix mit zurückgesetztem Zeitstempel akzeptieren. Dies sichert den Unterschied zwischen Rotation (Spur behalten) und explizitem Session-Ende (Spur löschen) ab. Kein echter Orientierungstest, keine aktive Route/Verbindung geprüft.
+- **CI:** Commit-Statusabfrage für `3ef5648` ergab `statuses=[]`; kein positiver Buildnachweis. Instrumentierung nicht ausgeführt, bisher dokumentierter Android-CI-Preflight #548 fehlgeschlagen. Keine APK-Freigabe.
+- **Nächste Priorität:** API-35-Instrumentierung ausführen; danach echte Portrait–Landscape–Portrait-Transitions mit aktiver Route/Ziel/Puffer. Runner-Setup-Annotations zur Preflight-Ursache prüfen, keine Workflow-/Secrets-Änderung auf Verdacht.
+
 ## Entwicklungsabgleich – 26.11.2026, 02:22 MEZ (wiederholte Activity-Recreation)
 
 - **Live-Prüfung:** main vor Änderung `5cc77f8`; README, Roadmap, Testmatrix, NavigationTraceViewModel, Instrumentierungstest, Issues und PRs geprüft. Elf offene Issues, keine offenen PRs; Main-/Schedule-Chats nicht vollständig live zugänglich.
