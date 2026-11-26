@@ -19,7 +19,15 @@ data class JourneyOption(
     val steps: List<JourneyStep> = emptyList(),
     /** Absolute instants parsed from EFA date/time when available. */
     val departureInstantMillis: Long? = null, val arrivalInstantMillis: Long? = null
-)
+) {
+    /** Exact boarding endpoint of the first vehicle leg, when EFA supplied it. */
+    fun boardingStop(): StopPosition? =
+        steps.firstOrNull { !it.walking }?.fromStop
+
+    /** Whether a cached walking route is actually for this journey's boarding stop. */
+    fun hasRouteToBoardingStop(route: WalkingRoute?): Boolean =
+        boardingStop()?.let { route?.destination == it } ?: false
+}
 data class JourneyStep(val line: String, val product: String, val from: String, val to: String,
     val departure: String, val arrival: String, val walking: Boolean, val minutes: Int,
     val fromStop: StopPosition? = null, val toStop: StopPosition? = null)

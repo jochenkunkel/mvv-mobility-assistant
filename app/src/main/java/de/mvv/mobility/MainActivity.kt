@@ -1855,8 +1855,9 @@ class MainActivity : ComponentActivity() {
                                 elevation = CardDefaults.cardElevation(defaultElevation = if (index == 0) 4.dp else 2.dp)
                             ) {
                                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    val pastDeparture = EfaTime.forNow(trip.departure, clockMillis)
-                                        ?.let { it < clockMillis } ?: false
+                                    val pastDeparture = JourneyTime.isPast(
+                                        trip, clockMillis, searchTimeMillis ?: clockMillis
+                                    )
                                     if (pastDeparture) Text("ABGEFAHREN – nicht mehr erreichbar",
                                         color = MaterialTheme.colorScheme.error,
                                         style = MaterialTheme.typography.labelMedium,
@@ -2121,13 +2122,14 @@ class MainActivity : ComponentActivity() {
                                 val departureClock = upcoming?.step?.departure
                                     ?: chosen?.departure.orEmpty()
                                 val boardingName = chosen?.steps?.firstOrNull { !it.walking }?.from.orEmpty()
-                                val platform = resolvedWalkingTarget?.second?.platform.orEmpty()
-                                val knownWalkMin = if (navigationLocation != null)
-                                    chosen?.walkingMinutes else chosen?.walkingMinutes
-                                val bufferText = if (upcoming != null && knownWalkMin != null) {
-                                    val remaining = (upcoming.departureMillis - clockMillis) / 60_000L - knownWalkMin
-                                    if (remaining >= 0) "ca. $remaining Min. (Planwert)" else "unbekannt – Abfahrt erreicht"
-                                } else "unbekannt – Abfahrt oder Gehzeit unbekannt"
+                                val boardingStop = chosen?.boardingStop()
+                                val platform = boardingStop?.platform.orEmpty()
+                                val boardingDistance = walkingRoute
+                                    ?.takeIf { it.destination != null && it.destination == boardingStop }
+                                    ?.totalMeters
+                                // JourneyOption.walkingMinutes is the total for the whole
+                                // itinerary, not a live estimate to the upcoming transfer.
+                                val bufferText = "unbekannt – Gehzeit zum Anschluss nicht bestimmt"
                                 val departureInstant = chosen?.let {
                                     JourneyTime.departureMillis(it, searchTimeMillis ?: clockMillis)
                                 }
@@ -2148,9 +2150,10 @@ class MainActivity : ComponentActivity() {
                                     else -> "${chosen?.lines?.joinToString(", ").orBlank()} · ${chosen?.departure.orBlank()}"
                                 }
                                 val warningsFull = buildList {
-                                    if (resolvedWalkingTarget?.second == null) add("⚠ MVV-Koordinaten fehlen – Einstieg auf Karte prüfen")
+                                    val hasVehicleLeg = chosen?.steps?.any { !it.walking } == true
+                                    if (hasVehicleLeg && boardingStop == null) add("⚠ MVV-Einstiegskoordinaten fehlen – Einstieg auf Karte prüfen")
                                     if (navigationLocation == null) add("⚠ GPS nicht aktuell – Anzeige kann veraltet sein")
-                                    if (chosen?.steps?.firstOrNull { !it.walking }?.toStop?.platform.isNullOrBlank()) add("⚠ Steig nicht eindeutig")
+                                    if (hasVehicleLeg && boardingStop?.platform.isNullOrBlank()) add("⚠ Steig nicht eindeutig")
                                 }
                                 FullscreenJourneyDashboard(
                                     countdown = countdownLabel,
@@ -2161,8 +2164,8 @@ class MainActivity : ComponentActivity() {
                                     departure = departureClock,
                                     boarding = boardingName,
                                     platform = platform,
-                                    walking = knownWalkMin?.let { "$it Min." }.orBlank(),
-                                    distance = walkingRoute?.totalMeters?.let { "ca. $it m" }.orBlank(),
+                                    walking = chosen?.walkingMinutes?.let { "$it Min. gesamt" }.orBlank(),
+                                    distance = boardingDistance?.let { "ca. $it m" }.orBlank(),
                                     buffer = bufferText,
                                     arrival = chosen?.arrival.orBlank(),
                                     warnings = warningsFull,
@@ -2178,9 +2181,12 @@ class MainActivity : ComponentActivity() {
                                         pendingNewSearch = true
                                     },
                                     onNavigate = {
-                                        if (walkingRoute == null) {
+                                        // A previously loaded walking alternative may route to the
+                                        // journey's final destination, not this boarding stop.
+                                        if (chosen?.hasRouteToBoardingStop(walkingRoute) != true) {
+                                            walkingRoute = null
                                             val start = usableLocation
-                                            val stop = resolvedWalkingTarget?.second
+                                            val stop = boardingStop
                                             val fallback = chosen?.steps?.firstOrNull { !it.walking }?.from
                                             if (start != null && (stop != null || !fallback.isNullOrBlank())) {
                                                 val requestId = ++walkingRequestId

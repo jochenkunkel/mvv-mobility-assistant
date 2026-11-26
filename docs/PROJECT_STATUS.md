@@ -1,3 +1,12 @@
+## Code-Review-Nachbesserungen – 26.11.2026
+
+- **Boarding-Ziel:** Das Vollbild-Dashboard routet jetzt anhand des `fromStop` des ersten Fahrzeugabschnitts; Zielhaltestellen-Koordinaten und bereits geladene Fußwege zum Reiseziel werden nicht mehr als MVV-Einstiegspunkt missbraucht. Plattform, Koordinatenwarnung und Fußwegdistanz beziehen sich ebenfalls auf diesen Einstieg.
+- **Suchdatum:** Die Vergangenheitsmarkierung der Verbindungskarten nutzt `JourneyTime.isPast` mit absolutem EFA-Instant bzw. gewähltem Suchzeitpunkt.
+- **Anschlusspuffer:** Die Gesamtgehzeit einer Reise wird nicht mehr als Gehzeit zum nächsten Anschluss ausgegeben. Der Puffer bleibt ehrlich „unbekannt“, bis eine anschlussspezifische Restgehzeit verfügbar ist; Gehzeit wird als Gesamtwert beschriftet.
+- **Regressionen:** Unit-Tests für zukünftige Suchdaten, korrekte Boarding-Stop-Auflösung und Ablehnung eines gecachten Fußwegs zum Reiseziel; Dashboard-Instrumentierung prüft den unbekannten Puffer; der UI-Test für vergangene Abfahrten nutzt einen deterministischen absoluten Instant. Aktueller lokaler Stand: `:app:testDebugUnitTest`, Android-Test-Kompilierung und `:app:lintDebug` erfolgreich (**0 Errors / 40 Warnings**); API-35-Emulator **38/38 Tests erfolgreich**; Preflight-Guards und 30 Python-Tests grün. GitHub-CI nach Push ausstehend.
+
+---
+
 ## Neue Tickets #19/#20 – 26.11.2026 (Umsetzung)
 
 - **#19 Datumsverlust:** `JourneyTime.departureMillis/arrivalMillis` nutzt absolute EFA-Instants oder löst HH:mm gegen den **gewählten Suchzeitpunkt** auf, nicht gegen „heute"; `earlier_connections` erhält denselben Referenzzeitpunkt. Suchdatum wird als `search_time_label` sichtbar und überlebt Rotation. „Abgefahren" vergleicht jetzt vollständige Instants. Icon-Mapping: unbekannter Verkehrsmitteltyp zeigt neutrales `🚏` statt fälschlich Bus.

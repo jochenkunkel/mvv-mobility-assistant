@@ -57,6 +57,13 @@ object EfaTime {
         return sameDay
     }
 
+    /** Resolve a clock-only result on the exact date selected for the search. */
+    fun onReferenceDate(clock: String, referenceMillis: Long, zone: ZoneId = BERLIN): Long? {
+        val parts = clockParts(clock) ?: return null
+        val date = Instant.ofEpochMilli(referenceMillis).atZone(zone).toLocalDate()
+        return resolve(date, parts.first, parts.second, zone)
+    }
+
     private fun clockParts(clock: String): Pair<Int, Int>? {
         val match = Regex("""^([0-9]{1,2}):([0-9]{2})$""").matchEntire(clock.trim())
             ?: return null

@@ -268,6 +268,8 @@ class MeinWegComposeUiTest {
             compose.onNodeWithTag("fullscreen_dashboard").assertExists()
             compose.onNodeWithTag("fullscreen_departure").assertExists()
             compose.onNodeWithTag("fullscreen_buffer").assertExists()
+            compose.onNodeWithTag("fullscreen_buffer")
+                .assertTextContains("Gehzeit zum Anschluss nicht bestimmt", substring = true)
             compose.onNodeWithTag("fullscreen_navigate").assertExists()
             compose.onNodeWithTag("cockpit_bottom_navigation").assertDoesNotExist()
             compose.onNodeWithTag("fullscreen_dashboard_back").performClick()
@@ -330,11 +332,36 @@ class MeinWegComposeUiTest {
     }
 
     /** #16: earlier-connections action is visible and marks past departures. */
-    @Test fun earlierConnectionsActionMarksPastDepartures() = launchFixture {
-        compose.onNodeWithTag("earlier_connections_button").performScrollTo().assertExists()
-        compose.onNodeWithTag("earlier_connections_button").performClick()
-        compose.waitForIdle()
-        compose.onNodeWithTag("journey_past_badge").performScrollTo().assertExists()
+    @Test fun earlierConnectionsActionMarksPastDepartures() {
+        val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra("mein_weg_test_fixture", true)
+        ActivityScenario.launch<MainActivity>(intent).use { scenario ->
+            compose.onNodeWithTag("earlier_connections_button").performScrollTo().assertExists()
+            compose.onNodeWithTag("earlier_connections_button").performClick()
+            compose.waitForIdle()
+
+            // Avoid depending on the emulator's time of day: exercise the card
+            // with an explicit past EFA instant after the earlier-search action.
+            scenario.onActivity { activity ->
+                val session = ViewModelProvider(activity)[NavigationSessionViewModel::class.java]
+                val departure = System.currentTimeMillis() - 60 * 60_000L
+                session.journeys = listOf(JourneyOption(
+                    departure = "09:10",
+                    arrival = "09:30",
+                    summary = "U3",
+                    changes = 0,
+                    walkingMinutes = 10,
+                    lines = listOf("U3"),
+                    products = listOf("U-Bahn"),
+                    steps = listOf(JourneyStep("U3", "U-Bahn", "A", "B",
+                        "09:10", "09:30", false, 20)),
+                    departureInstantMillis = departure
+                ))
+            }
+            compose.waitForIdle()
+            compose.onNodeWithTag("journey_past_badge").performScrollTo().assertExists()
+        }
     }
 
     /** #19: the selected appointment day must survive rotation and be visible. */

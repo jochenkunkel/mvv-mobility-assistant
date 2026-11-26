@@ -33,4 +33,17 @@ class JourneyTimeTest {
         val saturday = EfaTime.resolve(java.time.LocalDate.of(2026, 11, 28), 12, 34)
         assertFalse(JourneyTime.departureMillis(option("12:34"), saturday)!! < thursday)
     }
+
+    @Test fun futureSearchDayIsNotMarkedPastAgainstTodaysClock() {
+        val now = EfaTime.resolve(java.time.LocalDate.of(2026, 11, 26), 19, 42)
+        val futureSearchDay = EfaTime.resolve(java.time.LocalDate.of(2026, 11, 28), 9, 15)
+        assertFalse(JourneyTime.isPast(option("09:15"), now, futureSearchDay))
+    }
+
+    @Test fun selectedDayDoesNotRollEarlyClockToTomorrow() {
+        val selectedDay = EfaTime.resolve(java.time.LocalDate.of(2026, 11, 26), 21, 0)
+        val expectedSameDay = EfaTime.resolve(java.time.LocalDate.of(2026, 11, 26), 9, 15)
+        assertEquals(expectedSameDay, JourneyTime.departureMillis(option("09:15"), selectedDay))
+        assertTrue(JourneyTime.isPast(option("09:15"), selectedDay, selectedDay))
+    }
 }

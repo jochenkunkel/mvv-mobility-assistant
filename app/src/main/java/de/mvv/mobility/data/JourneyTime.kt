@@ -20,7 +20,7 @@ object JourneyTime {
         val clock = option.steps.firstOrNull { !it.walking }?.departure
             ?.takeIf { it.isNotBlank() }
             ?: option.departure
-        return EfaTime.forNow(clock, referenceMillis, zone)
+        return EfaTime.onReferenceDate(clock, referenceMillis, zone)
     }
 
     fun arrivalMillis(
@@ -28,4 +28,11 @@ object JourneyTime {
         referenceMillis: Long,
         zone: ZoneId = EfaTime.BERLIN
     ): Long? = option.arrivalInstantMillis ?: EfaTime.forNow(option.arrival, referenceMillis, zone)
+
+    fun isPast(
+        option: JourneyOption,
+        nowMillis: Long,
+        referenceMillis: Long = nowMillis,
+        zone: ZoneId = EfaTime.BERLIN
+    ): Boolean = departureMillis(option, referenceMillis, zone)?.let { it < nowMillis } ?: false
 }
