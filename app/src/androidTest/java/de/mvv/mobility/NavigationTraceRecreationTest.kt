@@ -87,4 +87,28 @@ class NavigationTraceRecreationTest {
         }
     }
 
+    @Test fun gpsGapAfterRecreationStartsNewSegmentWithoutLosingHistory() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            val before = TraceFix(48.1000, 11.5000, 1_000L, 5f)
+            val after = TraceFix(48.1001, 11.5001, 200_000L, 5f)
+            scenario.onActivity { activity ->
+                val trace = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
+                trace.acceptFix(before)
+                assertEquals(listOf(listOf(before)), trace.walkedTrace.segments)
+            }
+            scenario.recreate()
+            scenario.onActivity { activity ->
+                val trace = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
+                trace.acceptFix(after)
+                assertEquals(listOf(before, after), trace.walkedTrace.fixes)
+                assertEquals(listOf(listOf(before), listOf(after)), trace.walkedTrace.segments)
+            }
+            scenario.recreate()
+            scenario.onActivity { activity ->
+                val trace = ViewModelProvider(activity)[NavigationTraceViewModel::class.java]
+                assertEquals(listOf(listOf(before), listOf(after)), trace.walkedTrace.segments)
+            }
+        }
+    }
+
 }
