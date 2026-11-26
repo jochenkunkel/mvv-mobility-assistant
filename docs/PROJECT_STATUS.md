@@ -1,3 +1,22 @@
+## Entwicklungsabgleich – 26.11.2026, 15:22 MEZ (neue Nutzerentscheidungen)
+
+**Live-Stand vor dieser Dokumentationsänderung:** `main` = `7f3b461`; vier offene Issues [#15](https://github.com/jochenkunkel/mvv-mobility-assistant/issues/15), [#16](https://github.com/jochenkunkel/mvv-mobility-assistant/issues/16), [#17](https://github.com/jochenkunkel/mvv-mobility-assistant/issues/17), [#18](https://github.com/jochenkunkel/mvv-mobility-assistant/issues/18). Diese Tickets sind **neu und nicht implementiert**; frühere Aussagen „0 offene Tickets“ sind historische Momentaufnahmen. Die Designreferenzen liegen unter `docs/design/dashboard-design-5-kompakt.svg` und `docs/design/navigation-design-1-karte-im-fokus.svg`.
+
+**Verbindliche Entscheidungen aus dem aktuellen Projekt-Chat:** #17: Dashboard **Design 5, kompakt**, Vollbild ohne untere App-Tab-Leiste (Android-Statusleiste bleibt); #18: Fußweg-Navigation **Design 1, Karte im Fokus**, mit OSM-Route, großer echter Abbiegeanweisung, GPS-Position, Restdistanz/-zeit, Busabfahrt und ehrlichem Puffer. #15: Anschluss erreicht/Check-in oder verpasst und bewusste neue MVV-Suche; #16: frühere Verbindungen im Verbindungen-Tab nachladen. Andere vollständige Main-/Schedule-Chats sind in dieser Ausführung nicht direkt live abrufbar; nur sichtbarer Projektkontext verwendet.
+
+**CI-Beleg vor Änderung:** [Android CI #45837529670](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45837529670) auf `7f3b461` = `completed/success` (Push-Workflow). Das ist **kein** Nachweis für die noch nicht implementierten Features #15–#18 und keine physische Geräteabnahme. Historisch dokumentierter vollständiger Release-Gate [#45830055385](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45830055385) und Signed Release [#45831167108](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45831167108) waren erfolgreich auf älterem Stand. Keine neue APK-Freigabe durch diesen Dokumentationscommit.
+
+**Priorisierter, kleinteiliger Entwicklungsplan:**
+1. **P1 #17:** Aktiven Fahrtdashboard-Screen vom Bottom-Tab-Layout entkoppeln; Android-Statusleiste und Back-Navigation erhalten. Zuerst Compose-Regressionstest für Sichtbarkeit der Tab-Leiste, Back und Rotation; dann kompakte Anzeige/Countdown mit echten ViewModel-Werten. Bei unbekanntem Puffer explizit „unbekannt“.
+2. **P1 #18:** Darauf aufbauend Navigation als eigener Vollbildmodus; zuerst OSM-Routen-/Manövermodell und GPS-Freshness/RouteProgress prüfen, keine falschen Abbiegehinweise; danach Karte, Rezentrieren, Warnungen und Tests für GPS-Lücken/Rotation.
+3. **P2 #15:** Idempotenten, persistierbaren Anschlussstatus pro Umstieg modellieren und testen; bei „verpasst“ neue MVV-Suche mit unverändertem Ziel, aktuellem Start/Zeit; keine automatische Übernahme einer Ersatzroute.
+4. **P2 #16:** MVV-Zeitfenster-Rückwärtsnavigation separat kapseln; frühere Abfahrten deduplizieren/sortieren, Vergangenheitszustände kennzeichnen; Tests für Zeitzone, leere Treffer und Wiederholung.
+5. **Abnahme:** Aktuelle Push-CI, danach vollständiger Release-Gate und signierter Release auf *demselben* geprüften Feature-Commit, anschließend S25-Fußweg und S10 als Ergänzung. Signing/Secrets unverändert lassen.
+
+**Dieser Lauf:** Nur Plan-/Statusdokumentation geändert, keine Produktcodeänderung oder lokalen Tests; nachfolgende CI muss separat geprüft werden.
+
+---
+
 ## Endgültiger Nachweis – 26.11.2026
 
 - **Commit:** `ddbc09b` auf `main`.
