@@ -1,3 +1,13 @@
+## CI-Gate und paralleler GPS-PR – 27.11.2026, 19:21 MEZ
+
+- **Aktueller main-Stand bei Prüfung:** `c0b011aa5473cf8853520c75e0758ce79f3dd104`. README, `docs/IMPLEMENTATION-ROADMAP.md`, `docs/DECISIONS.md`, `docs/CHAT-START.md`, offene Issues/PRs und letzte Commits geprüft. Die Roadmap enthält historische Snapshots; diese nicht als aktuellen Teststand lesen.
+- **Verifizierter CI-Befund für #24:** GitHub-Actions-Lauf [#46041079256](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/46041079256) ist **nicht grün**: `preflight=success`, `build-and-test=cancelled`, `release-acceptance=cancelled`, `emulator-smoke-test=skipped`, beide MVV-Live-Probes `skipped`. Damit ist der neue `ImmersiveDashboardInstrumentedTest` im CI **nicht ausgeführt/nicht bestätigt**. Ursache der Stornierung aus Jobübersicht nicht belegt; vor Eingriff in Workflow oder Testcode zunächst Cancellation-/Concurrency-Ursache anhand Actions-Lauf und nachfolgender Läufe prüfen.
+- **Neue parallele Arbeit:** [PR #27](https://github.com/jochenkunkel/mvv-mobility-assistant/pull/27) (`c944525`) filtert unplausible GPS-Sprünge nur bei bestätigter ÖPNV-Fahrt und enthält Regressionstests. PR meldet lokal 135 Unit-Tests, 42/42 API-35-Instrumentierungstests sowie Lint/Build-Erfolg; dies sind **PR-Angaben, keine in diesem Lauf unabhängig reproduzierten Ergebnisse**. [PR #26](https://github.com/jochenkunkel/mvv-mobility-assistant/pull/26) bleibt ebenfalls offen. Nicht blind mergen; Überschneidungen in `PROJECT_STATUS.md` und `MainActivity.kt` vor Integration prüfen.
+- **Nächster kleiner Schritt:** Zuerst CI-Cancellation klären und API-35-Emulator-Gate für #24 nachweislich ausführen; danach PR #27 auf Regressionen und Main-Konflikte prüfen. #22–#25 offen lassen; keine APK-/S25-Freigabe.
+- **Chat-Grenze:** Vollständige andere Chats Main/Schedule nicht direkt abrufbar. Nur dokumentierte Repo-Issues und bekannter Projektkontext verwendet.
+
+---
+
 ## UI #24 – instrumentierter Systemleisten-Test, 27.11.2026, 18:20 MEZ
 
 - **Code:** Commit [47aa2d1](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/47aa2d1a487d32bbfca1bdc84f21e4ab69c5780d) ergänzt `ImmersiveDashboardInstrumentedTest`: tatsächliche Android-`navigationBars` verborgen, `statusBars` sichtbar, Reapplication nach `ActivityScenario.recreate()` und Wiederherstellung beim Verlassen des Dashboards. Test verwendet Debug-Fixture und echte WindowInsets statt ausschließlich Compose-Tags.
