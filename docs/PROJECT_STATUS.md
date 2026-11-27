@@ -1,3 +1,13 @@
+## #22 Bus-GPS: erster lokaler Implementierungsschritt – 27.11.2026, 15:48 MEZ
+
+- **Code-Commit:** `2e34d31` auf lokalem `main` (ein Commit vor `origin/main`). Fahrt-Dashboard kann den Einstieg manuell bestätigen; bei einer bestätigten Fahrzeug-Etappe wird eine grobe Fahrplanphase angezeigt, ausdrücklich ohne erfundene Koordinaten und mit „Anschluss nicht garantiert“. GPS-Status unterscheidet `GPS LIVE`, kurze Schätzung, letzte Position und veraltet/fehlend. Accuracy-Hysterese hält den bestehenden Status in engen Qualitätsgrenzen; Altersgrenzen bleiben hart (Schätzung max. 60 Sekunden). Einstiegshinweise werden nach Bestätigung ausgeblendet. EFA-Instants je Etappe sichern Mitternachtsfahrten.
+- **Verifikation lokal:** `:app:testDebugUnitTest` **129 Tests, 0 Fehler**; `:app:lintDebug`, `:app:assembleDebug` und `:app:assembleDebugAndroidTest` erfolgreich. Eigener Emulator `meinweg-qa-api35`, API 35: **42/42 Instrumentierungstests erfolgreich**, darunter explizite Boarding-Bestätigung, Rotation, 30-s-GPS-Lücke, Schätzkennzeichnung, Rückkehr zu `GPS LIVE` und Warnstatus nach 61 s. Zwei gezielte neue UI-Tests zusätzlich **2/2** bestanden. `git diff --check` sauber.
+- **CI / Issue:** Issue [#22](https://github.com/jochenkunkel/mvv-mobility-assistant/issues/22) ist weiterhin **OPEN**. Letzter live bestätigter Android-CI-Lauf [#46015258994](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/46015258994) ist erfolgreich für Basis-Commit `f52651b`, nicht für `2e34d31`; für den lokalen Commit existiert noch kein CI-Nachweis. Handy nicht verwendet.
+- **Noch offen – keine vollständige Ticketlösung:** keine reale S25-Busfahrt; keine Bus-spezifische Ausreißer-/Teleport-Sequenz oder belastbare Fortschrittsschätzung entlang der tatsächlichen Liniengeometrie/Haltestellen; Anschluss-/Restpuffer wird nicht geschätzt. Fahrtphase beruht auf manueller Einstiegsbestätigung; automatische Erkennung/Check-in und Hysterese bei widersprüchlichen Positionssprüngen sind nicht abgedeckt. Keine APK-Freigabe und Issue nicht schließen.
+- **Nächste Schritte:** Commit nach GitHub übertragen und zugehörige CI abwarten; deterministische Bus-GPS-Sequenztests (Sprung, Lücke, Wiederkehr) ergänzen; anschließend reale S25-Busfahrt mit Nutzerfreigabe. Bis dahin nur als lokal getesteter Zwischenstand behandeln.
+
+---
+
 ## UI-24 Umsetzungsvertrag – 27.11.2026, 15:20 MEZ
 
 - **Abgleich:** README, DECISIONS, IMPLEMENTATION-ROADMAP, CHAT-START, MainActivity, offene Issues #21–#25 und HEAD `8f0184a` geprüft. Keine neuen Codecommits/PRs seit dem vorherigen Lauf erkennbar. Vollständige Chats Main/Schedule nicht live zugänglich.
