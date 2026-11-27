@@ -1,3 +1,12 @@
+## GPS-03 Rotations-/Callback-Abnahme – 27.11.2026, 08:22 MEZ
+
+- **Repositoryprüfung:** `main` vor Änderung `a3cf98c`; README, `docs/IMPLEMENTATION-ROADMAP.md`, `docs/DECISIONS.md`, `docs/CHAT-START.md`, GPS-02-Audit und `MainActivity.kt` gelesen. GitHub-Suche: 0 offene Issues und 0 offene PRs. Vollständige Main-/Schedule-Chats nicht direkt abrufbar.
+- **Neues Arbeitspaket:** [GPS-03-ROTATION-CALLBACK-ACCEPTANCE-2026-11-27.md](GPS-03-ROTATION-CALLBACK-ACCEPTANCE-2026-11-27.md) in Commit [`0c55857`](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/0c55857b767305aa00dd33a4109dc4cd9cce6717): konkrete API-35-Testsequenz für `ActivityScenario.recreate()`, State-Erhalt, ältere/gleiche/neue Fixes, Subscription-Duplikate und Berechtigungsentzug. **Nur Testplanung, noch kein ausführbarer Regressionstest und keine Fehlerbehebung.**
+- **CI:** Der zuletzt dokumentierte sechsfach grüne Lauf [#45950234131](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45950234131) bezieht sich auf `24a19cc`, **nicht** auf die neuen Dokumentationscommits. Der GitHub-Connector liefert für commitbezogene Workflows nur PR-getriggerte Läufe; neuer Push-CI-Status daher nicht verifiziert.
+- **Nächster Schritt:** GPS-03 instrumentierten Test tatsächlich implementieren, API-35-Emulator ausführen, anschließend ROUTE-02-Hysterese; S25-Abnahme und APK-Freigabe bleiben offen.
+
+---
+
 ## CI-Nachweis GPS-02 – 27.11.2026, 07:23 MEZ
 
 - **Neuer verifizierter Lauf:** [Android CI #45950234131](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45950234131), gestartet 27.11.2026 06:11 UTC, abgeschlossen 06:15 UTC, für **exakt HEAD `24a19cc75005671e34adf7f58dd6b284f9830c54`**: `completed/success`. Alle sechs Jobs erfolgreich: `preflight`, `build-and-test`, `emulator-smoke-test`, `mvv-live-probe`, `door-to-door-live-probe`, `release-acceptance`. Damit ist die frühere Aussage „CI für d63de38/24a19cc unbekannt“ **überholt**; die zwei neuen instrumentierten GPS-Tests sind Bestandteil des getesteten HEAD. Die Jobübersicht belegt den erfolgreichen Emulatorlauf, aber keine physische S25-Abnahme.
