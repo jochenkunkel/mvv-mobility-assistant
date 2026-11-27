@@ -45,4 +45,30 @@ class LocationFreshnessInstrumentedTest {
         assertEquals(10_000L, CurrentLocationRepository.ageMillis(
             older, nowNanos, System.currentTimeMillis()))
     }
+    @Test fun delayedAndDuplicateFixesCannotReplaceAcceptedFix() {
+        val now = SystemClock.elapsedRealtimeNanos()
+        val accepted = fix(now - 3_000_000_000L, System.currentTimeMillis())
+        val delayed = fix(now - 4_000_000_000L, System.currentTimeMillis() + 60_000L)
+        val duplicate = fix(accepted.elapsedRealtimeNanos, System.currentTimeMillis() + 120_000L)
+        val later = fix(now - 1_000_000_000L, System.currentTimeMillis() - 120_000L)
+
+        // Mirrors the production callback's ordering condition; accuracy and
+        // freshness are separate acceptance gates in MainActivity.
+        assertFalse(CurrentLocationRepository.isNewer(delayed, accepted))
+        assertFalse(CurrentLocationRepository.isNewer(duplicate, accepted))
+        assertTrue(CurrentLocationRepository.isNewer(later, accepted))
+    }
+
+    @Test fun wallClockFallbackRequiresStrictIncreaseAndRejectsMixedClocks() {
+        val first = Location("test").apply { time = 10_000L }
+        val duplicate = Location("test").apply { time = 10_000L }
+        val later = Location("test").apply { time = 10_001L }
+        val monotonic = fix(SystemClock.elapsedRealtimeNanos(), 1L)
+
+        assertFalse(CurrentLocationRepository.isNewer(duplicate, first))
+        assertTrue(CurrentLocationRepository.isNewer(later, first))
+        assertFalse(CurrentLocationRepository.isNewer(monotonic, first))
+        assertFalse(CurrentLocationRepository.isNewer(first, monotonic))
+    }
+
 }
