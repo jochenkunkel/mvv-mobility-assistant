@@ -1,3 +1,13 @@
+## UI #24 – instrumentierter Systemleisten-Test, 27.11.2026, 18:20 MEZ
+
+- **Code:** Commit [47aa2d1](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/47aa2d1a487d32bbfca1bdc84f21e4ab69c5780d) ergänzt `ImmersiveDashboardInstrumentedTest`: tatsächliche Android-`navigationBars` verborgen, `statusBars` sichtbar, Reapplication nach `ActivityScenario.recreate()` und Wiederherstellung beim Verlassen des Dashboards. Test verwendet Debug-Fixture und echte WindowInsets statt ausschließlich Compose-Tags.
+- **CI zum Codecommit:** [Run #46041079256](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/46041079256) war bei letzter Prüfung **queued**. Kein Erfolg behauptet; Emulator-Gate muss explizit tatsächlich laufen, nicht `skipped` sein. Keine lokalen Gradle-/Emulator-Tests in diesem Lauf.
+- **Parallelentwicklung:** Offener [PR #26](https://github.com/jochenkunkel/mvv-mobility-assistant/pull/26) dokumentiert #22-GPS-Implementierung und lokale 129 Unit-/42 Instrumentierungstests; dessen [CI #46037328231](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/46037328231) meldet preflight/build-and-test success, aber emulator/live/release skipped. PR nicht ungeprüft mergen.
+- **Nächster Schritt:** CI-Ergebnis für 47aa2d1 und den nachfolgenden Statuscommit prüfen; bei übersprungenem Emulator den Test in API-35-Workflow tatsächlich ausführen, eventuelle Insets-Fehler gezielt korrigieren. S25-Drei-Tasten-/Gestenabnahme weiterhin offen; #24 offen lassen. Keine APK-Freigabe.
+- **Chatgrenze:** Main/Schedule nicht vollständig direkt lesbar; keine unbekannten Chat-Inhalte angenommen.
+
+---
+
 ## #22 Bus-GPS: erster lokaler Implementierungsschritt – 27.11.2026, 15:48 MEZ
 
 - **Code-Commit:** `2e34d31` ergänzt manuelle Einstiegsbestätigung und eine grobe Fahrplanphase für bestätigte Fahrzeug-Etappen, ausdrücklich ohne erfundene Koordinaten und mit „Anschluss nicht garantiert“. GPS-Status unterscheidet `GPS LIVE`, kurze Schätzung, letzte Position und veraltet/fehlend. Accuracy-Hysterese hält den bestehenden Status innerhalb enger Qualitätsgrenzen; Altersgrenzen bleiben hart (Schätzung max. 60 Sekunden). Einstiegshinweise werden nach Bestätigung ausgeblendet. EFA-Instants je Etappe sichern Mitternachtsfahrten.
