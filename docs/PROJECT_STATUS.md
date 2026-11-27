@@ -1,3 +1,12 @@
+## PR-Mergeability-Abgleich – 27.11.2026, 22:22 MEZ
+
+- **Baseline:** `main=32dcbe2abf8d4b300af67064fa3093887d6409ed`; README, Implementierungs-Roadmap, ADR, Android-Workflow, Status, offene Issues #21–#25, letzte Commits und PR-Metadaten erneut geprüft. Vollständige Main-/Schedule-Chatverläufe nicht live abrufbar.
+- **Neue verifizierte PR-Metadaten:** GitHub meldet für [PR #26](https://github.com/jochenkunkel/mvv-mobility-assistant/pull/26) `mergeable=false` (Head `8eb7b0c`, Base-Snapshot `c7e09c8`), für [PR #27](https://github.com/jochenkunkel/mvv-mobility-assistant/pull/27) `mergeable=true` (Head `1e3b9b5`, Base-Snapshot `32dcbe2`). **#26 ist aktuell nicht mergefähig; #27 ist laut GitHub mergefähig**, jedoch ohne neuen CI-/Emulator-Nachweis nicht freigegeben. Keine automatische Integration vorgenommen.
+- **Konkreter Integrationsschritt:** #26 gegen den aktuellen `main` rebasen und ausschließlich den Statusdatei-Konflikt unter Erhalt der jüngeren Abgleiche auflösen. #27 erst nach Review des GPS-Diffs, reproduzierbaren Unit-Tests und vollständigem API-35-Release-Gate mergen. Nach jedem Rebase Mergeability erneut abfragen.
+- **CI-Grenze:** Workflow `workflow_dispatch` bietet `test_level=release`; `emulator-smoke-test` läuft im Fast-Push nicht zwingend. Für diesen HEAD wurde kein neuer erfolgreicher Release-/Emulatorlauf belegt. Keine lokalen Tests, keine APK-/S25-Freigabe. Concurrency bleibt als plausible, nicht bewiesene Ursache des früheren Abbruchs dokumentiert.
+
+---
+
 ## CI-Concurrency-Quellcodeabgleich – 27.11.2026, 21:23 MEZ
 
 - **main vor Änderung:** `de73e022c89345f4b563c222a97c1ca3a9fdee70`; README, `docs/IMPLEMENTATION-ROADMAP.md`, `docs/DECISIONS.md`, Issues #21–#25, PR #26/#27 und jüngste Commits geprüft. Andere vollständige Chats (Main/Schedule) weiterhin nicht direkt abrufbar.
