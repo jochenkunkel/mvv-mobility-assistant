@@ -1,3 +1,12 @@
+## CI-Nachweis GPS-02 – 27.11.2026, 07:23 MEZ
+
+- **Neuer verifizierter Lauf:** [Android CI #45950234131](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45950234131), gestartet 27.11.2026 06:11 UTC, abgeschlossen 06:15 UTC, für **exakt HEAD `24a19cc75005671e34adf7f58dd6b284f9830c54`**: `completed/success`. Alle sechs Jobs erfolgreich: `preflight`, `build-and-test`, `emulator-smoke-test`, `mvv-live-probe`, `door-to-door-live-probe`, `release-acceptance`. Damit ist die frühere Aussage „CI für d63de38/24a19cc unbekannt“ **überholt**; die zwei neuen instrumentierten GPS-Tests sind Bestandteil des getesteten HEAD. Die Jobübersicht belegt den erfolgreichen Emulatorlauf, aber keine physische S25-Abnahme.
+- **Repository:** `main` weiterhin `24a19cc`; GitHub meldet 0 offene Issues. Keine neuen Codecommits seit der letzten Statusaktualisierung. Weitere Projekt-Chats Main/Schedule nicht vollständig live abrufbar.
+- **Nächster technischer Schritt:** GPS-Akzeptanzpfad und Rotation/Lifecycle mit deterministischem Callback-Sequenztest absichern; danach ROUTE-02-Hysterese für parallele OSM-Segmente. `LocationFixOrdering` nicht als redundanten zweiten Guard einbauen.
+- **Freigabe:** Erfolgreiche CI ersetzt weder die reale GPS-/OSM-Abnahme auf dem S25 noch die Design-5-/Datumsprüfung. Keine neue Installationsfreigabe; Signing/Secrets unverändert.
+
+---
+
 ## GPS-02: Produktiver Zeitstempelvergleich abgesichert – 27.11.2026, 06:16 MEZ
 
 - **Codeabgleich:** `CurrentLocationRepository.isNewer` nutzt strikt steigende `elapsedRealtimeNanos`, falls beide Fixes eine monotone Zeitbasis besitzen. Sind beide ohne monotone Zeitbasis, vergleicht es strikt steigende Wall-Clock-`time`; gemischte Zeitbasen werden abgelehnt. `MainActivity` verwendet diesen Vergleich bereits im produktiven Foreground-Callback, zusätzlich zu Freshness-/Accuracy-Gates. Ein zweiter `LocationFixOrdering`-Guard wäre ohne Zusammenführung redundant und könnte wegen der anderen Null-/Fallback-Semantik abweichen.
