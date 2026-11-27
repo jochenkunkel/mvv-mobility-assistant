@@ -1,3 +1,13 @@
+## GPS/OSM-Regressionspaket – 27.11.2026, 01:15 MEZ
+
+- **Codeänderung:** [d9aa47c](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/d9aa47ce94870e2a65ac0714bebd069d77686874) ergänzt zwei deterministische JVM-Regressionen in `RouteProgressTest.kt`: Projektion auf den näheren Schenkel einer Haarnadel statt den späteren, sowie definierte Tie-Break-Reihenfolge bei exakt überlappenden Segmenten. Synthetische Koordinaten; keine privaten GPS-Daten.
+- **Wichtige Grenze:** `RouteProgress.project` ist **zustandslos**. Der Test belegt keine Hysterese oder Absicherung gegen Sprünge bei gleich weit entfernten Segmenten und keinen realen GPS-Fortschritt. Nächstes Codepaket: Aufrufer von `RouteProgress.project` und vorhandene Sequenzfilter untersuchen, dann kontrollierte Fix-Folge für ROUTE-02 ergänzen.
+- **Tests:** In diesem Lauf keine lokale Gradle-/Emulator-Ausführung möglich. **CI des neuen Commits noch nicht bestätigt**. Vorherige grüne Release-CI #45893175285 betrifft älteren Code und darf nicht als Nachweis für d9aa47c gelten.
+- **Issues:** GitHub-Abfrage 0 offene Issues/PRs (GitHub-Issue-Suche). **Geräteabnahme S25 offen**, insbesondere GPS/OSM, Suchdatum und Design 5. Keine APK-Installationsfreigabe.
+- **Quellen:** README, DECISIONS, IMPLEMENTATION-ROADMAP, CHAT-START, bestehende RouteProgress-/LocationFreshness-Implementierung und Tests geprüft. Andere Chats Main/Schedule nicht vollständig live zugänglich; nur bekannte Nutzerentscheidungen verwendet.
+
+---
+
 ## CI-Abgleich und nächste Abnahme – 26.11.2026, 22:20 MEZ
 
 - **Live geprüfte GitHub-Actions-Jobs:** [vollständiger Release-CI #45893175285](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45893175285) hat **6/6 Jobs erfolgreich** abgeschlossen: `preflight`, `build-and-test`, `emulator-smoke-test`, `mvv-live-probe`, `door-to-door-live-probe`, `release-acceptance`. Der parallel gestartete [Push-CI #45893162384](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45893162384) wurde **teilweise abgebrochen** (`build-and-test` und `release-acceptance` cancelled; `preflight` success; übrige skipped). Ein abgebrochener Lauf darf nicht als grün bezeichnet werden.
