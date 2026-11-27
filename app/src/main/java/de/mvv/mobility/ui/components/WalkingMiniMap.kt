@@ -38,7 +38,15 @@ import org.osmdroid.views.overlay.Polyline
  * when already-cached map tiles are available.
  */
 @Composable
-fun WalkingMiniMap(route: WalkingRoute, position: Location?, walkedTrack: List<Pair<Double, Double>> = emptyList(), modifier: Modifier = Modifier, walkedSegments: List<List<Pair<Double, Double>>>? = null) {
+fun WalkingMiniMap(
+    route: WalkingRoute,
+    position: Location?,
+    walkedTrack: List<Pair<Double, Double>> = emptyList(),
+    modifier: Modifier = Modifier,
+    walkedSegments: List<List<Pair<Double, Double>>>? = null,
+    progressProjection: de.mvv.mobility.data.RouteProgress.Projection? = null,
+    useTrackedProgress: Boolean = false
+) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val lastHeading = remember { mutableFloatStateOf(Float.NaN) }
     val map = remember {
@@ -66,7 +74,7 @@ fun WalkingMiniMap(route: WalkingRoute, position: Location?, walkedTrack: List<P
         if (routePoints.size >= 2) {
             // Draw the untraveled route first. Use a nearest-segment projection
             // rather than snapping to a vertex, so both strokes meet seamlessly.
-            val projection = position?.takeIf {
+            val projection = if (useTrackedProgress) progressProjection else position?.takeIf {
                 !it.hasAccuracy() || it.accuracy <= 35f
             }?.let { de.mvv.mobility.data.RouteProgress.project(route.path, it.latitude, it.longitude) }
                 ?.takeIf { it.lateralMeters <= 35.0 }

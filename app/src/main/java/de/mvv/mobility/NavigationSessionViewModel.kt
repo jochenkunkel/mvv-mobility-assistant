@@ -17,6 +17,8 @@ import de.mvv.mobility.data.StopPosition
 import de.mvv.mobility.data.WalkingRoute
 import de.mvv.mobility.data.WalkingTurn
 import de.mvv.mobility.data.RouteFilterMode
+import de.mvv.mobility.data.RouteProgress
+import de.mvv.mobility.data.RouteProgressTracker
 import de.mvv.mobility.ui.components.CockpitTab
 
 /** Active fullscreen journey view; the app tab bar is hidden in both modes. */
@@ -67,6 +69,7 @@ class NavigationSessionViewModel(
     var expandedJourney by mutableStateOf<Int?>(null)
     var dashboardJourney by mutableStateOf<Int?>(null)
     var walkingRoute by mutableStateOf<WalkingRoute?>(null)
+    private val routeProgressTracker = RouteProgressTracker()
     var resolvedWalkingTarget by mutableStateOf<Pair<String, StopPosition>?>(null)
     var walkingRouteStatus by mutableStateOf("")
     var walkingOnlyFallback by mutableStateOf(false)
@@ -174,4 +177,16 @@ class NavigationSessionViewModel(
             lastSpokenTurnKey = null
         }
     }
+
+    /** Shared route projection for the map, maneuver display and off-route detection. */
+    internal fun routeProgress(route: WalkingRoute, fix: Location): RouteProgress.Projection? =
+        routeProgressTracker.project(
+            route = route,
+            path = route.path,
+            latitude = fix.latitude,
+            longitude = fix.longitude,
+            timestampMillis = fix.time,
+            elapsedRealtimeNanos = fix.elapsedRealtimeNanos,
+            accuracyMeters = fix.accuracy.takeIf { fix.hasAccuracy() }
+        )
 }

@@ -10,7 +10,7 @@ import kotlin.math.*
  * This is stateless geometry. The caller must separately handle GPS accuracy,
  * off-route detection and monotonic progress across successive location fixes.
  */
-internal object RouteProgress {
+object RouteProgress {
     data class Projection(
         val alongMeters: Double,
         val lateralMeters: Double,
@@ -26,8 +26,24 @@ internal object RouteProgress {
             (point.second - longitude) * 111_320.0 * cosLatitude to
                 (point.first - latitude) * 111_320.0
 
+        return candidates(path, latitude, longitude).minByOrNull { it.lateralMeters }
+    }
+
+    /** All valid segment projections, in route order, for sequence-aware callers. */
+    internal fun candidates(
+        path: List<Pair<Double, Double>>,
+        latitude: Double,
+        longitude: Double
+    ): List<Projection> {
+        if (path.size < 2 || !latitude.isFinite() || !longitude.isFinite() ||
+            path.any { !it.first.isFinite() || !it.second.isFinite() }) return emptyList()
+        val cosLatitude = cos(Math.toRadians(latitude)).coerceAtLeast(0.01)
+        fun xy(point: Pair<Double, Double>): Pair<Double, Double> =
+            (point.second - longitude) * 111_320.0 * cosLatitude to
+                (point.first - latitude) * 111_320.0
+
         var accumulated = 0.0
-        var best: Projection? = null
+        val result = mutableListOf<Projection>()
         for (index in 0 until path.lastIndex) {
             val (ax, ay) = xy(path[index])
             val (bx, by) = xy(path[index + 1])
@@ -41,10 +57,10 @@ internal object RouteProgress {
             val lateral = hypot(px, py)
             val length = sqrt(lengthSquared)
             val candidate = Projection(accumulated + fraction * length, lateral, index, fraction)
-            if (best == null || candidate.lateralMeters < best.lateralMeters) best = candidate
+            result += candidate
             accumulated += length
         }
-        return best
+        return result
     }
 
     /** Route tangent at the closest projected segment, in compass degrees. */
@@ -66,9 +82,12 @@ internal object RouteProgress {
         route: WalkingRoute,
         latitude: Double,
         longitude: Double,
-        maxOffRouteMeters: Double = 45.0
+        maxOffRouteMeters: Double = 45.0,
+        currentProjection: Projection? = null,
+        useTrackedProjection: Boolean = false
     ): Pair<WalkingTurn, Int>? {
-        val here = project(route.path, latitude, longitude) ?: return null
+        val here = if (useTrackedProjection) currentProjection
+            ?: return null else currentProjection ?: project(route.path, latitude, longitude) ?: return null
         if (here.lateralMeters > maxOffRouteMeters) return null
         // Depart maneuvers at the beginning of the route are informational.
         // Do not skip a genuine upcoming turn simply because it is <25m away.

@@ -112,10 +112,18 @@ object WalkingNavigation {
         return WalkingRoute(turns, route.optDouble("distance", 0.0).roundToInt(), path)
     }
 
-    fun nextTurn(route: WalkingRoute, position: Location): Pair<WalkingTurn, Int>? {
+    fun nextTurn(
+        route: WalkingRoute,
+        position: Location,
+        progress: RouteProgress.Projection? = null,
+        useTrackedProgress: Boolean = false
+    ): Pair<WalkingTurn, Int>? {
         // Never present a precise maneuver from an inaccurate or off-route GPS fix.
         if (position.hasAccuracy() && position.accuracy > 35f) return null
-        val turn = RouteProgress.nextTurn(route, position.latitude, position.longitude)
+        val turn = RouteProgress.nextTurn(
+            route, position.latitude, position.longitude, currentProjection = progress,
+            useTrackedProjection = useTrackedProgress
+        )
         if (turn?.first?.instruction == "Ziel erreicht" &&
             (!position.hasAccuracy() || position.accuracy > 12f)) {
             return turn.first.copy(

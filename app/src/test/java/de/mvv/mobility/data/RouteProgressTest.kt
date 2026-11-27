@@ -186,4 +186,51 @@ class RouteProgressTest {
             jittered.alongMeters - outbound.alongMeters > 100.0)
     }
 
+    @Test fun routeTrackerKeepsHairpinProgressOnSameLegDuringGpsJitter() {
+        val hairpin = listOf(
+            48.1000 to 11.5000,
+            48.1000 to 11.5020,
+            48.1001 to 11.5020,
+            48.1001 to 11.5000
+        )
+        val routeKey = Any()
+        val tracker = RouteProgressTracker()
+        val first = requireNotNull(tracker.project(
+            routeKey, hairpin, 48.10001, 11.5010, 1_000L, 0L, 5f
+        ))
+        val jittered = requireNotNull(tracker.project(
+            routeKey, hairpin, 48.10009, 11.5010, 6_000L, 0L, 5f
+        ))
+        assertEquals(0, first.segmentIndex)
+        assertEquals("A nearby return leg must not steal progress", 0, jittered.segmentIndex)
+        assertTrue(kotlin.math.abs(jittered.alongMeters - first.alongMeters) < 15.0)
+    }
+
+    @Test fun routeTrackerAllowsRealProgressAndWalkingBackwards() {
+        val routeKey = Any()
+        val tracker = RouteProgressTracker()
+        val first = requireNotNull(tracker.project(routeKey, path, 48.1000, 11.5005,
+            1_000L, 0L, 3f))
+        val forward = requireNotNull(tracker.project(routeKey, path, 48.1000, 11.5007,
+            11_000L, 0L, 3f))
+        val backward = requireNotNull(tracker.project(routeKey, path, 48.1000, 11.5006,
+            16_000L, 0L, 3f))
+        assertTrue(forward.alongMeters > first.alongMeters)
+        assertTrue(backward.alongMeters < forward.alongMeters)
+    }
+
+    @Test fun routeTrackerIgnoresOldFixAndResetsWhenRouteChanges() {
+        val tracker = RouteProgressTracker()
+        val firstRoute = Any()
+        val first = requireNotNull(tracker.project(firstRoute, path, 48.1000, 11.5005,
+            10_000L, 0L, 3f))
+        val stale = requireNotNull(tracker.project(firstRoute, path, 48.1000, 11.5009,
+            9_000L, 0L, 3f))
+        assertEquals(first.alongMeters, stale.alongMeters, 0.0)
+
+        val rerouted = requireNotNull(tracker.project(Any(), path, 48.1000, 11.5009,
+            11_000L, 0L, 3f))
+        assertTrue(rerouted.alongMeters > stale.alongMeters + 20.0)
+    }
+
 }

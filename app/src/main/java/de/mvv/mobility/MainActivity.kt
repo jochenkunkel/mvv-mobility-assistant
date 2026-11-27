@@ -472,8 +472,7 @@ class MainActivity : ComponentActivity() {
                             // A temporary GPS gap must not erase confirmed off-route evidence.
                         } else if (fix.time != lastOffRouteFixTime) {
                             lastOffRouteFixTime = fix.time
-                            val lateral = de.mvv.mobility.data.RouteProgress.project(
-                                route.path, fix.latitude, fix.longitude)?.lateralMeters
+                            val lateral = session.routeProgress(route, fix)?.lateralMeters
                             // 45m minimum; add GPS uncertainty to avoid false reroutes.
                             if (lateral != null && lateral > 25.0 + fix.accuracy) {
                                 offRouteFixes++
@@ -516,7 +515,9 @@ class MainActivity : ComponentActivity() {
                     }
                     val spokenTurn = if ((walkingOnlyDashboard || walkingNavigationOpen) &&
                         selectedTab == CockpitTab.JOURNEY && navigationLocation != null && walkingRoute != null)
-                        WalkingNavigation.nextTurn(walkingRoute!!, navigationLocation!!) else null
+                        WalkingNavigation.nextTurn(walkingRoute!!, navigationLocation!!,
+                            session.routeProgress(walkingRoute!!, navigationLocation!!),
+                            useTrackedProgress = true) else null
                     val spokenTurnKey = spokenTurn?.first?.let {
                         "${it.latitude},${it.longitude},${it.instruction}"
                     }
@@ -1297,7 +1298,9 @@ class MainActivity : ComponentActivity() {
                                     }
                                     if (walkingRoute != null) {
                                         val next = navigationLocation?.let {
-                                            WalkingNavigation.nextTurn(walkingRoute!!, it)
+                                            WalkingNavigation.nextTurn(walkingRoute!!, it,
+                                                session.routeProgress(walkingRoute!!, it),
+                                                useTrackedProgress = true)
                                         }
                                         Surface(shape = RoundedCornerShape(14.dp),
                                             color = Color(0xFFDCD2FB), modifier = Modifier.fillMaxWidth()) {
@@ -1462,7 +1465,10 @@ class MainActivity : ComponentActivity() {
                                     }
                                     Text("Ziel: $destination", style = MaterialTheme.typography.bodyMedium)
                                     Text("Fußroute: ca. ${route.totalMeters} m", style = MaterialTheme.typography.titleLarge)
-                                    val next = navigationLocation?.let { WalkingNavigation.nextTurn(route, it) }
+                                    val next = navigationLocation?.let {
+                                        WalkingNavigation.nextTurn(route, it, session.routeProgress(route, it),
+                                            useTrackedProgress = true)
+                                    }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -1489,11 +1495,15 @@ class MainActivity : ComponentActivity() {
                                             color = Color.White
                                         ) {
                                             WalkingMiniMap(
-                                                                     route, navigationLocation,
-                                                                     walkedSegments = navigationTraceViewModel.walkedTrace.segments.map { segment ->
-                                                                         segment.map { it.latitude to it.longitude }
-                                                                     }
-                                                                 )
+                                                                      route, navigationLocation,
+                                                                      walkedSegments = navigationTraceViewModel.walkedTrace.segments.map { segment ->
+                                                                          segment.map { it.latitude to it.longitude }
+                                                                      },
+                                                                      progressProjection = navigationLocation?.let {
+                                                                          session.routeProgress(route, it)
+                                                                      },
+                                                                      useTrackedProgress = true
+                                                                  )
                                         }
                                     }
                                     Text("Karte: © OpenStreetMap-Mitwirkende · Violett: Fußweg · Standort violett",
@@ -1580,7 +1590,9 @@ class MainActivity : ComponentActivity() {
                                         val untilBus = boarding?.let { countdown(it.departure) }
                                         // OSRM step lengths approximate remaining walking distance during navigation.
                                         val liveTurn = if (walkingNavigationOpen && navigationLocation != null && walkingRoute != null)
-                                            WalkingNavigation.nextTurn(walkingRoute!!, navigationLocation!!) else null
+                                            WalkingNavigation.nextTurn(walkingRoute!!, navigationLocation!!,
+                                                session.routeProgress(walkingRoute!!, navigationLocation!!),
+                                                useTrackedProgress = true) else null
                                         val remainingWalkMeters = liveTurn?.let { (turn, metersToTurn) ->
                                             val turns = walkingRoute!!.turns
                                             val index = turns.indexOf(turn)
@@ -1764,7 +1776,8 @@ class MainActivity : ComponentActivity() {
                                                     val fix = navigationLocation
                                                     val route = walkingRoute
                                                     val next = if (fix != null && route != null)
-                                                        WalkingNavigation.nextTurn(route, fix) else null
+                                                        WalkingNavigation.nextTurn(route, fix, session.routeProgress(route, fix),
+                                                            useTrackedProgress = true) else null
                                                     Row(modifier = Modifier.fillMaxWidth(),
                                                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                                                         verticalAlignment = Alignment.CenterVertically) {
@@ -1793,8 +1806,12 @@ class MainActivity : ComponentActivity() {
                                                                      route, navigationLocation,
                                                                      walkedSegments = navigationTraceViewModel.walkedTrace.segments.map { segment ->
                                                                          segment.map { it.latitude to it.longitude }
-                                                                     }
-                                                                 )
+                                                                     },
+                                                                     progressProjection = navigationLocation?.let {
+                                                                         session.routeProgress(route, it)
+                                                                     },
+                                                                     useTrackedProgress = true
+                                                                  )
                                                             }
                                                         }
                                                     }
@@ -2105,7 +2122,9 @@ class MainActivity : ComponentActivity() {
                     fun walkingNavigationLocationTurn(): Pair<de.mvv.mobility.data.WalkingTurn, Int>? {
                         val fix = navigationLocation ?: return null
                         val route = walkingRoute ?: return null
-                        return de.mvv.mobility.data.WalkingNavigation.nextTurn(route, fix)
+                        return de.mvv.mobility.data.WalkingNavigation.nextTurn(
+                            route, fix, session.routeProgress(route, fix), useTrackedProgress = true
+                        )
                     }
                     if (fullscreenMode == FullscreenMode.NONE) {
                         CockpitNavigation(selectedTab) { tab -> selectedTab = tab }
