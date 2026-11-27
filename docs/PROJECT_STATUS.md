@@ -1,3 +1,12 @@
+## GPS-02: Monotone Callback-Reihenfolge – 27.11.2026, 04:23 MEZ
+
+- **Code:** [af0cb7b](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/af0cb7b3f6de0960baef2659d785d1c535d9c4d7) führt den reinen `LocationFixOrdering`-Guard ein. Er akzeptiert nur strikt steigende positive `elapsedRealtimeNanos`, verwirft ältere/gleiche Callbacks und erlaubt Reset für neue Sessions. **Noch nicht in den Android-Callback integriert**; keine Behauptung, dass GPS-02 im Produkt behoben ist.
+- **Tests:** [06ee06b](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/06ee06b6ce96ff2178dfd2f91afe2d28d6cb4495) ergänzt drei JVM-Tests (verspätete Callbacks, Duplikate, Reset, GPS-Lücke). **Nicht ausgeführt**, CI für diese SHA noch nicht bestätigt.
+- **Nächster Schritt:** Tatsächlichen Location-Callback in `MainActivity` / `NavigationSessionViewModel` identifizieren, Guard genau einmal pro Session integrieren, Race-/Lifecycle-Test ergänzen. ROUTE-02-Hysterese bleibt unabhängig offen. Kein APK-Go ohne CI und S25-Abnahme.
+- **Projektkontext:** README, Roadmap, Entscheidungen, RouteProgress, LocationFreshness, bestehende Tests, letzte Commits und offene Issues geprüft; Main/Schedule-Chats nicht vollständig live lesbar.
+
+---
+
 ## GPS/OSM-Regressionspaket – 27.11.2026, 01:15 MEZ
 
 - **Codeänderung:** [d9aa47c](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/d9aa47ce94870e2a65ac0714bebd069d77686874) ergänzt zwei deterministische JVM-Regressionen in `RouteProgressTest.kt`: Projektion auf den näheren Schenkel einer Haarnadel statt den späteren, sowie definierte Tie-Break-Reihenfolge bei exakt überlappenden Segmenten. Synthetische Koordinaten; keine privaten GPS-Daten.
