@@ -44,6 +44,14 @@
 
 ---
 
+## Gerätefehler ROUTE-02 behoben – 27.11.2026
+
+- **Code-Commit:** `1094066` auf `main`. Route progress wird während einer aktiven Fußnavigation einmalig und routegebunden in `NavigationSessionViewModel` verfolgt und gemeinsam für Abbiegehinweise, OSM-Karte und Off-Route-Erkennung verwendet. Verspätete/duplizierte Fixes werden ignoriert; eine nahe parallele Routenetappe kann bei GPS-Jitter nur innerhalb eines plausiblen Bewegungsfensters übernehmen. Rückwärtsbewegung und Wechsel auf eine neue Route bleiben möglich.
+- **Regressionen:** Sequenztests für Haarnadel-Jitter, Vorwärts-/Rückwärtsbewegung, alte Fixes und Routenwechsel ergänzen die bisherige Charakterisierung des >100-m-Sprungs.
+- **Lokale Tests:** `:app:testDebugUnitTest` erfolgreich: **122 Tests, 0 Fehler**. `:app:lintDebug` erfolgreich: **0 Errors / 40 Warnings**. `:app:connectedDebugAndroidTest`: API-35-Emulator **40/40 erfolgreich**. Der Gradle-Gesamttask endete anschließend wegen des zusätzlich erkannten SM-G970F mit `INSTALL_FAILED_VERSION_DOWNGRADE`; auf dem S10 liefen **0 Tests**. Daher nicht als insgesamt grüner Connected-Lauf werten.
+- **Gerätestatus:** S10 an den GUI-Entwickler freigegeben; App beendet, Test-GPS-Provider entfernt, Dummy-Kalendertermin gelöscht. Keine weitere Geräteinteraktion, APK-Installation oder physische ROUTE-02-Abnahme in dieser Runde.
+- **GitHub/Issues:** Vor der Änderung waren **0 offene Issues** gemeldet. Der neue Code-Commit wurde lokal getestet; ein Actions-Lauf für diesen SHA ist noch nicht bestätigt. Nächster Schritt: Push und Prüfung des zugehörigen CI-Laufs; anschließend echte GPS-Haarnadelabnahme auf einem verfügbaren Gerät.
+
 ## CI-Abgleich und nächste Abnahme – 26.11.2026, 22:20 MEZ
 
 - **Live geprüfte GitHub-Actions-Jobs:** [vollständiger Release-CI #45893175285](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45893175285) hat **6/6 Jobs erfolgreich** abgeschlossen: `preflight`, `build-and-test`, `emulator-smoke-test`, `mvv-live-probe`, `door-to-door-live-probe`, `release-acceptance`. Der parallel gestartete [Push-CI #45893162384](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/45893162384) wurde **teilweise abgebrochen** (`build-and-test` und `release-acceptance` cancelled; `preflight` success; übrige skipped). Ein abgebrochener Lauf darf nicht als grün bezeichnet werden.
