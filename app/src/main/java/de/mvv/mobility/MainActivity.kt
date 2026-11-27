@@ -69,6 +69,8 @@ import de.mvv.mobility.data.MvvJourneyRepository
 import de.mvv.mobility.data.isCurrentSearchResponse
 import de.mvv.mobility.data.TransitModeIcon
 import de.mvv.mobility.data.JourneyOption
+import de.mvv.mobility.data.TransitGpsFix
+import de.mvv.mobility.data.TransitGpsPlausibility
 import de.mvv.mobility.data.RouteFilterMode
 import de.mvv.mobility.data.RoutePreference
 import de.mvv.mobility.data.reachableNowJourneys
@@ -354,6 +356,19 @@ class MainActivity : ComponentActivity() {
                             progressEstimate = estimate
                         )
                     }
+                    fun isConfirmedTransitRide(): Boolean {
+                        val journey = session.dashboardJourney
+                            ?.let { session.journeys.getOrNull(it) } ?: return false
+                        val vehicleIndex = journey.steps.indexOfFirst { !it.walking }
+                        return vehicleIndex >= 0 && session.isBoardingConfirmed(journey, vehicleIndex)
+                    }
+                    fun transitGpsFix(location: Location) = TransitGpsFix(
+                        latitude = location.latitude,
+                        longitude = location.longitude,
+                        wallTimeMillis = location.time,
+                        elapsedRealtimeNanos = location.elapsedRealtimeNanos,
+                        accuracyMeters = location.accuracy.takeIf { location.hasAccuracy() }
+                    )
                     LaunchedEffect(gpsDebugEnabled, appForeground, walkingNavigationOpen, walkingOnlyDashboard) {
                         if (gpsDebugEnabled && appForeground) {
                             while (true) {
@@ -423,10 +438,16 @@ class MainActivity : ComponentActivity() {
                                 if (gpsDebugEnabled) {
                                     val now = System.currentTimeMillis()
                                     val previous = location
+                                    val implausibleTransitJump = found != null && previous != null &&
+                                        TransitGpsPlausibility.shouldReject(
+                                            transitGpsFix(previous), transitGpsFix(found),
+                                            boardingConfirmed = isConfirmedTransitRide()
+                                        )
                                     val reason = when {
                                         found == null -> "provider_no_fix"
                                         !CurrentLocationRepository.isFreshFix(found) -> "stale_or_future"
                                         previous != null && !CurrentLocationRepository.isNewer(found, previous) -> "out_of_order"
+                                        implausibleTransitJump -> "transit_jump"
                                         found.hasAccuracy() && found.accuracy > 100f -> "accuracy_over_100m"
                                         previous != null && previous.hasAccuracy() && previous.accuracy <= 25f &&
                                             CurrentLocationRepository.isFreshFix(previous, 15_000L) &&
@@ -441,8 +462,14 @@ class MainActivity : ComponentActivity() {
                                 if (found != null) {
                                     val now = System.currentTimeMillis()
                                     val previous = location
-                                    // Ignore stale, out-of-order or implausibly inaccurate fixes.
-                                    // Do not overwrite a good fix with an older cached result.
+                                    val implausibleTransitJump = previous != null &&
+                                        TransitGpsPlausibility.shouldReject(
+                                            transitGpsFix(previous), transitGpsFix(found),
+                                            boardingConfirmed = isConfirmedTransitRide()
+                                        )
+                                    // Ignore stale, out-of-order, implausibly inaccurate, or
+                                    // teleporting fixes during a confirmed vehicle leg.
+                                    // Keep the last accepted position on rejection.
                                     val recentPreciseFix = previous != null &&
                                         previous.hasAccuracy() && previous.accuracy <= 25f &&
                                         CurrentLocationRepository.isFreshFix(previous, 15_000L)
@@ -451,7 +478,8 @@ class MainActivity : ComponentActivity() {
                                     val acceptable = CurrentLocationRepository.isFreshFix(found) &&
                                         (previous == null || CurrentLocationRepository.isNewer(found, previous)) &&
                                         (!found.hasAccuracy() || found.accuracy <= 100f) &&
-                                        !substantiallyWorse
+                                        !substantiallyWorse &&
+                                        !implausibleTransitJump
                                     if (acceptable) {
                                         location = found
                                         if ((walkingOnlyDashboard || walkingNavigationOpen) &&
