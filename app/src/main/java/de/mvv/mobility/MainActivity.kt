@@ -62,6 +62,8 @@ import de.mvv.mobility.data.JourneyTime
 import de.mvv.mobility.ui.components.FullscreenJourneyDashboard
 import de.mvv.mobility.ui.components.FullscreenWalkNavigation
 import androidx.activity.compose.BackHandler
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import de.mvv.mobility.data.DebugResponseCapture
 import de.mvv.mobility.data.MvvJourneyRepository
 import de.mvv.mobility.data.isCurrentSearchResponse
@@ -261,6 +263,21 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     var fullscreenMode by session::fullscreenMode
+                    // Only the journey dashboard is immersive; keep the status bar visible.
+                    // Restore Android navigation when leaving it or disposing this Activity.
+                    DisposableEffect(fullscreenMode) {
+                        val controller = WindowInsetsControllerCompat(window, window.decorView)
+                        if (fullscreenMode == FullscreenMode.DASHBOARD) {
+                            controller.systemBarsBehavior =
+                                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                            controller.hide(WindowInsetsCompat.Type.navigationBars())
+                        } else {
+                            controller.show(WindowInsetsCompat.Type.navigationBars())
+                        }
+                        onDispose {
+                            controller.show(WindowInsetsCompat.Type.navigationBars())
+                        }
+                    }
                     var connectionChecks by session::connectionChecks
                     var newSearchOffered by session::newSearchOffered
                     var pendingNewSearch by session::pendingNewSearch
