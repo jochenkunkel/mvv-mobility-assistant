@@ -30,7 +30,8 @@ data class JourneyOption(
 }
 data class JourneyStep(val line: String, val product: String, val from: String, val to: String,
     val departure: String, val arrival: String, val walking: Boolean, val minutes: Int,
-    val fromStop: StopPosition? = null, val toStop: StopPosition? = null)
+    val fromStop: StopPosition? = null, val toStop: StopPosition? = null,
+    val departureInstantMillis: Long? = null, val arrivalInstantMillis: Long? = null)
 /** MVV/EFA coordinates belong to the specific leg endpoint, not a geocoded street name. */
 data class StopPosition(
     val latitude: Double, val longitude: Double,
@@ -198,7 +199,8 @@ object MvvJourneyRepository {
                 val to = endpoint(leg, false)
                 steps.add(JourneyStep(number, product, from?.optString("name").orEmpty(),
                     to?.optString("name").orEmpty(), efaTime(from), efaTime(to), walking,
-                    leg.optInt("timeMinute", 0), stopPosition(from), stopPosition(to)))
+                    leg.optInt("timeMinute", 0), stopPosition(from), stopPosition(to),
+                    EfaTime.fromEfaPoint(from), EfaTime.fromEfaPoint(to)))
                 if (walking) {
                     val distance = leg.optDouble("distance", 0.0)
                     if (distance > 0) {

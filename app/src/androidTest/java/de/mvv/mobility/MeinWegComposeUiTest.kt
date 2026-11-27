@@ -1,6 +1,7 @@
 package de.mvv.mobility
 
 import android.content.Intent
+import android.location.Location
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsDisplayed
@@ -274,6 +275,100 @@ class MeinWegComposeUiTest {
             compose.onNodeWithTag("cockpit_bottom_navigation").assertDoesNotExist()
             compose.onNodeWithTag("fullscreen_dashboard_back").performClick()
             compose.onNodeWithTag("cockpit_bottom_navigation").assertExists()
+        }
+    }
+
+    @Test fun boardingConfirmationIsExplicitAndSurvivesActivityRecreation() {
+        val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra("mein_weg_test_fixture", true)
+        ActivityScenario.launch<MainActivity>(intent).use { scenario ->
+            scenario.onActivity { activity ->
+                val session = ViewModelProvider(activity)[NavigationSessionViewModel::class.java]
+                session.dashboardJourney = 0
+                session.fullscreenMode = FullscreenMode.DASHBOARD
+            }
+            compose.onNodeWithTag("boarding_confirmation")
+                .assertTextEquals("Ich bin eingestiegen")
+                .performClick()
+            compose.onNodeWithTag("boarding_confirmation")
+                .assertTextEquals("✓ Eingestiegen · Bestätigung zurücknehmen")
+            scenario.recreate()
+            compose.waitForIdle()
+            compose.onNodeWithTag("boarding_confirmation")
+                .assertTextEquals("✓ Eingestiegen · Bestätigung zurücknehmen")
+            scenario.onActivity { activity ->
+                val session = ViewModelProvider(activity)[NavigationSessionViewModel::class.java]
+                session.resetConnectionChecksForNewJourney()
+            }
+            compose.onNodeWithTag("boarding_confirmation")
+                .assertTextEquals("Ich bin eingestiegen")
+        }
+    }
+
+    @Test fun confirmedBusRideShowsScheduleEstimateDuringShortGpsGapAndRecoversToLive() {
+        val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra("mein_weg_test_fixture", true)
+        ActivityScenario.launch<MainActivity>(intent).use { scenario ->
+            scenario.onActivity { activity ->
+                val session = ViewModelProvider(activity)[NavigationSessionViewModel::class.java]
+                val now = System.currentTimeMillis()
+                val timeFormat = SimpleDateFormat("HH:mm", Locale.GERMANY).apply {
+                    timeZone = java.util.TimeZone.getTimeZone("Europe/Berlin")
+                }
+                val departure = timeFormat.format(Date(now - 10 * 60_000L))
+                val arrival = timeFormat.format(Date(now + 20 * 60_000L))
+                val journey = JourneyOption(
+                    departure, arrival, "134", 0, 0, listOf("134"), listOf("Bus"),
+                    listOf(JourneyStep("134", "Bus", "Fürstenried West", "Bleibtreustraße",
+                        departure, arrival, false, 30,
+                        departureInstantMillis = now - 10 * 60_000L,
+                        arrivalInstantMillis = now + 20 * 60_000L))
+                )
+                session.journeys = listOf(journey)
+                session.dashboardJourney = 0
+                session.confirmBoarding(journey, 0)
+                session.location = Location("test").apply {
+                    latitude = 48.1394
+                    longitude = 11.5615
+                    time = now - 30_000L
+                    accuracy = 12f
+                }
+                session.fullscreenMode = FullscreenMode.DASHBOARD
+            }
+            compose.waitForIdle()
+            compose.onNodeWithTag("fullscreen_gps_status")
+                .assertTextEquals("Fahrt aktiv · Position geschätzt")
+            compose.onNodeWithTag("ride_position_estimate")
+                .assertTextContains("Fahrplan", substring = true)
+                .assertTextContains("Anschluss nicht garantiert", substring = true)
+
+            scenario.onActivity { activity ->
+                ViewModelProvider(activity)[NavigationSessionViewModel::class.java].location =
+                    Location("test").apply {
+                        latitude = 48.1394
+                        longitude = 11.5615
+                        time = System.currentTimeMillis() - 1_000L
+                        accuracy = 5f
+                    }
+            }
+            compose.waitForIdle()
+            compose.onNodeWithTag("fullscreen_gps_status").assertTextEquals("GPS LIVE")
+
+            scenario.onActivity { activity ->
+                ViewModelProvider(activity)[NavigationSessionViewModel::class.java].location =
+                    Location("test").apply {
+                        latitude = 48.1394
+                        longitude = 11.5615
+                        time = System.currentTimeMillis() - 61_000L
+                        accuracy = 12f
+                    }
+            }
+            compose.waitForIdle()
+            compose.onNodeWithTag("fullscreen_gps_status")
+                .assertTextEquals("Fahrt bestätigt · GPS veraltet")
+            compose.onNodeWithTag("fullscreen_warning").assertExists()
         }
     }
 

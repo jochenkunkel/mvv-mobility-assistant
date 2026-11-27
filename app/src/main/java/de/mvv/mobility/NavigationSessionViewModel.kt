@@ -19,6 +19,10 @@ import de.mvv.mobility.data.WalkingTurn
 import de.mvv.mobility.data.RouteFilterMode
 import de.mvv.mobility.data.RouteProgress
 import de.mvv.mobility.data.RouteProgressTracker
+import de.mvv.mobility.data.RideGpsMode
+import de.mvv.mobility.data.RideGpsStatus
+import de.mvv.mobility.data.RideGpsStatusResolver
+import de.mvv.mobility.data.TransitProgressEstimate
 import de.mvv.mobility.ui.components.CockpitTab
 
 /** Active fullscreen journey view; the app tab bar is hidden in both modes. */
@@ -103,6 +107,9 @@ class NavigationSessionViewModel(
     // #15/#16/#17/#18: explicit, manually triggered journey state.
     var fullscreenMode by mutableStateOf(FullscreenMode.NONE)
     var connectionChecks by mutableStateOf<Map<Int, ConnectionCheckState>>(emptyMap())
+    var confirmedBoarding by mutableStateOf<Pair<JourneyOption, Int>?>(null)
+    private var gpsStatusJourney: JourneyOption? = null
+    private var previousRideGpsMode: RideGpsMode? = null
     var newSearchOffered by mutableStateOf(false)
     var pendingNewSearch by mutableStateOf(false)
     var earlierSearchOffsetMinutes by mutableIntStateOf(0)
@@ -112,6 +119,39 @@ class NavigationSessionViewModel(
         newSearchOffered = false
     }
 
+    fun confirmBoarding(journey: JourneyOption, stepIndex: Int) {
+        confirmedBoarding = journey to stepIndex
+    }
+
+    fun clearBoardingConfirmation() {
+        confirmedBoarding = null
+    }
+
+    fun isBoardingConfirmed(journey: JourneyOption, stepIndex: Int): Boolean =
+        confirmedBoarding?.let { it.first == journey && it.second == stepIndex } == true
+
+    fun resolveRideGpsStatus(
+        journey: JourneyOption?,
+        hasFix: Boolean,
+        fixAgeMillis: Long?,
+        accuracyMeters: Float?,
+        boardingConfirmed: Boolean,
+        progressEstimate: TransitProgressEstimate?
+    ): RideGpsStatus {
+        if (gpsStatusJourney != journey) {
+            gpsStatusJourney = journey
+            previousRideGpsMode = null
+        }
+        return RideGpsStatusResolver.resolve(
+            hasFix = hasFix,
+            fixAgeMillis = fixAgeMillis,
+            accuracyMeters = accuracyMeters,
+            boardingConfirmed = boardingConfirmed,
+            progressEstimate = progressEstimate,
+            previousMode = previousRideGpsMode
+        ).also { previousRideGpsMode = it.mode }
+    }
+
     fun markConnectionMissed(stepIndex: Int) {
         connectionChecks = connectionChecks + (stepIndex to ConnectionCheckState.MISSED)
         newSearchOffered = true
@@ -119,6 +159,9 @@ class NavigationSessionViewModel(
 
     fun resetConnectionChecksForNewJourney() {
         connectionChecks = emptyMap()
+        confirmedBoarding = null
+        gpsStatusJourney = null
+        previousRideGpsMode = null
         newSearchOffered = false
         earlierSearchOffsetMinutes = 0
     }

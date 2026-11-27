@@ -314,8 +314,29 @@ class MainActivity : ComponentActivity() {
                     }
                     val gpsIndicatorColor = if (navigationLocation != null)
                         Color(0xFF237A45) else Color(0xFF9A661B)
-                    val locationAgeSeconds = location?.takeIf { !fixture }
-                        ?.let { CurrentLocationRepository.ageMillis(it)?.div(1000L) }
+                    val gpsFixAgeMillis = location?.let {
+                        CurrentLocationRepository.ageMillis(it)
+                    } ?: if (fixture) 0L else null
+                    val gpsFixAccuracy = location?.takeIf { it.hasAccuracy() }?.accuracy
+                        ?: if (fixture) 5f else null
+                    fun journeyGpsStatus(journey: JourneyOption?): de.mvv.mobility.data.RideGpsStatus {
+                        val vehicleIndex = journey?.steps?.indexOfFirst { !it.walking } ?: -1
+                        val boardingConfirmed = vehicleIndex >= 0 && journey != null &&
+                            session.isBoardingConfirmed(journey, vehicleIndex)
+                        val estimate = if (boardingConfirmed && journey != null) {
+                            de.mvv.mobility.data.TransitProgressEstimator.estimate(
+                                journey.steps[vehicleIndex], clockMillis
+                            )
+                        } else null
+                        return session.resolveRideGpsStatus(
+                            journey = journey,
+                            hasFix = location != null,
+                            fixAgeMillis = gpsFixAgeMillis,
+                            accuracyMeters = gpsFixAccuracy,
+                            boardingConfirmed = boardingConfirmed,
+                            progressEstimate = estimate
+                        )
+                    }
                     LaunchedEffect(gpsDebugEnabled, appForeground, walkingNavigationOpen, walkingOnlyDashboard) {
                         if (gpsDebugEnabled && appForeground) {
                             while (true) {
@@ -1552,17 +1573,12 @@ class MainActivity : ComponentActivity() {
                                     elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                                 ) {
                                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        // GPS describes location freshness only, never MVV real-time departures.
-                                        val gpsLabel = when {
-                                            navigationLocation != null && (locationAgeSeconds ?: 0L) <= 15L -> "GPS LIVE"
-                                            navigationLocation != null -> "GPS ${locationAgeSeconds ?: 0}s · letzte Position"
-                                            location != null -> "GPS ${locationAgeSeconds ?: 0}s"
-                                            locationPermissionGranted && location != null -> "GPS ALT"
-                                            locationPermissionGranted -> "GPS …"
-                                            else -> "GPS AUS"
-                                        }
+                                        // "Position geschätzt" is only shown after explicit boarding
+                                        // confirmation and while a coarse timetable leg estimate exists.
+                                        val rideGpsStatus = journeyGpsStatus(chosen)
+                                        val gpsLabel = rideGpsStatus.label
                                         val gpsColor = when {
-                                            navigationLocation != null -> Color(0xFF247A43)
+                                            rideGpsStatus.isGreen -> Color(0xFF247A43)
                                             locationPermissionGranted -> Color(0xFF6B7280)
                                             else -> Color(0xFFB3261E)
                                         }
@@ -1981,7 +1997,12 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                     OutlinedButton(
-                                        onClick = { dashboardJourney = index; selectedTab = CockpitTab.JOURNEY; fullscreenMode = FullscreenMode.DASHBOARD },
+                                        onClick = {
+                                            session.clearBoardingConfirmation()
+                                            dashboardJourney = index
+                                            selectedTab = CockpitTab.JOURNEY
+                                            fullscreenMode = FullscreenMode.DASHBOARD
+                                        },
                                         modifier = Modifier.fillMaxWidth().testTag("open_walking_dashboard")
                                     ) { Text("Meine Fahrt öffnen") }
                                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -2079,6 +2100,7 @@ class MainActivity : ComponentActivity() {
                                             }
                                             if (firstBus?.from?.isNotBlank() == true && usableLocation != null) {
                                                 Button(onClick = {
+                                                    session.clearBoardingConfirmation()
                                                     dashboardJourney = index
                                                     selectedTab = CockpitTab.JOURNEY
                                                 }, modifier = Modifier.fillMaxWidth(),
@@ -2138,6 +2160,16 @@ class MainActivity : ComponentActivity() {
                             if (fullscreenMode == FullscreenMode.DASHBOARD) {
                                 val chosen = journeys.getOrNull(dashboardJourney ?: 0)
                                 val upcoming = displayConnection
+                                val firstVehicleIndex = chosen?.steps?.indexOfFirst { !it.walking } ?: -1
+                                val firstVehicle = chosen?.steps?.getOrNull(firstVehicleIndex)
+                                val boardingConfirmed = chosen != null && firstVehicleIndex >= 0 &&
+                                    session.isBoardingConfirmed(chosen, firstVehicleIndex)
+                                val transitProgressEstimate = if (boardingConfirmed && firstVehicle != null) {
+                                    de.mvv.mobility.data.TransitProgressEstimator.estimate(
+                                        firstVehicle, clockMillis
+                                    )
+                                } else null
+                                val rideGpsStatus = journeyGpsStatus(chosen)
                                 val departureClock = upcoming?.step?.departure
                                     ?: chosen?.departure.orEmpty()
                                 val boardingName = chosen?.steps?.firstOrNull { !it.walking }?.from.orEmpty()
@@ -2170,14 +2202,25 @@ class MainActivity : ComponentActivity() {
                                 }
                                 val warningsFull = buildList {
                                     val hasVehicleLeg = chosen?.steps?.any { !it.walking } == true
-                                    if (hasVehicleLeg && boardingStop == null) add("⚠ MVV-Einstiegskoordinaten fehlen – Einstieg auf Karte prüfen")
-                                    if (navigationLocation == null) add("⚠ GPS nicht aktuell – Anzeige kann veraltet sein")
-                                    if (hasVehicleLeg && boardingStop?.platform.isNullOrBlank()) add("⚠ Steig nicht eindeutig")
+                                    if (hasVehicleLeg && !boardingConfirmed && boardingStop == null)
+                                        add("⚠ MVV-Einstiegskoordinaten fehlen – Einstieg auf Karte prüfen")
+                                    when (rideGpsStatus.mode) {
+                                        de.mvv.mobility.data.RideGpsMode.ESTIMATED ->
+                                            add("⚠ ${transitProgressEstimate?.description} · Anschluss nicht garantiert")
+                                        de.mvv.mobility.data.RideGpsMode.RECENT ->
+                                            add("⚠ GPS vorübergehend ungenau – Anzeige kann veraltet sein")
+                                        de.mvv.mobility.data.RideGpsMode.STALE,
+                                        de.mvv.mobility.data.RideGpsMode.UNAVAILABLE ->
+                                            add("⚠ GPS nicht aktuell – Anzeige kann veraltet sein")
+                                        de.mvv.mobility.data.RideGpsMode.LIVE -> Unit
+                                    }
+                                    if (hasVehicleLeg && !boardingConfirmed && boardingStop?.platform.isNullOrBlank())
+                                        add("⚠ Steig nicht eindeutig")
                                 }
                                 FullscreenJourneyDashboard(
                                     countdown = countdownLabel,
                                     countdownContext = countdownContext,
-                                    gpsStatus = if (navigationLocation != null) "GPS LIVE" else "GPS veraltet",
+                                    gpsStatus = rideGpsStatus.label,
                                     leaveAt = chosen?.steps?.firstOrNull { it.walking }?.departure.orBlank(),
                                     line = chosen?.lines?.joinToString(", ").orBlank(),
                                     departure = departureClock,
@@ -2190,7 +2233,15 @@ class MainActivity : ComponentActivity() {
                                     warnings = warningsFull,
                                     upcoming = upcoming,
                                     checkState = displayConnection?.stepIndex?.let { connectionChecks[it] },
+                                    boardingAvailable = firstVehicleIndex >= 0,
+                                    boardingConfirmed = boardingConfirmed,
+                                    rideEstimateText = transitProgressEstimate?.description,
                                     onBack = { fullscreenMode = FullscreenMode.NONE },
+                                    onBoardingToggle = {
+                                        if (boardingConfirmed) session.clearBoardingConfirmation()
+                                        else if (chosen != null && firstVehicleIndex >= 0)
+                                            session.confirmBoarding(chosen, firstVehicleIndex)
+                                    },
                                     onCheckIn = { upcoming?.let { session.checkIn(it.stepIndex) } },
                                     onMissed = { upcoming?.let { session.markConnectionMissed(it.stepIndex) } },
                                     onNewSearch = {

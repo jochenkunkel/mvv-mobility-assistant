@@ -35,7 +35,11 @@ fun FullscreenJourneyDashboard(
     warnings: List<String>,
     upcoming: UpcomingConnection?,
     checkState: ConnectionCheckState?,
+    boardingAvailable: Boolean,
+    boardingConfirmed: Boolean,
+    rideEstimateText: String?,
     onBack: () -> Unit,
+    onBoardingToggle: () -> Unit,
     onCheckIn: () -> Unit,
     onMissed: () -> Unit,
     onNewSearch: () -> Unit,
@@ -54,8 +58,11 @@ fun FullscreenJourneyDashboard(
             Text("Meine Verbindung", style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             Text(gpsStatus,
-                color = if (gpsStatus == "GPS LIVE") Color(0xFF17733C) else Color(0xFF9A661B),
-                style = MaterialTheme.typography.labelSmall)
+                color = if (gpsStatus == "GPS LIVE" ||
+                    gpsStatus == "Fahrt aktiv · Position geschätzt") Color(0xFF17733C)
+                    else Color(0xFF9A661B),
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.testTag("fullscreen_gps_status"))
         }
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF5635B1))) {
@@ -77,6 +84,22 @@ fun FullscreenJourneyDashboard(
         InfoCard("FUSSWEG", "$walking · $distance", "fullscreen_walking")
         InfoCard("PUFFER", buffer, "fullscreen_buffer")
         InfoCard("ANKUNFT / ZIEL", arrival, "fullscreen_arrival")
+
+        if (boardingAvailable) {
+            Button(onClick = onBoardingToggle, modifier = Modifier.fillMaxWidth()
+                .heightIn(min = 52.dp).testTag("boarding_confirmation")) {
+                Text(if (boardingConfirmed) "✓ Eingestiegen · Bestätigung zurücknehmen"
+                    else "Ich bin eingestiegen")
+            }
+        }
+        if (boardingConfirmed && rideEstimateText != null) {
+            Text(
+                "Fahrplan-Schätzung: $rideEstimateText. Anschluss nicht garantiert.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF62577D),
+                modifier = Modifier.testTag("ride_position_estimate")
+            )
+        }
 
         if (upcoming != null) {
             Text("Anschluss: ${upcoming.step.line} → ${upcoming.step.to}",
