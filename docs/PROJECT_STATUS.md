@@ -1,3 +1,13 @@
+## CI-Abgleich Vollbild-Fix #24 – 27.11.2026, 17:24 MEZ
+
+- **GitHub direkt geprüft:** HEAD vor diesem Dokumentationscommit `8982e74d7476e7388394fb39a37821f677e756d6`; fünf offene Issues #21–#25, keine offenen PRs. README, Roadmap, Entscheidungen, Immersive-QA und `MainActivity.kt` abgeglichen. Die vollständigen Chats Main/Schedule bleiben nicht direkt lesbar; keine zusätzlichen Chat-Fakten angenommen.
+- **Neuer belastbarer Actions-Nachweis:** [Run #46023823824](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/46023823824) für **exakt `8982e74`** ist `completed/success`. **Job-Ebene:** `preflight=success`, `build-and-test=success`; `emulator-smoke-test=skipped`, `mvv-live-probe=skipped`, `door-to-door-live-probe=skipped`, `release-acceptance=skipped`. Der unmittelbar vorangehende Code-SHA `09349fe` hat einen **cancelled** Push-Run [#46023802245](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/46023802245), vermutlich durch CI-Concurrency, ohne eigenständigen grünen Lauf. Weil `8982e74` denselben Code enthält und lediglich Dokumentation ergänzt, ist dessen Build-/Unit-Test-Erfolg ein brauchbarer Integrationsbeleg, **aber kein Emulator- oder S25-Nachweis**.
+- **Qualitätsstatus:** #24 bleibt offen. Der `DisposableEffect(fullscreenMode)` in `MainActivity.kt` blendet die Navigationsleiste nur bei `DASHBOARD` aus und stellt sie beim Dispose wieder her. Rotation, Gestennavigation, Drei-Tasten-Modus, Warnungs-Inset und App-Lifecycle sind noch nicht auf Gerät bestätigt. Kein Release/APK-Freigabesignal.
+- **Nächstes kleines Code-/Testpaket:** Einen gezielten instrumentierten Test für `NONE → DASHBOARD → NONE` und Activity-Recreation ergänzen; dabei per WindowInsets und Screenshot prüfen, dass nur `navigationBars` verborgen werden, `statusBars` sichtbar bleiben und beim Zurückkehren die Systemnavigation wieder erscheint. Danach einen **nicht übersprungenen** API-35-Emulatorlauf und S25-Abnahme nachweisen. Erst danach #24 schließen; anschließend #23 und #22.
+- **Grenze dieses Laufs:** Keine lokale Gradle-/Emulator-Ausführung, keine Codeänderung; die neue Arbeit ist der verifizierte CI-Job-Abgleich samt dokumentierter Testlücke und nächstem ausführbaren Testpaket.
+
+---
+
 ## UI-24 erster Code-Fix – 27.11.2026, 16:20 MEZ
 
 - **Repo-Abgleich:** README, aktuelle Roadmap, CHAT-START, UI24-Vertrag, MainActivity, offene Tickets #21–#25 und Commits bis `f52651b` geprüft. Die vollständigen externen Main-/Schedule-Chats sind nicht direkt lesbar; aktuelle Nutzerwünsche stehen in den Issues.
