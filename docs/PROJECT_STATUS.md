@@ -1,3 +1,33 @@
+## CI-Concurrency-Quellcodeabgleich – 27.11.2026, 21:23 MEZ
+
+- **main vor Änderung:** `de73e022c89345f4b563c222a97c1ca3a9fdee70`; README, `docs/IMPLEMENTATION-ROADMAP.md`, `docs/DECISIONS.md`, Issues #21–#25, PR #26/#27 und jüngste Commits geprüft. Andere vollständige Chats (Main/Schedule) weiterhin nicht direkt abrufbar.
+- **Neu überprüfter Primärbeleg:** `.github/workflows/android.yml` setzt `concurrency.group = github.workflow + github.event_name + github.ref` und `cancel-in-progress` für Pushes außer Versionstags. Damit **können** aufeinanderfolgende Pushes auf demselben Branch einen noch laufenden Build beim Setup abbrechen. Das passt zum beobachteten Run #46041079256 (`build-and-test=cancelled` bei `Set up job`), belegt aber **nicht**, welcher nachfolgende Lauf ihn tatsächlich abgelöst hat. Kein Hinweis auf einen Gradle-Testfehler aus diesem Run. **Keine Änderung am Workflow nötig**, solange keine abweichende Ursache belegt ist.
+- **API-Grenze:** Die verfügbare Commit-Workflow-Abfrage listet nur PR-getriggerte Läufe; für `de73e02` lieferte sie `[]`. Das ist **kein Beweis**, dass es keinen Push-Build gab. Die Actions-Gesamtübersicht bzw. Run-Metadaten für den aktuellen Branch müssen extern geprüft werden.
+- **Nächstes kleines Arbeitspaket:** Einen tatsächlich abgeschlossenen, nicht durch Concurrency ersetzten `build-and-test`-Lauf für den aktuellen Code ermitteln; anschließend `workflow_dispatch` mit `test_level=release` ausführen, um das sonst übersprungene API-35-Emulator-Gate inklusive `ImmersiveDashboardInstrumentedTest` zu belegen. Falls kein Workflow-Dispatch verfügbar, CI-Administrator um gezielten Release-Gate-Lauf bitten. Danach GPS-PR #27 gegen main und #26 auf Merge-Konflikte und Tests prüfen.
+- **Tests/Freigabe:** In diesem Lauf keine Gradle-/Emulator-Tests ausgeführt, keine neuen grünen Builds belegt, keine APK-/S25-Freigabe.
+
+---
+
+## CI-Cancellation-Diagnose und PR-Integrationsprüfung – 27.11.2026, 20:24 MEZ
+
+- **main bei Prüfung:** `880d162ab1c9dbc15f5e5a31453ed8aa6ba08063`. README, Roadmap, Entscheidungen, Chat-Handoff, Issues, PRs und letzte Commits erneut gelesen. Offene PRs #26 und #27; #25 bleibt als neue Linien-/Fußweg-Anforderung offen.
+- **Direkter Actions-Jobnachweis:** [Run #46041079256](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/46041079256): `preflight=success` (inklusive Concurrency-Guard), `build-and-test=cancelled` **bereits im Schritt „Set up job“**, `release-acceptance=cancelled`, `emulator-smoke-test=skipped`, beide MVV-Live-Probes `skipped`. Ein Gradle-/Testfehler ist **nicht belegt**, da der Buildjob gar nicht zum Testschritt kam. Eine Concurrency-bedingte Ablösung durch einen jüngeren Lauf ist plausibel, aber ohne Workflow-Run-Metadaten/Logs **nicht bestätigt**. Nicht am Testcode oder Workflow auf Verdacht ändern.
+- **Konkreter nächster CI-Schritt:** GitHub-Actions-Laufübersicht nach dem Abbruchzeitpunkt und `cancelled_by`/Concurrency-Gruppe prüfen; einen *nicht abgebrochenen* Lauf für den aktuellen Code mit tatsächlich ausgeführtem API-35-Emulator-Gate abwarten/gezielt starten. Das vorhandene `ImmersiveDashboardInstrumentedTest`-Ergebnis erst danach als bestätigt markieren.
+- **PR-Konfliktrisiko:** [#26](https://github.com/jochenkunkel/mvv-mobility-assistant/pull/26) ändert ausschließlich `docs/PROJECT_STATUS.md`; [#27](https://github.com/jochenkunkel/mvv-mobility-assistant/pull/27) ändert `MainActivity.kt`, neue GPS-Plausibilitätsklasse und Unit-Tests **sowie dieselbe Statusdatei**. Daher Dokumentationskonflikt wahrscheinlich; tatsächliche Git-Mergeability vor Integration prüfen. PR-Behauptung 135 Unit-/42 Instrumentierungstests nicht mit unabhängig bestätigtem CI verwechseln.
+- **Qualitätsgrenze:** Keine lokalen Tests oder Emulatorläufe in diesem Prüflauf. Keine APK-/S25-Freigabe. Vollständige Chats Main/Schedule sind nicht direkt lesbar; nur Repository und bekannter Gesprächskontext verwendet.
+
+---
+
+## CI-Gate und paralleler GPS-PR – 27.11.2026, 19:21 MEZ
+
+- **Aktueller main-Stand bei Prüfung:** `c0b011aa5473cf8853520c75e0758ce79f3dd104`. README, `docs/IMPLEMENTATION-ROADMAP.md`, `docs/DECISIONS.md`, `docs/CHAT-START.md`, offene Issues/PRs und letzte Commits geprüft. Die Roadmap enthält historische Snapshots; diese nicht als aktuellen Teststand lesen.
+- **Verifizierter CI-Befund für #24:** GitHub-Actions-Lauf [#46041079256](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/46041079256) ist **nicht grün**: `preflight=success`, `build-and-test=cancelled`, `release-acceptance=cancelled`, `emulator-smoke-test=skipped`, beide MVV-Live-Probes `skipped`. Damit ist der neue `ImmersiveDashboardInstrumentedTest` im CI **nicht ausgeführt/nicht bestätigt**. Ursache der Stornierung aus Jobübersicht nicht belegt; vor Eingriff in Workflow oder Testcode zunächst Cancellation-/Concurrency-Ursache anhand Actions-Lauf und nachfolgender Läufe prüfen.
+- **Neue parallele Arbeit:** [PR #27](https://github.com/jochenkunkel/mvv-mobility-assistant/pull/27) (`c944525`) filtert unplausible GPS-Sprünge nur bei bestätigter ÖPNV-Fahrt und enthält Regressionstests. PR meldet lokal 135 Unit-Tests, 42/42 API-35-Instrumentierungstests sowie Lint/Build-Erfolg; dies sind **PR-Angaben, keine in diesem Lauf unabhängig reproduzierten Ergebnisse**. [PR #26](https://github.com/jochenkunkel/mvv-mobility-assistant/pull/26) bleibt ebenfalls offen. Nicht blind mergen; Überschneidungen in `PROJECT_STATUS.md` und `MainActivity.kt` vor Integration prüfen.
+- **Nächster kleiner Schritt:** Zuerst CI-Cancellation klären und API-35-Emulator-Gate für #24 nachweislich ausführen; danach PR #27 auf Regressionen und Main-Konflikte prüfen. #22–#25 offen lassen; keine APK-/S25-Freigabe.
+- **Chat-Grenze:** Vollständige andere Chats Main/Schedule nicht direkt abrufbar. Nur dokumentierte Repo-Issues und bekannter Projektkontext verwendet.
+
+---
+
 ## UI #24 – instrumentierter Systemleisten-Test, 27.11.2026, 18:20 MEZ
 
 - **Code:** Commit [47aa2d1](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/47aa2d1a487d32bbfca1bdc84f21e4ab69c5780d) ergänzt `ImmersiveDashboardInstrumentedTest`: tatsächliche Android-`navigationBars` verborgen, `statusBars` sichtbar, Reapplication nach `ActivityScenario.recreate()` und Wiederherstellung beim Verlassen des Dashboards. Test verwendet Debug-Fixture und echte WindowInsets statt ausschließlich Compose-Tags.
