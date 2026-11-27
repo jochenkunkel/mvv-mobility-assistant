@@ -1,3 +1,13 @@
+## CI-Cancellation-Diagnose und PR-Integrationsprüfung – 27.11.2026, 20:24 MEZ
+
+- **main bei Prüfung:** `880d162ab1c9dbc15f5e5a31453ed8aa6ba08063`. README, Roadmap, Entscheidungen, Chat-Handoff, Issues, PRs und letzte Commits erneut gelesen. Offene PRs #26 und #27; #25 bleibt als neue Linien-/Fußweg-Anforderung offen.
+- **Direkter Actions-Jobnachweis:** [Run #46041079256](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/46041079256): `preflight=success` (inklusive Concurrency-Guard), `build-and-test=cancelled` **bereits im Schritt „Set up job“**, `release-acceptance=cancelled`, `emulator-smoke-test=skipped`, beide MVV-Live-Probes `skipped`. Ein Gradle-/Testfehler ist **nicht belegt**, da der Buildjob gar nicht zum Testschritt kam. Eine Concurrency-bedingte Ablösung durch einen jüngeren Lauf ist plausibel, aber ohne Workflow-Run-Metadaten/Logs **nicht bestätigt**. Nicht am Testcode oder Workflow auf Verdacht ändern.
+- **Konkreter nächster CI-Schritt:** GitHub-Actions-Laufübersicht nach dem Abbruchzeitpunkt und `cancelled_by`/Concurrency-Gruppe prüfen; einen *nicht abgebrochenen* Lauf für den aktuellen Code mit tatsächlich ausgeführtem API-35-Emulator-Gate abwarten/gezielt starten. Das vorhandene `ImmersiveDashboardInstrumentedTest`-Ergebnis erst danach als bestätigt markieren.
+- **PR-Konfliktrisiko:** [#26](https://github.com/jochenkunkel/mvv-mobility-assistant/pull/26) ändert ausschließlich `docs/PROJECT_STATUS.md`; [#27](https://github.com/jochenkunkel/mvv-mobility-assistant/pull/27) ändert `MainActivity.kt`, neue GPS-Plausibilitätsklasse und Unit-Tests **sowie dieselbe Statusdatei**. Daher Dokumentationskonflikt wahrscheinlich; tatsächliche Git-Mergeability vor Integration prüfen. PR-Behauptung 135 Unit-/42 Instrumentierungstests nicht mit unabhängig bestätigtem CI verwechseln.
+- **Qualitätsgrenze:** Keine lokalen Tests oder Emulatorläufe in diesem Prüflauf. Keine APK-/S25-Freigabe. Vollständige Chats Main/Schedule sind nicht direkt lesbar; nur Repository und bekannter Gesprächskontext verwendet.
+
+---
+
 ## CI-Gate und paralleler GPS-PR – 27.11.2026, 19:21 MEZ
 
 - **Aktueller main-Stand bei Prüfung:** `c0b011aa5473cf8853520c75e0758ce79f3dd104`. README, `docs/IMPLEMENTATION-ROADMAP.md`, `docs/DECISIONS.md`, `docs/CHAT-START.md`, offene Issues/PRs und letzte Commits geprüft. Die Roadmap enthält historische Snapshots; diese nicht als aktuellen Teststand lesen.
