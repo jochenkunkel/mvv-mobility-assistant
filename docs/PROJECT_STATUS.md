@@ -1,3 +1,12 @@
+## Entwicklungsabgleich – 27.11.2026, 23:17 MEZ
+
+- **Baseline:** `main=0c26c1da01d0e8c463968011a77f6ec32b874df6`; fünf offene Issues #21–#25, PR #26 weiterhin `mergeable=false`, PR #27 `mergeable=true`. README, Implementierungs-Roadmap, Projektstatus, jüngste Commits und PR-Diffs geprüft. Vollständige fremde Projekt-Chats Main/Schedule sind nicht direkt live zugänglich; nur bekannte, dokumentierte Anforderungen berücksichtigt.
+- **Konkreter Code-Review-Befund zu PR #27 (noch kein Laufzeitfehler nachgewiesen):** `isConfirmedTransitRide()` ermittelt in `MainActivity.kt` stets `journey.steps.indexOfFirst { !it.walking }` und fragt die Boarding-Bestätigung nur für **diese erste** Fahrzeug-Etappe ab. Bei Verbindungen mit mehreren ÖPNV-Etappen kann der Sprungschutz deshalb nach dem Umstieg falsch aktiviert bleiben oder bei erst später bestätigter Etappe ausbleiben. Der neue `TransitGpsPlausibilityTest` prüft ausschließlich den booleschen Parameter, nicht die Auswahl der **aktiven** Fahrzeug-Etappe. Vor Merge von #27 aktuellen Leg-Index bzw. expliziten Fahrstatus der Session verwenden und JVM-/UI-Regression für Bus → Fußweg → Bus mit separater Einstiegsbestätigung ergänzen. Keine pauschale Aktivierung bei einer beliebigen vergangenen Boarding-Bestätigung.
+- **CI-Grenze:** Die verfügbare commitbezogene Workflow-Abfrage für `0c26c1d` liefert `[]`, berücksichtigt jedoch nur PR-getriggerte Läufe; daraus folgt kein Push-Buildstatus. Kein Gradle-/Emulatorlauf in diesem Abgleich ausgeführt; **keine APK-/S25-Freigabe**.
+- **Integrationsreihenfolge:** Zuerst oben genannten Mehr-Etappen-Fall in PR #27 beheben/testen, danach vollständigen API-35-Release-Gate-Nachweis einholen. PR #26 bleibt bis zur gezielten Statusdatei-Konfliktauflösung unmergebar. Keine Signing-/Secrets-/Workflow-Änderungen.
+
+---
+
 ## PR-Mergeability-Abgleich – 27.11.2026, 22:22 MEZ
 
 - **Baseline:** `main=32dcbe2abf8d4b300af67064fa3093887d6409ed`; README, Implementierungs-Roadmap, ADR, Android-Workflow, Status, offene Issues #21–#25, letzte Commits und PR-Metadaten erneut geprüft. Vollständige Main-/Schedule-Chatverläufe nicht live abrufbar.
