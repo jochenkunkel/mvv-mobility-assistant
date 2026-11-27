@@ -1,3 +1,13 @@
+## CI-Concurrency-Quellcodeabgleich – 27.11.2026, 21:23 MEZ
+
+- **main vor Änderung:** `de73e022c89345f4b563c222a97c1ca3a9fdee70`; README, `docs/IMPLEMENTATION-ROADMAP.md`, `docs/DECISIONS.md`, Issues #21–#25, PR #26/#27 und jüngste Commits geprüft. Andere vollständige Chats (Main/Schedule) weiterhin nicht direkt abrufbar.
+- **Neu überprüfter Primärbeleg:** `.github/workflows/android.yml` setzt `concurrency.group = github.workflow + github.event_name + github.ref` und `cancel-in-progress` für Pushes außer Versionstags. Damit **können** aufeinanderfolgende Pushes auf demselben Branch einen noch laufenden Build beim Setup abbrechen. Das passt zum beobachteten Run #46041079256 (`build-and-test=cancelled` bei `Set up job`), belegt aber **nicht**, welcher nachfolgende Lauf ihn tatsächlich abgelöst hat. Kein Hinweis auf einen Gradle-Testfehler aus diesem Run. **Keine Änderung am Workflow nötig**, solange keine abweichende Ursache belegt ist.
+- **API-Grenze:** Die verfügbare Commit-Workflow-Abfrage listet nur PR-getriggerte Läufe; für `de73e02` lieferte sie `[]`. Das ist **kein Beweis**, dass es keinen Push-Build gab. Die Actions-Gesamtübersicht bzw. Run-Metadaten für den aktuellen Branch müssen extern geprüft werden.
+- **Nächstes kleines Arbeitspaket:** Einen tatsächlich abgeschlossenen, nicht durch Concurrency ersetzten `build-and-test`-Lauf für den aktuellen Code ermitteln; anschließend `workflow_dispatch` mit `test_level=release` ausführen, um das sonst übersprungene API-35-Emulator-Gate inklusive `ImmersiveDashboardInstrumentedTest` zu belegen. Falls kein Workflow-Dispatch verfügbar, CI-Administrator um gezielten Release-Gate-Lauf bitten. Danach GPS-PR #27 gegen main und #26 auf Merge-Konflikte und Tests prüfen.
+- **Tests/Freigabe:** In diesem Lauf keine Gradle-/Emulator-Tests ausgeführt, keine neuen grünen Builds belegt, keine APK-/S25-Freigabe.
+
+---
+
 ## CI-Cancellation-Diagnose und PR-Integrationsprüfung – 27.11.2026, 20:24 MEZ
 
 - **main bei Prüfung:** `880d162ab1c9dbc15f5e5a31453ed8aa6ba08063`. README, Roadmap, Entscheidungen, Chat-Handoff, Issues, PRs und letzte Commits erneut gelesen. Offene PRs #26 und #27; #25 bleibt als neue Linien-/Fußweg-Anforderung offen.
