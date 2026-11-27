@@ -132,4 +132,38 @@ class RouteProgressTest {
         assertTrue(projected.alongMeters > 30.0)
     }
 
+
+    /**
+     * ROUTE-02 baseline: on a hairpin, a fix near the outbound leg must not be
+     * projected onto the nearby return leg just because it is later in the path.
+     * This only verifies stateless nearest-segment geometry. A sequence-aware
+     * progress filter is still needed to prevent jumps at ambiguous crossings.
+     */
+    @Test fun hairpinProjectionChoosesClosestLegNotLatestLeg() {
+        val hairpin = listOf(
+            48.1000 to 11.5000,
+            48.1000 to 11.5020,
+            48.1001 to 11.5020,
+            48.1001 to 11.5000
+        )
+        val outbound = requireNotNull(RouteProgress.project(hairpin, 48.10001, 11.5010))
+        val returning = requireNotNull(RouteProgress.project(hairpin, 48.10009, 11.5010))
+        assertEquals(0, outbound.segmentIndex)
+        assertEquals(2, returning.segmentIndex)
+        assertTrue(outbound.alongMeters < returning.alongMeters)
+        assertTrue(outbound.lateralMeters < 2.0)
+        assertTrue(returning.lateralMeters < 2.0)
+    }
+
+    /** At an exact overlap the current stateless implementation breaks ties by path order. */
+    @Test fun overlappingSegmentsHaveDeterministicFirstSegmentTieBreak() {
+        val outAndBack = listOf(
+            48.1000 to 11.5000,
+            48.1000 to 11.5010,
+            48.1000 to 11.5000
+        )
+        val projection = requireNotNull(RouteProgress.project(outAndBack, 48.1000, 11.5005))
+        assertEquals(0, projection.segmentIndex)
+        assertEquals(0.5, projection.fraction, 0.02)
+    }
 }
