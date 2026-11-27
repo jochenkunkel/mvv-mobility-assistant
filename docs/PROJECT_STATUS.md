@@ -1,3 +1,12 @@
+## UI-24 Umsetzungsvertrag – 27.11.2026, 15:20 MEZ
+
+- **Abgleich:** README, DECISIONS, IMPLEMENTATION-ROADMAP, CHAT-START, MainActivity, offene Issues #21–#25 und HEAD `8f0184a` geprüft. Keine neuen Codecommits/PRs seit dem vorherigen Lauf erkennbar. Vollständige Chats Main/Schedule nicht live zugänglich.
+- **Neu:** [UI24-IMMERSIVE-IMPLEMENTATION-CONTRACT-2026-11-27.md](UI24-IMMERSIVE-IMPLEMENTATION-CONTRACT-2026-11-27.md) in Commit `f6793cd`: präziser WindowInsets-/Lifecycle-Ansatz, acht Regressionen, S25-Abnahme, Trennung von #23. **Noch keine Code-Reparatur**.
+- **CI:** Für `8f0184a` weder PR-Workflow-Lauf noch kombinierter Commit-Status vorhanden; Push-CI damit nicht verifiziert. Für neue Dokumentationscommits ebenfalls keine grüne CI behaupten. Keine APK-Freigabe.
+- **Nächstes Paket:** #24 gezielt in `MainActivity` implementieren, Zustandswechsel `DASHBOARD` ↔ `NONE` testen und anschließend CI sowie physische S25-Ansicht verifizieren. #23 und #22 bleiben offen.
+
+---
+
 ## GPS-03 Rotations-/Callback-Abnahme – 27.11.2026, 08:22 MEZ
 
 - **Repositoryprüfung:** `main` vor Änderung `a3cf98c`; README, `docs/IMPLEMENTATION-ROADMAP.md`, `docs/DECISIONS.md`, `docs/CHAT-START.md`, GPS-02-Audit und `MainActivity.kt` gelesen. GitHub-Suche: 0 offene Issues und 0 offene PRs. Vollständige Main-/Schedule-Chats nicht direkt abrufbar.
