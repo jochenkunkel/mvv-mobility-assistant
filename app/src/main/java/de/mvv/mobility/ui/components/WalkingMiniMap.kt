@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -67,8 +68,10 @@ fun WalkingMiniMap(
             map.onDetach()
         }
     }
-    Box(modifier = modifier.fillMaxSize()) {
-    AndroidView(factory = { map }, modifier = Modifier.fillMaxSize(), update = { view ->
+    // Keep rotated osmdroid tiles inside the map viewport, never above the
+    // surrounding navigation header or controls (regression: issue #23).
+    Box(modifier = modifier.fillMaxSize().clipToBounds()) {
+    AndroidView(factory = { map }, modifier = Modifier.fillMaxSize().clipToBounds(), update = { view ->
         view.overlays.clear()
         val routePoints = route.path.map { GeoPoint(it.first, it.second) }
         if (routePoints.size >= 2) {
