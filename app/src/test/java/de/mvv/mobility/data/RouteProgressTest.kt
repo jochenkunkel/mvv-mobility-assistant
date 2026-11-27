@@ -166,4 +166,24 @@ class RouteProgressTest {
         assertEquals(0, projection.segmentIndex)
         assertEquals(0.5, projection.fraction, 0.02)
     }
+    /**
+     * ROUTE-02 characterization (not a fix): a plausible ~9 m northward GPS
+     * jitter can switch a hairpin projection to the return leg and jump >100 m.
+     * Keep this as evidence until a route-scoped sequence filter is integrated.
+     */
+    @Test fun hairpinGpsJitterCanCauseLargeStatelessProgressJump() {
+        val hairpin = listOf(
+            48.1000 to 11.5000,
+            48.1000 to 11.5020,
+            48.1001 to 11.5020,
+            48.1001 to 11.5000
+        )
+        val outbound = requireNotNull(RouteProgress.project(hairpin, 48.10001, 11.5010))
+        val jittered = requireNotNull(RouteProgress.project(hairpin, 48.10009, 11.5010))
+        assertEquals(0, outbound.segmentIndex)
+        assertEquals(2, jittered.segmentIndex)
+        assertTrue("Stateless projection jumps despite small GPS jitter",
+            jittered.alongMeters - outbound.alongMeters > 100.0)
+    }
+
 }
