@@ -1,3 +1,12 @@
+## UI-24 erster Code-Fix – 27.11.2026, 16:20 MEZ
+
+- **Repo-Abgleich:** README, aktuelle Roadmap, CHAT-START, UI24-Vertrag, MainActivity, offene Tickets #21–#25 und Commits bis `f52651b` geprüft. Die vollständigen externen Main-/Schedule-Chats sind nicht direkt lesbar; aktuelle Nutzerwünsche stehen in den Issues.
+- **Code:** Commit [`09349fe`](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/09349fed8f056138f2392b367f1e789d2c7ec39e) setzt in `MainActivity` einen `DisposableEffect(fullscreenMode)`: Android-Navigationsleiste nur bei `DASHBOARD` per `WindowInsetsControllerCompat.hide(navigationBars())` verbergen, temporäres Swipe-Einblenden erlauben, beim Verlassen wiederherstellen. Die Statusleiste bleibt unangetastet. **Erster Implementierungsschritt, kein Geräte-Fix-Nachweis.**
+- **CI:** Für Code-SHA `09349fe` liefert die verfügbare kombinierte Statusabfrage `[]` und die PR-begrenzte Workflow-Abfrage ebenfalls `[]`. Push-Actions-Erfolg damit **unbekannt**. Keine lokalen Gradle-/Emulator-Tests ausgeführt, keine APK-Freigabe.
+- **Nächstes kleines Paket:** Android-Compile/CI für exakte SHA nachweisen; Instrumentierung der Übergänge NONE → DASHBOARD → NONE und Rotation ergänzen; S25 mit 3-Tasten-/Gestensteuerung und überlagerten Warnungen prüfen. #24 offen lassen. Danach #23 Karten-Insets/Clipping, #22 Bus-GPS.
+
+---
+
 ## UI-24 Umsetzungsvertrag – 27.11.2026, 15:20 MEZ
 
 - **Abgleich:** README, DECISIONS, IMPLEMENTATION-ROADMAP, CHAT-START, MainActivity, offene Issues #21–#25 und HEAD `8f0184a` geprüft. Keine neuen Codecommits/PRs seit dem vorherigen Lauf erkennbar. Vollständige Chats Main/Schedule nicht live zugänglich.
