@@ -1,3 +1,12 @@
+## GPS-02: Produktiver Zeitstempelvergleich abgesichert – 27.11.2026, 06:16 MEZ
+
+- **Codeabgleich:** `CurrentLocationRepository.isNewer` nutzt strikt steigende `elapsedRealtimeNanos`, falls beide Fixes eine monotone Zeitbasis besitzen. Sind beide ohne monotone Zeitbasis, vergleicht es strikt steigende Wall-Clock-`time`; gemischte Zeitbasen werden abgelehnt. `MainActivity` verwendet diesen Vergleich bereits im produktiven Foreground-Callback, zusätzlich zu Freshness-/Accuracy-Gates. Ein zweiter `LocationFixOrdering`-Guard wäre ohne Zusammenführung redundant und könnte wegen der anderen Null-/Fallback-Semantik abweichen.
+- **Test-Commit:** [d63de38](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/d63de386766886140882589f9759da46511b5c27) ergänzt zwei instrumentierte Android-Regressionen: verspätete/gleiche monotone Fix-Zeitstempel trotz jüngerer Wall-Clock-Zeit sowie strikter Wall-Clock-Fallback und Ablehnung gemischter Zeitbasen. Die Tests rufen die tatsächlich produktiv verwendete `isNewer`-Funktion auf, simulieren aber **nicht** den kompletten `MainActivity`-Callback.
+- **Offen:** Kein lokaler Android-Emulator/Gradle-Test in diesem Durchlauf; GitHub-Commit-Workflow-Abfrage liefert nur PR-bezogene Läufe und für den bisherigen HEAD keine Runs. CI des neuen Commits daher **unbekannt**. Keine APK-Freigabe. Nächster Schritt: Tests in API-35-Emulator ausführen, anschließend bei Bedarf Callback-Akzeptanzpfad in testbare Funktion extrahieren und Lifecycle/Re-Subscription prüfen; ROUTE-02-Hysterese bleibt separat offen.
+- **Repo/Chats:** README, Roadmap, Entscheidungen, Chat-Handoff, GPS-Audit, Source und bestehende Instrumentierung gelesen; GitHub-Suche: 0 offene Issues und 0 offene PRs. Vollständige Chats Main/Schedule nicht live zugänglich.
+
+---
+
 ## GPS-02: Monotone Callback-Reihenfolge – 27.11.2026, 04:23 MEZ
 
 - **Code:** [af0cb7b](https://github.com/jochenkunkel/mvv-mobility-assistant/commit/af0cb7b3f6de0960baef2659d785d1c535d9c4d7) führt den reinen `LocationFixOrdering`-Guard ein. Er akzeptiert nur strikt steigende positive `elapsedRealtimeNanos`, verwirft ältere/gleiche Callbacks und erlaubt Reset für neue Sessions. **Noch nicht in den Android-Callback integriert**; keine Behauptung, dass GPS-02 im Produkt behoben ist.
