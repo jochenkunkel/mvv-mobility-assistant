@@ -1,3 +1,12 @@
+## Entwicklungsabgleich – 28.11.2026, 01:20 MEZ
+
+- **Aktuelle Prüfung:** README, Implementierungs-Roadmap, ADR, Android-CI-Workflow, Status, offene Issues #21–#25, PR #26/#27 und letzte Commits geprüft. Neuester gefundener main-Commit vor diesem Eintrag: `f852127c1f3533e6065624aee9d081fcc5aaa95e`. Andere vollständige Projekt-Chats Main/Schedule sind nicht direkt lesbar; keine unbekannten Inhalte angenommen.
+- **Integrationsblocker PR #27:** Aktive Fahrzeug-Etappe statt `indexOfFirst { !it.walking }` für die Einstiegsbestätigung verwenden; Bus A → Fußweg → Bus B getrennt testen. Ein formaler GitHub-Review mit `REQUEST_CHANGES` wurde von GitHub mit HTTP 422 abgewiesen, weil der verbundene Account den eigenen PR nicht so bewerten darf. Das ist eine GitHub-Berechtigungsgrenze, **keine** Aussage über Codequalität. Bis zur Korrektur nicht mergen.
+- **Konkretes nächstes Codepaket:** Aktiven Leg-Index der Session als Eingabe für den Transit-GPS-Filter verwenden; auf Fußweg und bei unbekannter Etappe Filter deaktivieren. Tests für A bestätigt/B nicht, A bestätigt/B bestätigt, Fußweg, B-Einstieg und verzögerte GPS-Callbacks ergänzen. Danach API-35-Test tatsächlich ausführen.
+- **CI-/Freigabegrenze:** `workflow_dispatch(test_level=release)` ist in `.github/workflows/android.yml` vorhanden; kein vollständiger aktueller Release-/Emulatorlauf durch diese Prüfung belegt. Keine lokalen Gradle-Tests, keine APK- oder S25-Freigabe. PR #26 bleibt gesondert auf Dokumentationskonflikt zu prüfen.
+
+---
+
 ## Entwicklungsabgleich – 27.11.2026, 23:17 MEZ
 
 - **Baseline:** `main=0c26c1da01d0e8c463968011a77f6ec32b874df6`; fünf offene Issues #21–#25, PR #26 weiterhin `mergeable=false`, PR #27 `mergeable=true`. README, Implementierungs-Roadmap, Projektstatus, jüngste Commits und PR-Diffs geprüft. Vollständige fremde Projekt-Chats Main/Schedule sind nicht direkt live zugänglich; nur bekannte, dokumentierte Anforderungen berücksichtigt.
