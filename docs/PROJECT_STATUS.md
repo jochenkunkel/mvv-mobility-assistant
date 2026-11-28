@@ -1,3 +1,13 @@
+## Entwicklungsabgleich – 28.11.2026, 09:17 MEZ
+
+- **Live-Repository:** main `a573d7b83ba5d8d016ea0df9f1cc87a9f09618e8`; README, Roadmap, ADR, CI-Workflow, Issues #21–#25, PR #26/#27 und letzte fünf Commits abgeglichen. Die anderen vollständigen Projekt-Chats Main/Schedule sind nicht direkt lesbar; die Anforderungen in den Issues bleiben die verlässliche Quelle.
+- **PR #27 erneut verifiziert:** Head `81dea14ccdeec148fc5e8b91e72871428d027563`, GitHub meldet `mergeable=false` (Basis-Snapshot `32dcbe2`). Diese Meldung beweist ohne Konfliktdiff nicht, welche Datei betroffen ist. Die Datei `MainActivity.kt` auf dem PR-Head verwendet in `journeyGpsStatus()` und `isConfirmedTransitRide()` weiterhin `indexOfFirst { !it.walking }`; der tatsächlich aktive Session-Leg wird nicht bestimmt. **Keine Freigabe und kein Merge.**
+- **Konkretisierte Implementierungsgrenze:** Ein bloßer Austausch des Index durch `displayConnection.stepIndex` wäre unsicher, weil diese Anzeige auch die *nächste* Etappe bezeichnen kann. Zuerst eine explizite Session-Semantik für `activeLegIndex` und einen Übergang bei Umstieg definieren; bei unbekanntem Index, Fußweg oder nicht bestätigter aktueller Busetappe darf der GPS-Teleportfilter nicht greifen. Asynchrone Location-Callbacks müssen den Etappenwechsel respektieren. Anschließend JVM-Regressionen für A bestätigt → Fußweg → B unbestätigt → B bestätigt und verzögerte Callbacks.
+- **CI-Beleg:** PR-Head hat Actions-Run [#687](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/46070058272) mit `completed/success`; dies bestätigt **nicht** die im Fast-Lauf übersprungenen Emulator-, Live-Probe- und Release-Gates. Keine Tests in diesem Lauf ausgeführt, keine APK-/S25-Freigabe; Signing/Secrets unverändert.
+- **Nächster ausführbarer Schritt:** Im PR-Branch den Session-Etappenvertrag und die oben genannten Unit-Tests implementieren, anschließend den GPS-Guard darauf umstellen und die vollständigen Release-Gates mit API-35-Emulator prüfen. PR-Mergekonflikte erst nach gezieltem Vergleich zum aktuellen main beheben.
+
+---
+
 ## Entwicklungsabgleich – 28.11.2026, 08:25 MEZ
 
 - **Basis:** main `ba25f29317c2933d6bed1a39c85d5dc7d6ae3ce4`; README, Roadmap, ADR, Status, Android-Workflow, Issues #21–#25, PR #26/#27 und letzte Commits geprüft. Vollständige Projekt-Chats Main/Schedule nicht direkt abrufbar.
