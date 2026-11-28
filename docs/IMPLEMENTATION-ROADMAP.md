@@ -1,3 +1,17 @@
+## Aktuelle Arbeitsreihenfolge – 28.11.2026, 04:23 MEZ
+
+**Verifizierter Stand:** main `b90ffc1d9171c193307fa87f8fc09190a4a0a4a5`; offene Issues #21–#25, offene PRs #26 und #27. Diese Priorisierung ersetzt für neue Arbeit die ältere Tabelle vom 26.11., ohne deren historische Testaussagen zu verändern. Die commitbezogene Actions-Abfrage lieferte für diesen main-Commit keine PR-getriggerten Läufe; daraus lässt sich kein Push-CI-Erfolg oder -Fehler ableiten.
+
+1. **P0 – #22 / PR #27: Etappenbindung korrigieren.** In `MainActivity.kt` jede Verwendung von `indexOfFirst { !it.walking }` für den Transit-GPS-Sprungschutz auf den **aktuell aktiven** Session-Leg-Index umstellen. Der Filter darf nur greifen, wenn dieser Index gültig ist, die aktive Etappe eine Fahrzeug-Etappe ist **und genau diese Etappe** eine Einstiegsbestätigung besitzt. Auf Fußwegen, vor dem Einstieg und bei unbekannter Etappe Filter aus. Alte Bestätigungen dürfen nicht auf spätere Busetappen übergehen. Keine pauschale GPS-LIVE- oder Grün-Kennzeichnung aus diesem Filter ableiten.
+2. **P0 – ausführbare Regression vor Merge:** deterministische Fälle `Bus A bestätigt → Fußweg → Bus B unbestätigt`, `Bus B bestätigt`, `nur Fußweg`, `ungültiger Leg-Index`, `verspäteter GPS-Callback nach Etappenwechsel`. Erwartung: Nur während bestätigter aktiver Fahrzeug-Etappe Sprungschutz; kein Fortschritts-Teleport; kein übernommener Boarding-Status. Tests für die tatsächliche Etappenauswahl, nicht nur den booleschen Filterparameter.
+3. **P0 – CI-Gate:** Für den korrigierten PR Unit-/Lint-/Build-Ergebnisse und tatsächlich ausgeführte API-35-Instrumentierung nachweisen. `workflow_dispatch(test_level=release)` existiert, wurde hier aber nicht gestartet. Erst nach überprüfbaren Ergebnissen kontrolliert mergen; #26-Dokumentationskonflikt separat behandeln. Keine APK-/S25-Freigabe ohne weitere reale Geräteprüfung.
+4. **P1 – #23/#24/#21:** Karten-Clipping und System-Inset, Immersive-Mode-Regression samt Rotation, visuelle Dashboard-Abnahme anhand der tatsächlich freigegebenen Vorlage.
+5. **P2 – #25:** Linienstartfilter und einzelne Etappen durch OSM-Fußwege ersetzen; erst nach verlässlicher Neuberechnung von Anschlüssen und Zeitpuffer freigeben.
+
+**Chat-Grenze:** Vollständige Projekt-Chats Main/Schedule nicht direkt lesbar; nur hier bekannte Anforderungen und GitHub-Issues verwendet. Keine neuen Tests ausgeführt; keine APK-Installationsfreigabe.
+
+---
+
 ## Aktueller Status – 26.11.2026 (nach Abschluss der Ticketrunde)
 
 **Dieser Abschnitt ist vor allen datierten historischen Abgleichen unten maßgeblich.** Der continuously aktuelle Stand steht in [PROJECT_STATUS.md](PROJECT_STATUS.md); die historischen Abschnitte bleiben als Momentaufnahmen erhalten und dürfen nicht als heutiger Implementierungsstand gelesen werden.
