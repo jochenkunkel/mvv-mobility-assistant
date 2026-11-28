@@ -1,3 +1,13 @@
+## Entwicklungsabgleich – 28.11.2026, 19:24 MEZ
+
+- **Code:** `ActiveLegState.kt` als reines, unveränderliches JVM-testbares Zustandsmodell hinzugefügt (Commit `c792463`). Identität der Journey, aktiver Leg, Generationszähler und leggebundene Einstiegsbestätigung sind getrennt. Bei Wechsel von Journey/Leg wird die Bestätigung verworfen; verspätete Callbacks können anhand der Generation erkannt werden. Kein GPS-Fix bestätigt automatisch einen Einstieg.
+- **Regressionen:** `ActiveLegStateTest.kt` (Commit `e102343`) prüft unbekannte/Fußweg-Etappen, Bus A → Fußweg → Bus B, ungültige Indizes, Journey-Wechsel, verspätete Callback-Generation und Reset. **Noch nicht ausgeführt.**
+- **Integrationsgrenze:** Dieses Modell ist bewusst **noch nicht** an `NavigationSessionViewModel` oder `MainActivity` angeschlossen. `resolveRideGpsStatus()` verwendet weiterhin eine journeyweite Hysterese; PR #27 bleibt `mergeable=false` und darf nicht blind integriert werden. Nächstes kleines Paket: Modell als Session-Eigentümer einhängen, explizite UI-Etappenübergänge definieren, bei Wechsel Hysterese zurücksetzen, dann GPS-Guard/Status/Dashboard auf denselben aktiven Leg umstellen. Die Generation ist an der asynchronen Callback-Grenze zu prüfen.
+- **CI:** Die verfügbare Commit-Workflow-Abfrage sieht nur PR-getriggerte Läufe; für `e202154` gab sie keine zurück. Keine Aussage über Push-CI oder Erfolg der neuen Commits ohne Jobs/Logs. Letzter separat dokumentierter Fast-CI-Beleg: #699 auf `bc3a408`, Release-Gates übersprungen. Keine APK-/S25-Freigabe; Signing/Secrets unverändert.
+- **Kontext:** README, Roadmap, ADR, Status, CI-Workflow, Issues #21–#25, PR #26/#27 und letzte Commits geprüft. Vollständige Chats Main/Schedule nicht direkt lesbar; keine neuen Inhalte daraus angenommen.
+
+---
+
 ## CI-Nachweis und P0-Folgearbeit – 28.11.2026, 18:18 MEZ
 
 - **Verifiziert:** `main=bc3a408f6920476f43d260f6e07c51fa586d31d2`; README, ADR, Roadmap, GPS-Etappenvertrag, Issues #21–#25, PR #26/#27 und letzte Commits abgeglichen. Die vollständigen fremden Projekt-Chats Main/Schedule sind nicht direkt zugänglich; Issue-Texte sind die belastbare Anforderungsquelle.
