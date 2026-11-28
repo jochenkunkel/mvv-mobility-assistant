@@ -1,3 +1,13 @@
+## Entwicklungsabgleich – 28.11.2026, 16:24 MEZ
+
+- **Codebasis:** main `55272358ec748ecec3e58d75cdcbdd90758b2209`; offene Issues #21–#25, PR #26/#27. README, ADR, Roadmap, Status, Android-CI-Workflow und die letzten Commits erneut geprüft. Vollständige fremde Projekt-Chats Main/Schedule sind nicht direkt lesbar; keine unbekannten Chat-Inhalte angenommen.
+- **Neu seit der bisherigen Roadmap:** `RouteProgressTest.kt` enthält jetzt vier zusätzliche Regressionen aus `4f834c4` und `5527235`: gemischte GPS-Zeitbasen, Off-Route-Rückkehr, doppelte Zeitstempel und Tracker-Reset. **Nur eingecheckt, nicht als bestanden nachgewiesen.** Die PR-Run-Abfrage für `5527235` ergab keine PR-Läufe und erfasst Push-CI nicht.
+- **Weiterer Integrationsaspekt für P0 #22:** `NavigationSessionViewModel.resolveRideGpsStatus()` setzt `previousRideGpsMode` beim Wechsel von `gpsStatusJourney` zurück; beim Wechsel **innerhalb derselben Journey** ist ein Reset im eingesehenen Code nicht erkennbar. Für Bus A → Fußweg → Bus B muss die Hysterese daher an einen expliziten aktiven Etappenschlüssel gebunden und beim Etappenwechsel zurückgesetzt werden. Boarding-Bestätigung und GPS-Teleportfilter müssen denselben aktuellen Leg verwenden; `displayConnection.stepIndex` ist ohne Aktivitätsvertrag nicht ausreichend.
+- **Konkretes nächstes kleines Codepaket:** Aktiven Leg-Index als expliziten Session-Zustand mit definierten Übergängen modellieren; bei ungültigem Index/Fußweg keine Fahrzeug-GPS-Bestätigung; bei jedem Leg-Wechsel Hysterese und alte Boarding-Wirkung zurücksetzen. JVM-Tests für A bestätigt → Fußweg → B unbestätigt → B bestätigt sowie verspäteten Location-Callback. Erst danach die drei Aufrufer (Sprungschutz, Status, Dashboard) auf den gemeinsamen Zustand umstellen.
+- **Freigabe:** Keine Tests in diesem Abgleich ausgeführt, keine grüne Push-CI belegt, keine APK-/S25-Freigabe; Signing/Secrets unverändert.
+
+---
+
 ## Aktuelle Arbeitsreihenfolge – 28.11.2026, 04:23 MEZ
 
 **Verifizierter Stand:** main `b90ffc1d9171c193307fa87f8fc09190a4a0a4a5`; offene Issues #21–#25, offene PRs #26 und #27. Diese Priorisierung ersetzt für neue Arbeit die ältere Tabelle vom 26.11., ohne deren historische Testaussagen zu verändern. Die commitbezogene Actions-Abfrage lieferte für diesen main-Commit keine PR-getriggerten Läufe; daraus lässt sich kein Push-CI-Erfolg oder -Fehler ableiten.
