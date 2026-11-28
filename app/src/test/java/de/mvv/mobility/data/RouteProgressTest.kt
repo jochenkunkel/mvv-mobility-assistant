@@ -265,4 +265,33 @@ class RouteProgressTest {
         assertTrue(recovered.alongMeters > initial.alongMeters)
     }
 
+    @Test fun routeTrackerIgnoresDuplicateTimestampEvenWhenPositionChanges() {
+        val tracker = RouteProgressTracker()
+        val key = Any()
+        val initial = requireNotNull(tracker.project(
+            key, path, 48.1000, 11.5003, 10_000L, 0L, 3f
+        ))
+        val duplicate = requireNotNull(tracker.project(
+            key, path, 48.1000, 11.5009, 10_000L, 0L, 3f
+        ))
+        assertEquals(initial.alongMeters, duplicate.alongMeters, 0.0)
+        val later = requireNotNull(tracker.project(
+            key, path, 48.1000, 11.5005, 15_000L, 0L, 3f
+        ))
+        assertTrue(later.alongMeters > initial.alongMeters)
+    }
+
+    @Test fun routeTrackerClearStartsFreshProgressWithoutOldTimestamp() {
+        val tracker = RouteProgressTracker()
+        val key = Any()
+        requireNotNull(tracker.project(
+            key, path, 48.1000, 11.5009, 50_000L, 0L, 3f
+        ))
+        tracker.clear()
+        val fresh = requireNotNull(tracker.project(
+            key, path, 48.1000, 11.5002, 1_000L, 0L, 3f
+        ))
+        assertTrue(fresh.alongMeters in 10.0..20.0)
+    }
+
 }
