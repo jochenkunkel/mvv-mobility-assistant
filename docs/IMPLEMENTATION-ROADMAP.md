@@ -1,3 +1,12 @@
+## CI-Nachweis und P0-Folgearbeit – 28.11.2026, 18:18 MEZ
+
+- **Verifiziert:** `main=bc3a408f6920476f43d260f6e07c51fa586d31d2`; README, ADR, Roadmap, GPS-Etappenvertrag, Issues #21–#25, PR #26/#27 und letzte Commits abgeglichen. Die vollständigen fremden Projekt-Chats Main/Schedule sind nicht direkt zugänglich; Issue-Texte sind die belastbare Anforderungsquelle.
+- **Neu belegte CI:** [Android CI #699](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/46164927418) für `bc3a408`, Push am 28.11.2026 17:23 MEZ, Abschluss 17:26 MEZ: `preflight=success`, `build-and-test=success`; darin Unit-Tests, Debug-APK, Signatur-/Paketprüfung und Android-Lint als Schritte erfolgreich. `emulator-smoke-test=skipped`, `release-acceptance=skipped`, `mvv-live-probe=skipped`, `door-to-door-live-probe=skipped`. **Fast-CI grün, keine vollständige Release-/S25-Abnahme, keine APK-Installationsfreigabe.**
+- **P0 #22:** [GPS-Etappenvertrag](GPS-ACTIVE-LEG-CONTRACT.md) ist weiterhin *nur Spezifikation*. Priorität bleibt ein isolierter, JVM-testbarer Session-Etappenzustand mit Journey-Identität, aktivem Leg, Generation und leggebundener Boarding-Bestätigung; danach Hysterese-Reset, Guard/Status/Dashboard vereinheitlichen und Bus A → Fußweg → Bus B testen. PR #27 vor Integration neu auf Mergefähigkeit und Konflikte prüfen; kein Blind-Merge.
+- **Nächster Test-Gate:** JVM/Gradle + API-35-Instrumentierung und `workflow_dispatch(test_level=release)` mit expliziter Prüfung aller Jobs. Signing/Secrets nicht ändern.
+
+---
+
 ## Entwicklungsabgleich – 28.11.2026, 16:24 MEZ
 
 - **Codebasis:** main `55272358ec748ecec3e58d75cdcbdd90758b2209`; offene Issues #21–#25, PR #26/#27. README, ADR, Roadmap, Status, Android-CI-Workflow und die letzten Commits erneut geprüft. Vollständige fremde Projekt-Chats Main/Schedule sind nicht direkt lesbar; keine unbekannten Chat-Inhalte angenommen.
