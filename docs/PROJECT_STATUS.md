@@ -1,3 +1,12 @@
+## Entwicklungsabgleich – 28.11.2026, 08:25 MEZ
+
+- **Basis:** main `ba25f29317c2933d6bed1a39c85d5dc7d6ae3ce4`; README, Roadmap, ADR, Status, Android-Workflow, Issues #21–#25, PR #26/#27 und letzte Commits geprüft. Vollständige Projekt-Chats Main/Schedule nicht direkt abrufbar.
+- **Neuer CI-Beleg:** PR #27 Head `81dea14ccdeec148fc5e8b91e72871428d027563`: [Android CI #687 / Run 46070058272](https://github.com/jochenkunkel/mvv-mobility-assistant/actions/runs/46070058272) = completed/success, **preflight und build-and-test erfolgreich**; **emulator-smoke-test, release-acceptance, mvv-live-probe und door-to-door-live-probe übersprungen**. Dies ist kein vollständiger API-35-/Release-Nachweis. Combined Status für main `ba25f29` ist leer; commitbezogene Abfrage erfasst keine Push-Runs.
+- **Gezielte Quellcodeanalyse auf PR-Branch:** `MainActivity.kt` Zeilen 359–364 wählt in `isConfirmedTransitRide()` weiterhin die erste Fahrzeug-Etappe. Zeilen 341–357 (`journeyGpsStatus`) und 2206–2216 (Dashboard) verwenden dieselbe erste Etappe. `displayConnection` wird separat als anstehende Verbindung berechnet; deren `stepIndex` darf **nicht ungeprüft** als aktive Etappe verwendet werden. Es fehlt ein explizit verlässlicher aktiver Session-Leg-Index bzw. eine definierte Zustandsüberleitung bei Umstiegen. Erst diesen Vertrag festlegen, dann GPS-Guard, Status und Dashboard gemeinsam korrigieren und Bus A → Fußweg → Bus B testen. PR #27 meldete bei erneuter Abfrage `mergeable=false`; Metadaten allein klären keinen Konflikt.
+- **Ausführung:** Kein lokaler Gradle-/Emulatorlauf, keine Codeänderung am GPS-Guard, kein Merge. Signing/Secrets unverändert; **keine APK-/S25-Freigabe**. Nächster Schritt: aktiven Etappenzustand im Session-Modell mit deterministischen Tests einführen, dann PR aktualisieren und vollständige API-35-Gates ausführen.
+
+---
+
 ## Entwicklungsabgleich – 28.11.2026, 07:18 MEZ
 
 - **Repo:** main `80eb0d3a60561833e421524d30195f9c02cc4cb3`; README, Roadmap, Status, Android-CI-Workflow, Issues #21–#25, PRs #26/#27 und letzte Commits geprüft. Andere vollständige Chats Main/Schedule nicht direkt abrufbar.
