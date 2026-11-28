@@ -233,4 +233,36 @@ class RouteProgressTest {
         assertTrue(rerouted.alongMeters > stale.alongMeters + 20.0)
     }
 
+
+    @Test fun routeTrackerRejectsMixedClockBasesWithoutMovingProgress() {
+        val tracker = RouteProgressTracker()
+        val key = Any()
+        val initial = requireNotNull(tracker.project(
+            key, path, 48.1000, 11.5005, 1_000L, 1_000_000_000L, 3f
+        ))
+        val mixedClock = requireNotNull(tracker.project(
+            key, path, 48.1000, 11.5009, 2_000L, 0L, 3f
+        ))
+        assertEquals(initial.alongMeters, mixedClock.alongMeters, 0.0)
+        val recovered = requireNotNull(tracker.project(
+            key, path, 48.1000, 11.5007, 3_000L, 11_000_000_000L, 3f
+        ))
+        assertTrue(recovered.alongMeters > initial.alongMeters)
+    }
+
+    @Test fun routeTrackerOffRouteFixDoesNotErasePreviousProgress() {
+        val tracker = RouteProgressTracker()
+        val key = Any()
+        val initial = requireNotNull(tracker.project(
+            key, path, 48.1000, 11.5005, 1_000L, 0L, 3f
+        ))
+        assertNull(tracker.project(
+            key, path, 48.1050, 11.5050, 2_000L, 0L, 3f
+        ))
+        val recovered = requireNotNull(tracker.project(
+            key, path, 48.1000, 11.5006, 6_000L, 0L, 3f
+        ))
+        assertTrue(recovered.alongMeters > initial.alongMeters)
+    }
+
 }
