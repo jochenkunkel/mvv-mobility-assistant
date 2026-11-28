@@ -1,3 +1,12 @@
+## Entwicklungsabgleich – 28.11.2026, 05:16 MEZ
+
+- **Repo-Abgleich:** `main=34991d754e5da44e11028b59d0f2b3222a405fd4`; README, Roadmap, ADR, CI-Workflow, Status, letzte Commits, offene Issues #21–#25 und PRs #26/#27 erneut geprüft. Aus den anderen Projekt-Chats Main/Schedule liegt kein vollständiger Live-Verlauf vor; keine neuen Anforderungen daraus behauptet.
+- **Neue GitHub-Metadaten:** Für PR #27 liefert die aktuelle PR-Abfrage `mergeable=false` (zuvor dokumentiert: `true`). Die genaue Konfliktdatei ist mit dieser Metadatenabfrage **nicht** bewiesen. Vor jeglichem Merge Diff gegen aktuellen `main` neu abgleichen und Konflikt gezielt auflösen; PR #26 weiterhin separat behandeln. Kein automatischer Merge.
+- **Erneut im PR-Diff bestätigt:** `isConfirmedTransitRide()` wählt `journey.steps.indexOfFirst { !it.walking }`, nicht den aktiven Leg. Die sechs GPS-Plausibilitätstests prüfen Geschwindigkeits-/Zeitgrenzen, aber keine Mehr-Etappen-Auswahl. **Nächstes Codepaket auf PR-Branch:** aktive Session-Etappe verwenden, bei Fußweg/unbekanntem Index Guard deaktivieren, Regression Bus A → Fußweg → Bus B mit getrennten Boarding-Bestätigungen; anschließend API-35-Test und erneute Mergeability-Prüfung.
+- **Verifikation:** In diesem Lauf kein Gradle-/Emulator-Test ausgeführt und kein neuer vollständiger Actions-Release-Gate-Nachweis. Commit-bezogene Workflow-Abfrage ist für Push-Läufe unvollständig; kein Grün behauptet. Keine APK-/S25-Installationsfreigabe. Keine Signing-/Secrets-Änderung.
+
+---
+
 ## Entwicklungsabgleich – 28.11.2026, 01:20 MEZ
 
 - **Aktuelle Prüfung:** README, Implementierungs-Roadmap, ADR, Android-CI-Workflow, Status, offene Issues #21–#25, PR #26/#27 und letzte Commits geprüft. Neuester gefundener main-Commit vor diesem Eintrag: `f852127c1f3533e6065624aee9d081fcc5aaa95e`. Andere vollständige Projekt-Chats Main/Schedule sind nicht direkt lesbar; keine unbekannten Inhalte angenommen.
